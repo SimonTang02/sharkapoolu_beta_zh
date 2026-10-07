@@ -79,8 +79,8 @@ NYU 用户不能据此使用 Penn 登录；启用新学校渠道需要合法访�
 Linux / WSL 需要 Git、Python 3.10+ 与 venv。TeX 和浏览器按任务另装。
 
 ```bash
-git clone https://github.com/SimonTang02/sharkapoolu_zh.git
-cd sharkapoolu_zh
+git clone https://github.com/SimonTang02/sharkapoolu_beta_zh.git
+cd sharkapoolu_beta_zh
 ./scripts/bootstrap.sh
 source .venv/bin/activate
 jobbot-private check
@@ -283,9 +283,9 @@ SSH 配置，先查清机器角色；不要令主机连回自己。两台安装�
 客户端使用实际已授权 SSH 别名，路径填主机的实际项目位置：
 
 ```bash
-ssh -o BatchMode=yes example-db 'cd ~/workspace/sharkapoolu_zh && .venv/bin/python -m job_bot.shared_database check'
-jobbot-db configure --host example-db --project-dir '~/workspace/sharkapoolu_zh'
-jobbot-db configure --host example-db --project-dir '~/workspace/sharkapoolu_zh' --apply
+ssh -o BatchMode=yes example-db 'cd ~/workspace/sharkapoolu_beta_zh && .venv/bin/python -m job_bot.shared_database check'
+jobbot-db configure --host example-db --project-dir '~/workspace/sharkapoolu_beta_zh'
+jobbot-db configure --host example-db --project-dir '~/workspace/sharkapoolu_beta_zh' --apply
 jobbot-db check
 ```
 

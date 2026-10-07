@@ -11,7 +11,7 @@
   },
   "mode": "local",
   "host": "example-db",
-  "project_dir": "~/workspace/sharkapoolu_zh",
+  "project_dir": "~/workspace/sharkapoolu_beta_zh",
   "python": ".venv/bin/python",
   "private_dir": null,
   "request_timeout": 60

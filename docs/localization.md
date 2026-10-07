@@ -5,7 +5,7 @@
 | 仓库 | 用途 |
 | --- | --- |
 | [sharkapoolu_beta](https://github.com/SimonTang02/sharkapoolu_beta) | 主开发仓库：功能开发、缺陷修复和接口演进在这里进行 |
-| [sharkapoolu_zh](https://github.com/SimonTang02/sharkapoolu_zh) | 中文发布仓库：跟进上游版本、维护翻译并验证兼容性 |
+| [sharkapoolu_beta_zh](https://github.com/SimonTang02/sharkapoolu_beta_zh) | 中文发布仓库：跟进上游版本、维护翻译并验证兼容性 |
 
 此次中文版本基于英文上游提交 `bd90331c16d9f128f985928ae7752b49e8e758c9`。
 机器可读的版本对应关系见 [upstream.json](../localization/upstream.json)。

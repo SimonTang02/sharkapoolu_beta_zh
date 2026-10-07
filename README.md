@@ -26,8 +26,8 @@ Sharkapoolu 是一个本地优先的求职工具集，可发现和排序职位�
 需要 Python 3.10 或更新版本。
 
 ```bash
-git clone https://github.com/SimonTang02/sharkapoolu_zh.git
-cd sharkapoolu_zh
+git clone https://github.com/SimonTang02/sharkapoolu_beta_zh.git
+cd sharkapoolu_beta_zh
 ./scripts/bootstrap.sh
 source .venv/bin/activate
 ```

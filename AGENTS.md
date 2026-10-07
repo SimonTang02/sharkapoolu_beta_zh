@@ -142,8 +142,8 @@ sudo apt install -y git python3 python3-venv
 然后按照仓库的实际访问权限克隆中文发布仓库，再安装：
 
 ```bash
-git clone https://github.com/SimonTang02/sharkapoolu_zh.git
-cd sharkapoolu_zh
+git clone https://github.com/SimonTang02/sharkapoolu_beta_zh.git
+cd sharkapoolu_beta_zh
 ./scripts/bootstrap.sh
 source .venv/bin/activate
 ```

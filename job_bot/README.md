@@ -330,7 +330,7 @@ python3 job_bot/bot.py digest --config job_bot/test_fixtures/config.fixture.json
 ```bash
 export SMTP_USERNAME="your_email@example.com"
 export SMTP_PASSWORD="your_app_password"
-python3 /volume1/path/to/sharkapoolu_zh/job_bot/bot.py run --config /volume1/path/to/sharkapoolu_zh/job_bot/config.local.json
+python3 /volume1/path/to/sharkapoolu_beta_zh/job_bot/bot.py run --config /volume1/path/to/sharkapoolu_beta_zh/job_bot/config.local.json
 ```
 
 使用 app password 或 SMTP token，不要使用邮箱主密码。
@@ -355,7 +355,7 @@ python3 /volume1/path/to/sharkapoolu_zh/job_bot/bot.py run --config /volume1/pat
 
 - 用户自定义脚本。
 - 每日运行，例如上午 8:30。
-- 命令：`python3 /volume1/path/to/sharkapoolu_zh/job_bot/bot.py run --config /volume1/path/to/sharkapoolu_zh/job_bot/config.local.json`
+- 命令：`python3 /volume1/path/to/sharkapoolu_beta_zh/job_bot/bot.py run --config /volume1/path/to/sharkapoolu_beta_zh/job_bot/config.local.json`
 - 前几天保持 `dry_run=true`，并检查 `private_data/outputs/job_bot/`。
 
 其他部署选项：

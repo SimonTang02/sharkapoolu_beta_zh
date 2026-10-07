@@ -4,7 +4,7 @@
   "upstream_repository": "https://github.com/SimonTang02/sharkapoolu_beta",
   "upstream_ref": "main",
   "upstream_commit": "bd90331c16d9f128f985928ae7752b49e8e758c9",
-  "localized_repository": "https://github.com/SimonTang02/sharkapoolu_zh",
+  "localized_repository": "https://github.com/SimonTang02/sharkapoolu_beta_zh",
   "release_date": "2026-10-07",
   "development_policy": "功能开发和业务修复在英文上游进行；本仓库维护中文翻译及兼容发布。"
 }

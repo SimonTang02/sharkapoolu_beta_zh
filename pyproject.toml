@@ -36,9 +36,9 @@ jobbot-db = "job_bot.shared_database:main"
 jobbot-settings = "job_bot.easy_cli:main"
 
 [project.urls]
-Repository = "https://github.com/SimonTang02/sharkapoolu_zh"
-Documentation = "https://github.com/SimonTang02/sharkapoolu_zh/tree/main/docs"
-Issues = "https://github.com/SimonTang02/sharkapoolu_zh/issues"
+Repository = "https://github.com/SimonTang02/sharkapoolu_beta_zh"
+Documentation = "https://github.com/SimonTang02/sharkapoolu_beta_zh/tree/main/docs"
+Issues = "https://github.com/SimonTang02/sharkapoolu_beta_zh/issues"
 
 [tool.setuptools]
 py-modules = ["private_paths"]

@@ -18,8 +18,8 @@
 按本仓库的实际访问权限选择 HTTPS 或 SSH clone；访问权限因用户和仓库设置而异，不能保证匿名用户可克隆。
 
 ```bash
-git clone https://github.com/SimonTang02/sharkapoolu_zh.git
-cd sharkapoolu_zh
+git clone https://github.com/SimonTang02/sharkapoolu_beta_zh.git
+cd sharkapoolu_beta_zh
 ./scripts/bootstrap.sh
 source .venv/bin/activate
 ```

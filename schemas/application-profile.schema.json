@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_zh/main/schemas/application-profile.schema.json",
+  "$id": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_beta_zh/main/schemas/application-profile.schema.json",
   "title": "申请者档案",
   "description": "候选人事实与已明确审阅的申请答案。此文件应保存在私有目录中。",
   "type": "object",
