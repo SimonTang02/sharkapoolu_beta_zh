@@ -1,45 +1,36 @@
-# Installation
+# 安装
 
-Recommended Windows + WSL2 + VS Code setup and audited Mac/native Windows/Linux
-limits are in [platforms.md](platforms.md). Native Windows has a PowerShell
-bootstrap entry point; Linux-specific shell/Make commands are not interchangeable.
+推荐的 Windows + WSL2 + VS Code 环境，以及经过审阅的 Mac/原生 Windows/Linux 支持边界，见 [platforms.md](platforms.md)。原生 Windows 提供 PowerShell bootstrap 入口；Linux 专用 shell/Make 命令不能直接互换。
 
-Before choosing a workflow, read [setup ownership and readiness](getting-started.md).
-It distinguishes generated blank files from candidate-confirmed facts and
-documents the remaining strategy, browser, material and portal setup work.
+选择工作流前请阅读[配置责任与就绪指南](getting-started.md)。该指南区分自动生成的空白文件与候选人确认的事实，并说明策略、浏览器、材料和门户仍需完成的设置。
 
-For two online WSL machines that need the same private SQLite data, follow
-[the shared database setup](shared-database.md). The database stays on one host,
-and the other machine uses authenticated SSH for database operations.
+若两台联网的 WSL 机器要访问同一份私有 SQLite 数据，请参照[共享数据库配置指南](shared-database.md)。数据库保存在一台主机上，另一台通过已认证的 SSH 执行数据库操作。
 
-## Requirements
+## 系统要求
 
 - Git
-- Python 3.10 or newer with `venv`
-- Optional: Chromium dependencies for browser-assisted features
-- Optional: TeX Live, TinyTeX, or Overleaf for PDF resume rendering
+- Python 3.10 或更新版本及 `venv`
+- 可选：浏览器辅助功能所需的 Chromium 依赖
+- 可选：渲染简历 PDF 所需的 TeX Live、TinyTeX 或 Overleaf
 
-## Fresh clone
+## 全新克隆
+
+按本仓库的实际访问权限选择 HTTPS 或 SSH clone；访问权限因用户和仓库设置而异，不能保证匿名用户可克隆。
 
 ```bash
-git clone git@github.com:SimonTang02/sharkapoolu_beta.git
-cd sharkapoolu_beta
+git clone https://github.com/SimonTang02/sharkapoolu_zh.git
+cd sharkapoolu_zh
 ./scripts/bootstrap.sh
 source .venv/bin/activate
 ```
 
-`bootstrap.sh` is safe to run again. It preserves existing private files. It
-creates a virtual environment, installs the package in editable mode, copies
-missing templates into the ignored private tree, validates both configuration
-layers, and runs tests.
+`bootstrap.sh` 可安全重复运行，会保留现有私有文件。它会创建虚拟环境、以 editable 模式安装软件包、将缺失模板复制到被忽略的私有目录、验证两层配置并运行测试。
 
-Use `PYTHON=/path/to/python ./scripts/bootstrap.sh` to select another Python.
-Use `--skip-tests` only for a quick repair after tests have already passed at
-the same revision.
+使用 `PYTHON=/path/to/python ./scripts/bootstrap.sh` 可选择其他 Python。只有在同一版本的测试已通过后，才将 `--skip-tests` 用作快速修复选项。
 
-## Fill private configuration
+## 填写私有配置
 
-The first run creates:
+首次运行会创建：
 
 ```text
 private_data/config/easy_settings.json
@@ -51,81 +42,65 @@ private_data/cv/profile/evidence_profile.json
 private_data/cv/profile/application_keywords.json
 ```
 
-Edit those files locally, then run:
+在本地编辑这些文件，然后运行：
 
 ```bash
 jobbot-private check
 ```
 
-The checker reports paths and field names but never values. Details are in
-[configuration.md](configuration.md).
+检查器报告路径和字段名称，但绝不打印具体值。详情见[配置指南](configuration.md)。
 
-To place personal data outside the clone, set one stable absolute location
-before every command:
+若要将个人资料放在 clone 目录之外，在每条命令运行前设置同一个稳定绝对路径：
 
 ```bash
 export JOBBOT_PRIVATE_DIR="$HOME/.local/share/sharkapoolu"
 ./scripts/bootstrap.sh
 ```
 
-Keep that directory on encrypted storage or in an encrypted private backup.
-Do not point it at a public Git repository.
+将该目录保存在加密存储或加密的私有备份中。不要将它指向公开 Git 仓库。
 
-An editable installation made by `bootstrap.sh` uses the clone's
-`private_data/` by default. A wheel installed outside a checkout defaults to
-`$XDG_DATA_HOME/sharkapoolu`, normally `~/.local/share/sharkapoolu`.
+bootstrap 创建的 editable 安装默认使用 clone 内的 `private_data/`。在 checkout 外通过 wheel 安装时，默认使用 `$XDG_DATA_HOME/sharkapoolu`，通常为 `~/.local/share/sharkapoolu`。
 
-## Browser support
+## 浏览器支持
 
-Install the optional browser package and Chromium:
+安装可选浏览器依赖和 Chromium：
 
 ```bash
 ./scripts/bootstrap.sh --with-browser
 ```
 
-On Ubuntu, Debian, WSL, and some servers, Playwright also needs system
-libraries. The command requires administrator access:
+在 Ubuntu、Debian、WSL 和部分服务器上，Playwright 还需要系统库。此命令需要管理员权限：
 
 ```bash
 sudo .venv/bin/python -m playwright install-deps chromium
 ```
 
-New bootstrap installs use the standard Playwright OS cache (or the explicitly
-set `PLAYWRIGHT_BROWSERS_PATH`). Older `.playwright-browsers/` remains ignored
-and is not deleted. Set the same override for installation and later commands.
+新的 bootstrap 安装使用 Playwright 标准操作系统缓存，或显式设置的 `PLAYWRIGHT_BROWSERS_PATH`。旧版 `.playwright-browsers/` 仍被忽略，不会删除。安装和后续命令需设置相同覆盖值。
 
-### Dedicated Windows Chrome through CDP
+### 通过 CDP 使用专用 Windows Chrome
 
-The `windows_cdp` mode connects WSL to a separate Windows Chrome profile. Keep
-the endpoint in `private_data/credentials/passport.env`:
+`windows_cdp` 模式将 WSL 连接到独立的 Windows Chrome profile。端点保存在 `private_data/credentials/passport.env`：
 
 ```dotenv
 CHROME_CDP_URL=http://<wsl-gateway-address>:9223
 ```
 
-Select `application_browser.mode: "windows_cdp"` in a private config override.
-Use the scripts and network restrictions described in
-[`job_bot/README.md`](../job_bot/README.md). Never expose the debugging port to
-the LAN or reuse the ordinary personal Chrome profile.
+在私有配置覆盖中设置 `application_browser.mode: "windows_cdp"`。脚本和网络限制说明见 [`job_bot/README.md`](../job_bot/README.md)。绝不要将调试端口暴露到 LAN，也不要复用日常个人 Chrome profile。
 
-## Optional local config override
+## 可选本地配置覆盖
 
-The shared entry point is `job_bot/config/jobbot.json`. For machine-specific
-paths or browser selection, copy the example to the default private location:
+共享入口是 `job_bot/config/jobbot.json`。如需机器专用路径或浏览器选择，将示例复制到默认私有位置：
 
 ```bash
 cp examples/job_bot.local.json private_data/config/job_bot.local.json
 jobbot-config --config private_data/config/job_bot.local.json
 ```
 
-The example's relative include assumes the default in-repository
-`private_data/` layout. If `JOBBOT_PRIVATE_DIR` points elsewhere, replace the
-include with an absolute path to this clone's `job_bot/config/jobbot.json`.
+示例中的相对 include 假设 `private_data/` 位于仓库内默认布局。如果 `JOBBOT_PRIVATE_DIR` 指向其他位置，需将 include 改为此 clone 中 `job_bot/config/jobbot.json` 的绝对路径。
 
-## Resume rendering
+## 渲染简历
 
-Place candidate-owned `.tex` entry points under `private_data/cv/source/` and
-run:
+候选人维护的 `.tex` 入口文件放在 `private_data/cv/source/` 下，然后运行：
 
 ```bash
 make check-tools
@@ -133,13 +108,11 @@ make current
 make visa
 ```
 
-Shared classes and styles live in `cv/latex/`; rendered PDFs go to
-`private_data/cv/build/`. Overleaf can compile the private source together with
-those shared style files.
+共享类和样式位于 `cv/latex/`；渲染后的 PDF 保存到 `private_data/cv/build/`。Overleaf 可连同这些共享样式文件编译私有源文件。
 
-## First functional run
+## 首次功能运行
 
-Start with read-only checks and previews:
+先运行只读检查和预览：
 
 ```bash
 make private-check
@@ -149,8 +122,7 @@ jobbot auth-status --config job_bot/config/jobbot.json \
 make workflow-plan WORKFLOW=http_refresh
 ```
 
-Initialize the database, then run a selected workflow when the source list is
-appropriate for the candidate:
+初始化数据库；确认来源列表适合候选人后再运行选定工作流：
 
 ```bash
 jobbot init --config job_bot/config/jobbot.json
@@ -158,19 +130,15 @@ make workflow WORKFLOW=http_refresh
 make weekly
 ```
 
-## Updating an installation
+## 更新已安装环境
 
 ```bash
 git pull --ff-only
 ./scripts/bootstrap.sh
 ```
 
-Private files are preserved. Review release notes and rerun
-`jobbot-private check` whenever schemas or examples change.
+私有文件会保留。查看发布说明；Schema 或示例变更后重新运行 `jobbot-private check`。
 
-## Original resume and manual database
+## 原始简历与手工数据库
 
-Use `./scripts/bootstrap.sh --with-resume` for optional PDF text extraction,
-then follow [candidate-onboarding.md](candidate-onboarding.md). The importer
-creates a new private review packet without replacing existing source or PDFs.
-For CSV-only operation, see [manual-database.md](manual-database.md).
+如需提取 PDF 文本，使用 `./scripts/bootstrap.sh --with-resume`，然后遵循[候选人资料导入指南](candidate-onboarding.md)。导入器会新建私有审阅包，不会替换现有源文件或 PDF。只使用 CSV 时，请参阅[手工数据库指南](manual-database.md)。

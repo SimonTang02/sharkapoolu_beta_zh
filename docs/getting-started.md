@@ -1,103 +1,57 @@
-# Setup ownership and readiness
+# 配置责任与就绪状态
 
-For everyday feature switches after setup, use the annotated
-[`easy_settings.json` guide](beginner-settings.md). Its `jobbot-settings` entry
-point compiles the current base config without changing existing advanced
-configuration or browser progress; personal facts still need separate setup.
+完成初始设置后，日常功能开关请使用带注释的 [`easy_settings.json` 指南](beginner-settings.md)。其 `jobbot-settings` 入口会组合当前基础配置，不会更改现有高级配置或浏览器进度；个人事实仍需单独填写。
 
-This guide describes what a fresh clone actually initializes, what needs
-candidate input, and where an agent or developer can help. An agent is optional:
-a technically experienced user can do the same configuration work. Candidate
-confirmation and portal challenges cannot be replaced by inferred answers.
+本指南说明全新 clone 会初始化什么、哪些内容需要候选人输入，以及 Agent 或开发者可以协助哪些工作。Agent 并非必需；具备技术经验的用户可以自行完成相同配置。候选人确认和门户验证步骤不能通过推断答案替代。
 
-## What bootstrap completes
+## bootstrap 会完成什么
 
-Read [AGENTS.md](../AGENTS.md) and [AGENT_HANDOFF.md](../AGENT_HANDOFF.md), then
-follow [installation](installation.md). Bootstrap creates a virtual environment,
-installs code, creates missing blank profile/evidence/keyword/credential files,
-validates structure, and runs synthetic tests. It preserves existing files.
-Blank required facts produce warnings; no-errors does not mean ready to apply.
+先阅读 [AGENTS.md](../AGENTS.md) 和 [AGENT_HANDOFF.md](../AGENT_HANDOFF.md)，再遵循[安装指南](installation.md)。bootstrap 会创建虚拟环境、安装代码、创建缺少的空白 profile/evidence/keyword/credential 文件、验证结构并运行合成测试。它会保留已有文件。必填事实为空时会发出警告；没有错误并不代表已可申请。
 
-Bootstrap does not create a populated resume, select suitable sources, tune
-career preferences, initialize production job history, grant institutional
-access, log in to employers, or configure SSH sharing, SMTP or a scheduler.
-The optional browser install does not choose or authenticate a browser profile.
-The shipped runtime currently selects Windows CDP; Linux-only users must
-deliberately choose `local_persistent` in their private override.
+bootstrap 不会生成完整简历、选择合适来源、调整职业偏好、初始化生产职位历史、授予机构访问权限、登录雇主门户、配置 SSH 共享、SMTP 或调度器。可选浏览器安装不会选择或验证浏览器 profile。目前附带的 runtime 选择 Windows CDP；仅用 Linux 的用户需在私有覆盖中主动选择 `local_persistent`。
 
-## Who configures what
+## 各项由谁配置
 
-| Area | Existing input or tool | Agent/developer assistance | Candidate or operator must supply |
+| 项目 | 现有输入或工具 | Agent/开发者可协助 | 候选人或操作者必须提供 |
 | --- | --- | --- | --- |
-| Private storage and machine role | `JOBBOT_PRIVATE_DIR`, `private_paths.py`, `jobbot-private paths` | Select paths, permissions, backups and local/SSH role | Storage destination and authorized machines |
-| Identity, education and dates | `profiles/application_profile.json` | Organize provided facts; check duplicates and formats | Legal identity, contacts, degree/GPA and confirmed graduation dates |
-| Skills and evidence | `cv/profile/evidence_profile.json`, `application_keywords.json` | Map verified work to evidence groups, source IDs and keywords | Actual experience, source documents and explicit limits |
-| Work permission, sponsorship and consent | Profile authorization and exact private answers | Preserve unresolved answers; check portal wording and location scope | Region-specific facts and each required policy decision |
-| Career preferences and sources | Private `job_bot.local.json` overlays for `sources`, `scoring`, `strategy` | Translate preferences into consumed settings; disable unsuitable sources; preview a small run | Roles, regions, cycle, availability and exclusions |
-| New regions, years or professions | Existing three strategy tracks and hardware classifiers | Adapt code and tests if existing tracks cannot express the preference | Desired scope and review of qualification rules |
-| Institutional channels | Source definitions and session preflight | Configure a supported source or implement a new adapter | Legitimate account/access, login and MFA |
-| Browser preparation | Browser extra, private `application_browser.mode`, `CHROME_CDP_URL` | Set up a dedicated profile, restricted CDP transport and routing | Login, CAPTCHA, MFA, recovery and policy choices |
-| LaTeX materials | Private `cv/source/current.tex`, shared `cv/latex/`, `cvbot` | Convert verified content to the expected layout, configure TeX, fix rendering | Approved claims, language, source material and final PDF review |
-| Manual HTML kit | `applybot manual-kit`, reviewed manifest and role `Application_Data.json` | Assemble factual answers, official URLs, PDF review hashes and attachments; render a new kit | Reviewed targets, approved PDFs and actual supporting documents |
-| Portal-specific preparation | Queue, batch, login-preflight and supported dispatcher | Learn the first real form; configure exact options or implement missing behavior | Unknown mandatory answers, limits and per-company consent |
-| Shared database | `jobbot-db configure`, `prepare-host`, `check` | Verify roles, deduplicate histories, prepare backups and SSH routing | Authorized host, existing SSH access and online availability |
-| Reports and SMTP | Workflow preview, weekly report, private `email` settings | Configure timezone/recipients and inspect dry-run output | Private credentials and explicit send authorization |
-| Recurring runs | Existing CLI plus OS scheduler | Create and verify scheduler/environment setup when requested | Desired timing and delivery authorization |
-| Continuation and submission records | Private handoff, manifest, progress export, `mark_submitted.py` | Match ranks/URLs, query the authoritative DB, record confirmed outcomes | Active job, actual receipt or explicit success confirmation |
+| 私有存储与机器角色 | `JOBBOT_PRIVATE_DIR`、`private_paths.py`、`jobbot-private paths` | 选择路径、权限、备份及本地/SSH 角色 | 存储位置及获授权的机器 |
+| 身份、教育和日期 | `profiles/application_profile.json` | 整理已提供事实；检查重复项和格式 | 法定身份、联系方式、学位/GPA 与确认的毕业日期 |
+| 技能与证据 | `cv/profile/evidence_profile.json`、`application_keywords.json` | 将已核实经历映射到证据组、来源 ID 和关键词 | 真实经历、来源文件及明确限制 |
+| 工作许可、签证赞助和同意 | 档案中的授权与精确私有答案 | 保留未解决答案；检查门户措辞和适用地点 | 地区事实及每项所需政策决定 |
+| 职业偏好与来源 | 私有 `job_bot.local.json` 覆盖中的 `sources`、`scoring`、`strategy` | 将偏好映射到实际读取的设置；停用不适合的来源；预览小规模运行 | 岗位、地区、招聘周期、可入职时间和排除条件 |
+| 新地区、年份或职业类别 | 现有三个策略轨道及硬件分类器 | 现有轨道无法表达偏好时修改代码和测试 | 期望范围及资格规则审查 |
+| 机构渠道 | 来源定义及会话预检 | 配置受支持来源或实现新适配器 | 合法账户/访问权限、登录与 MFA |
+| 浏览器准备 | browser extra、私有 `application_browser.mode`、`CHROME_CDP_URL` | 设置专用 profile、受限 CDP 传输和路由 | 登录、CAPTCHA、MFA、账户恢复及政策选择 |
+| LaTeX 材料 | 私有 `cv/source/current.tex`、共享 `cv/latex/`、`cvbot` | 将已核实内容转换为预期布局、配置 TeX、修复渲染 | 批准的声明、语言、来源材料和最终 PDF 审阅 |
+| 手动 HTML 投递包 | `applybot manual-kit`、已审阅 manifest 和逐岗 `Application_Data.json` | 汇总事实答案、官方 URL、PDF 审阅哈希及附件；生成新的投递包 | 已审阅目标、批准的 PDF 和实际支持文件 |
+| 门户专用准备 | 队列、批次、login-preflight 和受支持的 dispatcher | 学习雇主的首份真实表单；配置精确选项或实现缺失行为 | 未知必填答案、数量限制和逐公司同意 |
+| 共享数据库 | `jobbot-db configure`、`prepare-host`、`check` | 核实角色、去重历史、准备备份和 SSH 路由 | 获授权主机、已有 SSH 访问和在线可用性 |
+| 报告与 SMTP | 工作流预览、周报、私有 `email` 设置 | 配置时区/收件人并检查 dry-run 输出 | 私有凭据及明确发送授权 |
+| 定期运行 | 现有 CLI 和操作系统调度器 | 按要求创建并验证调度器/环境设置 | 运行时间和投递授权 |
+| 续接与提交记录 | 私有交接、manifest、进度导出、`mark_submitted.py` | 匹配排名/URL，查询权威数据库，记录已确认结果 | 当前岗位、实际回执或明确成功确认 |
 
-## Important implementation limits
+## 重要实现限制
 
-`career_preferences` records intent. Arbitrary extra preference keys are not
-automatically consumed by every command. The strategy report currently builds
-three named queues: China/Hong Kong campus, US new graduate, and US summer
-internship. It uses hardware-oriented patterns and recruiting-year logic.
-Adding another JSON track or geography label alone does not add its collector
-or report branch. Trace the consumer before claiming coverage.
+`career_preferences` 记录意向，但任意新增偏好键不会自动被每条命令读取。策略报告目前构建三个具名队列：中国/香港校园招聘、美国新毕业生、美国暑期实习。它使用偏硬件的模式和招聘年份逻辑。仅新增 JSON 轨道或地区标签不会新增采集器或报告分支。宣称覆盖能力前，应追踪实际消费该配置的代码。
 
-The authorization validator has first-class scopes for mainland China, Hong
-Kong and the United States. Other regions require preserved, explicitly
-confirmed private answers and portal-specific review; adding a country to an
-address field does not establish its work authorization.
+授权验证器目前对中国大陆、香港和美国设有一等范围。其他地区需要保留经明确确认的私有答案，并进行门户专用审查；地址字段中添加国家并不能证明工作许可。
 
-Original PDF/TXT/TeX intake, evidence-to-answer mapping, actual scoring fields
-and safe tailoring are described in [candidate onboarding](candidate-onboarding.md).
-`cvbot import-resume` preserves the original and creates a review draft and Agent
-task; image-only PDF needs visual reading/OCR. Normal CV and campaign generation
-now use the private evidence graduation date rather than a fixed recruiting-year
-override. Empty dates preserve the reviewed source. The old exported constant is
-compatibility-only; it is no longer automatically applied by these entry points.
+原始 PDF/TXT/TeX 导入、证据到答案映射、实际评分字段和安全定制方式见[候选人资料导入指南](candidate-onboarding.md)。`cvbot import-resume` 会保留原件并创建审阅草稿和 Agent 任务；仅含图片的 PDF 需要视觉阅读/OCR。一般简历和批次生成现在使用私有 evidence 中的毕业日期，不再固定覆盖招聘年份。日期为空时保留已审阅的源值。旧导出常量仅为兼容保留，这些入口不会再自动应用它。
 
-The standard HTML generator consumes an already assembled manifest and each
-role's `Application_Data.json`. It is not yet a one-command conversion from
-`batch_campaign.py` output. It verifies declared passed PDF review and hashes,
-but cannot perform that visual review or establish factual accuracy. Transcript
-official/unofficial labels and employer requirements still need review. Public
-example values never establish candidate eligibility.
+标准 HTML 生成器读取已组装的 manifest 和每个岗位的 `Application_Data.json`，目前尚不支持将 `batch_campaign.py` 输出一键转换为投递包。它会检查声明的 PDF 审阅状态和哈希，但无法代替视觉审阅或验证事实准确性。成绩单官方/非官方标记和雇主要求仍需复核。公开示例值不能证明候选人资格。
 
-Database sharing routes SQL to one online host. It does not sync private files,
-browser sessions or unsaved forms; there is no offline write/merge system.
-Use [the shared-database guide](shared-database.md) for migration and updates.
+数据库共享会将 SQL 路由到一台在线主机。它不会同步私有文件、浏览器会话或未保存表单；不支持离线写入或自动合并系统。迁移和更新方法见[共享数据库指南](shared-database.md)。
 
-## A bounded first run
+## 有边界的首次运行
 
-1. Choose one stable private root; create and validate blank files. Record facts
-   and unresolved questions before enabling application work.
-2. Create a private runtime override from `examples/job_bot.local.json`. Its
-   include path assumes the in-repository private layout; adjust that include
-   and `database.path` for an external root. Validate the composed file.
-3. Choose suitable sources and a supported strategy scope. Preview a small
-   HTTP-only workflow; check actual results and failures before expanding it.
-4. Initialize the intended database and run the reviewed workflow. In shared
-   mode, confirm that the host owns the only authoritative history first.
-5. Prepare a reviewed private resume and evidence profile. Learn one employer's
-   current form before preparing a batch. Keep final-submit guards false.
-6. Choose manual HTML delivery or supported agent-assisted form preparation.
-   Review the actual portal and submit personally; then record the confirmed
-   submission.
+1. 选择一个稳定的私有根目录；创建并验证空白文件。启用申请功能前，记录事实和待确认问题。
+2. 从 `examples/job_bot.local.json` 创建私有 runtime 覆盖。其 include 路径假定私有目录位于仓库内；外部目录时需调整 include 和 `database.path`。验证组合配置。
+3. 选择合适来源和受支持的策略范围。先预览小规模、仅 HTTP 工作流；检查实际结果和错误后再扩大范围。
+4. 初始化预期使用的数据库并运行已审阅工作流。共享模式下，先确认主机保存唯一权威历史。
+5. 准备已审阅的私有简历和证据档案。准备批次之前先了解一个雇主当前表单。保持最终提交保护为 false。
+6. 选择手动 HTML 投递或受支持的 Agent 辅助表单准备。检查实际门户并由本人提交，之后记录已确认结果。
 
-Commands accepting `--config` must receive the same private override. The
-Makefile's daily/weekly defaults do not automatically load arbitrary private
-settings. For example, after reviewing source selection:
+接受 `--config` 的命令必须传入同一个私有覆盖。Makefile 的 daily/weekly 默认入口不会自动载入任意私有设置。审阅来源选择后，例如：
 
 ```bash
 jobbot-config --config private_data/config/job_bot.local.json
@@ -105,22 +59,10 @@ python3 job_bot/run_modules.py --config private_data/config/job_bot.local.json \
   --workflow http_refresh --dry-run
 ```
 
-## Start a new agent conversation
+## 开始新的 Agent 对话
 
-A fresh clone describes tools and configuration contracts. It cannot recover
-private application history or browser-local progress from public templates.
-For an existing installation, read current canonical private files and the
-latest private continuation record after the repository contracts.
+全新 clone 提供工具和配置契约，但不能从公开模板恢复私有申请历史或浏览器本地进度。使用已有安装时，应在仓库契约之后读取当前规范私有文件和最新的私有续接记录。
 
-Each newly rendered manual kit includes its own `AGENT_HANDOFF.md`: bundle
-directory, original target count, manifest fingerprint, progress-key prefix and
-receipt rules. Its dashboard links that file and offers a copyable continuation
-prompt. An agent can use those pointers without old chat history, but must
-obtain the active job/export/receipt before treating progress as known. It must
-not replay old cleanup or material-generation steps.
+每个新渲染的手动投递包都包含自己的 `AGENT_HANDOFF.md`，其中记录包目录、原始目标数量、manifest 指纹、进度键前缀和回执规则。面板会链接该文件，并提供可复制的续接提示。Agent 可据此在没有旧聊天记录时定位资料，但在确认进度前必须获取当前岗位、导出或回执；不得重放旧的清理或材料生成步骤。
 
-Existing delivered bundles are not modified to add this feature. Keep their
-entry file address and localStorage keys, and use their existing private
-handoff. Only official receipt evidence or explicit success confirmation
-authorizes a new `submitted` record; progress exports do not automatically
-synchronize the database.
+已有投递包不会为加入此功能而修改。保留其入口文件地址和 localStorage 键，并使用现有私有交接说明。只有官方回执证据或明确成功确认才允许新增 `submitted` 记录；进度导出不会自动同步数据库。

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the human review/action queue for a no-submit campaign."""
+"""为禁止提交申请批次生成供人工审阅/操作的队列。"""
 
 from __future__ import annotations
 
@@ -25,40 +25,40 @@ DEFAULT_OUT = APPLICATION_OUTPUT
 
 ACTION = {
     "qr_login_policy_required": (
-        "Scan the Hotjob WeChat QR code and decide whether to accept the displayed privacy policy; "
-        "this single action can unlock all 40 Horizon/UNISOC roles."
+        "扫描 Hotjob 微信二维码，并决定是否接受显示的隐私政策；"
+        "仅此操作即可解锁 Horizon/UNISOC 的全部 40 个岗位。"
     ),
     "authentication_required": (
-        "Complete the named portal sign-in/account step in the dedicated Chrome. Workday tenants, "
-        "Apple, and Moore Threads use separate sessions."
+        "请在专用 Chrome 中完成相应门户登录/账户步骤。Workday 租户、"
+        "Apple 和 Moore Threads 使用独立会话。"
     ),
     "browser_form_started": (
-        "Review the open form. Moka still requires birth date and nationality; Infineon requires "
-        "country of residence and preferred start date. Do not press the final submit button yet."
+        "审阅已打开的表单。Moka 仍需出生日期和国籍；Infineon 需要"
+        "居住国家和期望入职日期。暂时不要点击最终提交按钮。"
     ),
     "profile_ready_final_only": (
-        "Review the MediaTek global profile. The site has no per-role draft: the next job action is "
-        "final submission, so tailored PDFs remain in the local review bundles."
+        "审阅 MediaTek 全局档案。该网站没有按岗位区分的草稿：下一步岗位操作将是"
+        "最终提交，因此定制 PDF 仍保留在本地审阅材料包中。"
     ),
-    "captcha_required": "Complete each AMD hCaptcha; email and AMD privacy consent are already filled.",
+    "captcha_required": "完成每个 AMD hCaptcha；邮箱和 AMD 隐私同意已填写。",
     "policy_consent_required": (
-        "Review and explicitly authorize or decline the TI policy/consent screen before automation continues."
+        "自动化继续前，请审阅 TI 政策/同意页面并明确选择授权或拒绝。"
     ),
     "account_creation_required": (
-        "Create a Qualcomm candidate account or sign in with Google; the authorized email is already entered."
+        "创建 Qualcomm 候选人账户或使用 Google 登录；已填写获授权的邮箱。"
     ),
     "external_redirect_unresolved": (
-        "Open the employer's real destination manually. JobsDB only recorded an external-site visit and did "
-        "not send an application."
+        "请手动打开雇主的实际目标网站。JobsDB 仅记录了外部网站访问，"
+        "并未提交申请。"
     ),
     "job_detail_unresolved": (
-        "Repair the current Alibaba position-detail URL mapping; the stored links now open the general job list."
+        "修复当前 Alibaba 职位详情网址映射；已存储的链接目前会打开通用职位列表。"
     ),
     "profile_repair_required": (
-        "Repair or recreate the Shixiseng online resume; its current completion link resolves to /resume/undefined."
+        "修复或重新创建实习僧在线简历；当前完善资料链接会跳转到 /resume/undefined。"
     ),
-    "portal_unreachable": "Repair the Kunlunxin Zhiye detail route, which currently opens a blank page.",
-    "draft_saved": "Review the saved NVIDIA server draft; no final submission has occurred.",
+    "portal_unreachable": "修复昆仑芯科技职位详情路由；该路由当前打开空白页面。",
+    "draft_saved": "审阅已保存的 NVIDIA 服务器草稿；尚未最终提交。",
 }
 
 PRIORITY = {
@@ -98,13 +98,13 @@ def main() -> None:
     for row in rows:
         groups[row["status"]].append(row)
     lines = [
-        f"# Campaign {args.campaign_id} review actions",
+        f"# 批次 {args.campaign_id} 审阅操作",
         "",
-        f"Generated: {datetime.now().astimezone().isoformat(timespec='seconds')}",
+        f"生成时间：{datetime.now().astimezone().isoformat(timespec='seconds')}",
         "",
-        f"Total roles: {len(rows)}. Final submissions: 0.",
+        f"岗位总数：{len(rows)}。最终提交数：0。",
         "",
-        "Every role has tailored resume and cover-letter PDFs. Browser/server progress is listed below.",
+        "每个岗位均有定制简历和求职信 PDF。浏览器/服务器进度见下方。",
         "",
     ]
     for status in sorted(groups, key=lambda value: PRIORITY.get(value, 99)):
@@ -113,9 +113,9 @@ def main() -> None:
             [
                 f"## {status} ({len(items)})",
                 "",
-                ACTION.get(status, "Review this state manually."),
+                ACTION.get(status, "请人工审阅此状态。"),
                 "",
-                "| Rank | App | Company | Role | Location |",
+                "| 序号 | 申请 | 公司 | 职位 | 地点 |",
                 "|---:|---:|---|---|---|",
             ]
         )

@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_beta/main/schemas/application-profile.schema.json",
-  "title": "Application profile",
-  "description": "Candidate facts and explicitly reviewed application answers. Keep this file private.",
+  "$id": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_zh/main/schemas/application-profile.schema.json",
+  "title": "申请者档案",
+  "description": "候选人事实与已明确审阅的申请答案。此文件应保存在私有目录中。",
   "type": "object",
   "required": ["schema_version", "fields", "documents", "safety"],
   "properties": {
-    "schema_version": {"const": 1, "description": "Profile format version."},
+    "schema_version": {"const": 1, "description": "档案格式版本。"},
     "fields": {
       "type": "object",
-      "description": "Stable identity and contact values. Blank means unknown; it must not be inferred.",
+      "description": "稳定的身份与联系信息。留空表示未知，不得推断。",
       "properties": {
         "how_did_you_hear": {"oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
         "previous_nvidia_worker": {"type": ["boolean", "null"]},
@@ -25,7 +25,7 @@
         "city": {"type": "string"},
         "postal_code": {"type": "string"},
         "country": {"type": "string"},
-        "date_of_birth": {"type": "string", "description": "Use YYYY-MM-DD or leave blank."},
+        "date_of_birth": {"type": "string", "description": "使用 YYYY-MM-DD 格式，或留空。"},
         "linkedin_url": {"type": "string"},
         "github_url": {"type": "string"}
       },
@@ -33,7 +33,7 @@
     },
     "documents": {
       "type": "object",
-      "description": "Default private document paths; per-job profiles may override them.",
+      "description": "默认私有材料路径；单个岗位档案可以覆盖。",
       "properties": {
         "resume_path": {"type": "string"},
         "cover_letter_path": {"type": "string"}
@@ -47,19 +47,19 @@
     "skills": {"type": "array", "items": {"type": "string"}},
     "workday_checkbox_groups": {
       "type": "object",
-      "description": "Portal option groups keyed by logical group name. Values must be reviewed exact labels.",
+      "description": "按逻辑组名称索引的门户选项组。值必须是已审阅的准确标签。",
       "additionalProperties": {"type": "array", "items": {"type": "string"}}
     },
     "custom_answers": {
       "type": "object",
-      "description": "Exact portal question text mapped to a reviewed answer. Null means unanswered.",
+      "description": "将门户中的确切问题文本映射到已审阅答案。null 表示尚未回答。",
       "additionalProperties": {"type": ["string", "boolean", "number", "null"]}
     },
-    "answer_rules": {"type": "array", "description": "Pattern-based reviewed answers for wording variants.", "items": {"type": "object"}},
+    "answer_rules": {"type": "array", "description": "针对不同措辞变体的基于模式的已审阅答案。", "items": {"type": "object"}},
     "voluntary_disclosures": {"type": "object"},
     "explicit_authorization": {
       "type": "object",
-      "description": "User-confirmed work authorization scope. Residence country is not authorization.",
+      "description": "用户确认的工作授权范围。居住国家不代表拥有工作授权。",
       "properties": {
         "user_confirmed": {"type": "boolean"},
         "location_scopes": {"type": "array", "items": {"enum": ["mainland_china", "hong_kong", "united_states"]}},
@@ -72,7 +72,7 @@
     "career_preferences": {"type": "object"},
     "personal_facts_confirmation": {
       "type": "object",
-      "description": "Optional dated provenance for candidate-confirmed facts that do not yet have a first-class field."
+      "description": "可选的带日期来源记录，用于保存经候选人确认但尚无专用字段的事实。"
     },
     "safety": {
       "type": "object",
@@ -80,7 +80,7 @@
       "properties": {
         "allow_sensitive_answers": {"type": "boolean"},
         "allow_server_draft": {"type": "boolean"},
-        "allow_submit": {"const": false, "description": "The shared automation contract never enables final submission."}
+        "allow_submit": {"const": false, "description": "共享自动化约定始终禁止最终提交。"}
       },
       "additionalProperties": false
     }

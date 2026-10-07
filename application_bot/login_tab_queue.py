@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Open only session pages that the latest config-driven audit flagged."""
+"""仅打开最近一次基于配置的审计标记出的会话页面。"""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ def latest_audit() -> Path:
     candidates = sorted(APPLICATION_OUTPUT.glob("session_audit_*.json"))
     if not candidates:
         raise SystemExit(
-            "No session audit exists; run application_bot/session_audit.py first"
+            "尚无会话审计结果；请先运行 application_bot/session_audit.py"
         )
     return candidates[-1]
 
@@ -52,7 +52,7 @@ def main() -> int:
     config = load_config(args.config)
     mode, cdp_url = resolve_browser_connection(config)
     if mode != "windows_cdp":
-        raise SystemExit("login queue requires application_browser.mode=windows_cdp")
+        raise SystemExit("登录队列需要 application_browser.mode=windows_cdp")
     audit_path = args.audit or latest_audit()
     payload = json.loads(audit_path.read_text(encoding="utf-8"))
     targets = [

@@ -160,7 +160,7 @@ class BrowserConnectionConfigTests(unittest.TestCase):
     def test_workday_blocks_legal_answers_without_confirmed_job_scope(self) -> None:
         question = "Are you legally authorized to work in the country where this position is located?"
         profile = {
-            "fields": {"country": "China"},  # Residence cannot authorize a US job.
+            "fields": {"country": "China"},  # 居住地不能作为在美国工作的资格证明。
             "custom_answers": {question: "Yes"},
             "explicit_authorization": {
                 "user_confirmed": True,

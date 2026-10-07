@@ -39,7 +39,7 @@ class PlatformAuditTests(unittest.TestCase):
             visible_file_inputs=0,
         )
         self.assertEqual(state, "captcha_or_consent_required")
-        self.assertIn("Human", action)
+        self.assertIn("人工审阅", action)
 
     def test_mediatek_final_submit_is_not_draft(self) -> None:
         state, _, _ = classify_portal(

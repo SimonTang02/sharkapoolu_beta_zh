@@ -205,7 +205,7 @@
         "priority": 50,
         "host_suffixes": ["career.huawei.com"],
         "dispatchable": false,
-        "session_probe": {"kind": "unsupported", "reason": "no stable read-only account endpoint is configured"},
+        "session_probe": {"kind": "unsupported", "reason": "未配置稳定的只读账户端点"},
         "supports_draft": false
       },
       {
@@ -242,7 +242,7 @@
         "priority": 60,
         "platforms": ["apple_jobs"],
         "host_suffixes": ["jobs.apple.com"],
-        "session_probe": {"kind": "unsupported", "reason": "Apple ID state cannot be proven from a job detail without starting an application"},
+        "session_probe": {"kind": "unsupported", "reason": "不启动申请流程就无法通过职位详情证明 Apple ID 登录状态"},
         "supports_draft": false
       },
       {

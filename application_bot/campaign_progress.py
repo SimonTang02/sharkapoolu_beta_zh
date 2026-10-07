@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Update and render no-submit campaign progress."""
+"""更新并呈现禁止提交申请批次的进度。"""
 
 from __future__ import annotations
 
@@ -87,18 +87,18 @@ def render(conn: sqlite3.Connection, campaign_id: int) -> str:
     counts = Counter(row["status"] for row in rows)
     submitted_count = counts.get("submitted", 0)
     submission_summary = (
-        f"{submitted_count} application(s) in this report are marked as finally submitted."
+        f"本报告中有 {submitted_count} 份申请标记为已最终提交。"
         if submitted_count
-        else "No application in this report has been finally submitted."
+        else "本报告中的申请均未最终提交。"
     )
     lines = [
-        f"# Campaign {campaign_id} application progress",
+        f"# 批次 {campaign_id} 申请进度",
         "",
-        f"Generated: {datetime.now().astimezone().isoformat(timespec='seconds')}",
+        f"生成时间：{datetime.now().astimezone().isoformat(timespec='seconds')}",
         "",
         submission_summary,
         "",
-        "## Status counts",
+        "## 状态计数",
         "",
     ]
     for status, count in sorted(counts.items()):
@@ -106,9 +106,9 @@ def render(conn: sqlite3.Connection, campaign_id: int) -> str:
     lines.extend(
         [
             "",
-            "## Applications",
+            "## 申请记录",
             "",
-            "| # | Company | Role | Location | Status | Resume/CL | Note |",
+            "| 序号 | 公司 | 职位 | 地点 | 状态 | 简历/求职信 | 备注 |",
             "|---:|---|---|---|---|:---:|---|",
         ]
     )
@@ -156,11 +156,11 @@ def main() -> None:
     sync_application_statuses(conn, args.campaign_id)
     if args.set_company:
         if not args.status:
-            raise SystemExit("--status is required with --set-company")
+            raise SystemExit("使用 --set-company 时必须同时提供 --status")
         count = set_company_status(
             conn, args.campaign_id, args.set_company, args.status, args.note
         )
-        print(f"Updated {count} campaign jobs")
+        print(f"已更新批次中的 {count} 个岗位")
     output = (
         Path(args.output)
         if args.output

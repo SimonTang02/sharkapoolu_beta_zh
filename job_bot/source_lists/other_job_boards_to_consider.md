@@ -1,49 +1,49 @@
-# Other Job Boards to Consider
+# 可进一步考虑的招聘网站
 
-This is a watchlist for future adapters. The goal is not to add every source immediately, but to prioritize sources that are useful for China/Hong Kong/US hardware, semiconductor, EDA, digital IC, analog IC, verification, and computer-architecture roles.
+这是未来适配器的观察清单。目标不是立即接入所有来源，而是优先考虑对中国大陆/香港/美国硬件、半导体、EDA、数字 IC、模拟 IC、验证和计算机架构岗位有帮助的来源。
 
-## Mainland China
+## 中国大陆
 
-| Platform | Best use | Bot priority | Notes |
+| 平台 | 适用场景 | 机器人优先级 | 说明 |
 | --- | --- | --- | --- |
-| 智联招聘 / Zhaopin | General full-time and campus roles | Medium | Broad coverage; likely noisy, but useful for larger employers and manufacturing/semiconductor hiring. |
-| 前程无忧 / 51job | General full-time, campus, lower-tier cities | Medium | Useful for traditional electronics/manufacturing companies. |
-| 猎聘 / Liepin | Experienced full-time roles | Low for internships, medium for full-time | Better for senior/experienced hiring than intern search. |
-| 脉脉 / Maimai | Company discovery, referrals, passive opportunities | Low as crawler, high as manual reference | Social/network-heavy; better for finding people and hidden opportunities than pure scraping. |
-| 牛客 / Nowcoder | Campus recruiting and written-test prep | Medium | Useful for 校招/实习 information, especially tech-campus cycles. |
-| 应届生求职网 / Yingjiesheng | Campus recruiting | Medium | Often useful for campus timelines and announcements. |
-| 海投网 / Haitou | Campus recruiting aggregator | Medium | Good for school-year pipelines, but needs duplicate control. |
+| 智联招聘 / Zhaopin | 一般全职与校园招聘 | 中等 | 覆盖广，噪声可能较多，但适合大型雇主及制造/半导体招聘。 |
+| 前程无忧 / 51job | 一般全职、校园招聘及较低线城市 | 中等 | 适合传统电子/制造企业。 |
+| 猎聘 / Liepin | 有经验的全职岗位 | 实习优先级低，全职中等 | 更适合资深/有经验岗位，而非实习搜索。 |
+| 脉脉 / Maimai | 公司发现、内推和被动机会 | 爬取优先级低，人工参考优先级高 | 以社交/人脉为主，适合找人和隐藏机会，不适合单纯爬取。 |
+| 牛客 / Nowcoder | 校园招聘和笔试准备 | 中等 | 可发现校招/实习信息，尤其适用于科技类校园招聘周期。 |
+| 应届生求职网 / Yingjiesheng | 校园招聘 | 中等 | 常可用于了解校园招聘时间线和公告。 |
+| 海投网 / Haitou | 校园招聘 aggregator | 中等 | 适合学年招聘渠道，但需控制重复项。 |
 
-## Hong Kong
+## 香港
 
-| Platform | Best use | Bot priority | Notes |
+| 平台 | 适用场景 | 机器人优先级 | 说明 |
 | --- | --- | --- | --- |
-| JIJIS | University-vetted internships and graduate roles | High if account access is available | Good quality for Hong Kong students; usually requires eligible university login. |
-| CUHK CU Careers / CU Job Link | CUHK student/fresh-grad postings and campus events | High if account access works | CPDC portal/app can expose job postings; CUHK Login may require 2FA/DUO, so cookie/session export is likely safer than raw password automation. |
-| CTgoodjobs | Local Hong Kong full-time roles | Medium | Good broad local board; may include engineering/technology roles. |
-| CPJobs | Professional roles | Medium | Useful for Hong Kong professional and mid-level roles. |
-| LinkedIn Jobs | Multinational companies, referrals | High as manual/alert source | Strong for foreign companies and networking; login/API limits mean email alerts or saved searches may be safer. |
-| Indeed Hong Kong | Aggregated postings | Medium | Good breadth; duplicates need handling. |
-| eFinancialCareers | Finance/quant/fintech hardware-adjacent roles | Low for IC, medium for quant/finance | Useful only if widening target direction. |
+| JIJIS | 大学审核的实习和毕业生岗位 | 若可访问账户则优先级高 | 对香港学生质量较高；通常需符合资格的大学账号登录。 |
+| CUHK CU Careers / CU Job Link | CUHK 学生/应届职位和校园活动 | 账户可用时高 | CPDC 门户/应用可能提供职位；CUHK Login 可能需要 2FA/DUO，因此使用 cookie/session 导出通常比自动输入原始密码安全。 |
+| CTgoodjobs | 香港本地全职岗位 | 中等 | 本地综合网站，可能包含工程/科技岗位。 |
+| CPJobs | 专业岗位 | 中等 | 适合香港专业及中级岗位。 |
+| LinkedIn Jobs | 跨国公司和内推 | 作为人工/提醒来源时优先级高 | 适合寻找外企与职业联系；受登录/API 限制，邮件提醒或保存的搜索可能更稳妥。 |
+| Indeed Hong Kong | 聚合职位 | 中等 | 覆盖较广；需要处理重复职位。 |
+| eFinancialCareers | 金融/量化/金融科技及硬件相关岗位 | IC 岗位优先级低，量化/金融岗位中等 | 仅在扩大目标方向时有用。 |
 
-## United States
+## 美国
 
-| Platform | Best use | Bot priority | Notes |
+| 平台 | 适用场景 | 机器人优先级 | 说明 |
 | --- | --- | --- | --- |
-| LinkedIn Jobs | Big tech, semiconductor, networking/referrals | High as manual/alert source | Best combined with saved searches and email alerts. |
-| Indeed | Broad job aggregation | Medium | Very broad; useful with strict filters and dedupe. |
-| Handshake | University internships/new-grad roles | High if school account access is available | Strong for internships and campus roles. |
-| Simplify | Internship/new-grad tracking and autofill workflow | High for manual workflow | Useful for application management; check integration constraints before automation. |
-| RippleMatch | Early-career matching | Medium | Better for early-career pipeline than raw scraping. |
-| Wellfound | Startups | Medium | Good for smaller chip/AI hardware startups when target is broadened. |
-| Otta / Welcome to the Jungle | Curated tech roles | Low to medium | More software/product heavy; still useful for some hardware-adjacent startups. |
-| Built In | US tech companies by region | Medium | Useful for city-specific searches. |
-| USAJobs | Government/research lab roles | Low for private IC internships | Useful only for government/public-sector paths. |
+| LinkedIn Jobs | 大型科技公司、半导体、职业联系/内推 | 作为人工/提醒来源时优先级高 | 最好配合保存搜索和邮件提醒使用。 |
+| Indeed | 广泛职位聚合 | 中等 | 范围很广；需严格筛选和去重。 |
+| Handshake | 大学实习/应届毕业生岗位 | 若可访问学校账户则优先级高 | 适合实习和校园岗位。 |
+| Simplify | 实习/应届岗位跟踪和自动填表流程 | 手动工作流优先级高 | 适合申请管理；自动化前检查集成限制。 |
+| RippleMatch | 早期职业匹配 | 中等 | 更适合早期职业招聘渠道，不适合直接爬取。 |
+| Wellfound | 初创公司 | 中等 | 扩大目标范围时，适合寻找较小的芯片/AI 硬件初创公司。 |
+| Otta / Welcome to the Jungle | 精选科技岗位 | Low to medium | 偏软件/产品，但对部分硬件相关初创公司仍有帮助。 |
+| Built In | 按地区检索美国科技公司 | 中等 | 适合按城市搜索。 |
+| USAJobs | 政府/研究实验室岗位 | 私营 IC 实习优先级低 | 仅适用于政府/公共部门路径。 |
 
-## Recommended next adapters
+## 建议优先实现的后续适配器
 
-1. JIJIS, if your school access works and you want Hong Kong student-vetted roles.
-2. Handshake, if your Penn access exposes hardware/semiconductor internships.
-3. LinkedIn saved-search email ingestion, because direct scraping is fragile but email alerts are stable.
-4. Zhaopin/51job for mainland full-time/campus breadth.
-5. Simplify for application tracking/autofill support, not blind auto-submit.
+1. 若学校账号可用且希望寻找经香港学生渠道审核的岗位，优先接入 JIJIS。
+2. 若 Penn 账号可查看硬件/半导体实习，接入 Handshake。
+3. 接入 LinkedIn 保存搜索邮件，因为直接爬取不稳定，邮件提醒较稳定。
+4. 接入智联招聘/前程无忧，扩大中国大陆全职/校园招聘覆盖。
+5. 将 Simplify 用于申请跟踪/自动填表支持，不得盲目自动提交。

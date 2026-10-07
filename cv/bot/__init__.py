@@ -1,2 +1,2 @@
-"""Truthful resume-evidence matching and cover-letter drafting."""
+"""真实简历证据匹配与求职信起草工具。"""
 

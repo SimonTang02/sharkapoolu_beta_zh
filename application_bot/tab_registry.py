@@ -1,4 +1,4 @@
-"""Persistent mapping between application records and browser tabs."""
+"""申请记录与浏览器标签页之间的持久映射。"""
 
 from __future__ import annotations
 
@@ -59,15 +59,15 @@ def canonical_url(url: str) -> str:
 
 
 def job_fingerprint(url: str) -> str:
-    """Extract a stable job identity across detail/apply/login URL variants."""
+    """从详情/申请/登录网址变体中提取稳定的岗位标识。"""
     parts = urllib.parse.urlsplit(url.strip())
     host = (parts.hostname or "").casefold()
     query = dict(urllib.parse.parse_qsl(parts.query))
     for key in ("jobId", "postId", "positionId", "pid", "job_id"):
         if query.get(key):
-            # Eightfold uses /careers/job/<id> for the detail page and
-            # /careers/apply?pid=<id> for every subsequent application step.
-            # Treat those two representations as one durable job identity.
+            # Eightfold 详情页使用 /careers/job/<id>，
+            # 后续申请步骤使用 /careers/apply?pid=<id>。
+            # 将这两种形式视为同一个持久岗位标识。
             label = (
                 "job"
                 if key == "pid" and "/careers/apply" in parts.path.casefold()

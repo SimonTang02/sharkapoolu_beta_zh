@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Inspect visible controls in an already-open application portal.
+"""检查已打开申请门户中的可见控件。
 
-The probe deliberately omits field values so it can be used without leaking
-contact details or credentials into terminal logs.
+探查器有意省略字段值，因此使用时不会将联系方式或凭据泄露到终端日志中。
 """
 
 from __future__ import annotations
@@ -34,11 +33,11 @@ def short(value: str | None, limit: int = 180) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("host", help="hostname substring of the open page")
+    parser.add_argument("host", help="已打开页面的主机名子串")
     parser.add_argument(
         "--application-id",
         type=int,
-        help="Select the registered tab label jobbot-application-ID",
+        help="选择已登记的标签名称 jobbot-application-ID",
     )
     parser.add_argument("--config", default=str(ROOT / "job_bot/config.china_hk_ic_foreign.json"))
     parser.add_argument("--env", default=str(CREDENTIALS_FILE))
@@ -47,26 +46,26 @@ def main() -> None:
     parser.add_argument(
         "--full-page-screenshot",
         action="store_true",
-        help="Capture the whole document, expanding SPA scroll containers when possible.",
+        help="捕获整个文档；如可行，展开单页应用的滚动容器。",
     )
     parser.add_argument(
         "--preserve-scroll",
         action="store_true",
-        help="Keep the current section in view for a viewport screenshot.",
+        help="将当前分区保持在视口内并截取视口图像。",
     )
     parser.add_argument("--parent-text", action="store_true")
     parser.add_argument("--ancestor-depth", type=int, default=1)
     parser.add_argument("--html", action="store_true")
-    parser.add_argument("--open-combobox", help="visible text of a combobox to open")
+    parser.add_argument("--open-combobox", help="要打开的组合框中可见文本")
     parser.add_argument("--combobox-index", type=int, default=0)
     parser.add_argument("--ancestors", action="store_true")
     parser.add_argument(
         "--list-options",
         action="store_true",
-        help="List options currently visible without opening or closing a control.",
+        help="列出当前可见的选项，不打开或关闭控件。",
     )
     parser.add_argument("--scroll-offset", type=int)
-    parser.add_argument("--click-button", help="open a non-final editor before probing")
+    parser.add_argument("--click-button", help="探查前打开非最终提交的编辑器")
     parser.add_argument("--button-index", type=int, default=0)
     parser.add_argument("--navigate-url")
     parser.add_argument("--all-pages", action="store_true")
@@ -81,34 +80,34 @@ def main() -> None:
     parser.add_argument("--selector-index", type=int, default=0)
     parser.add_argument(
         "--press-keys",
-        help="comma-separated keyboard keys to send after opening a control",
+        help="打开控件后要发送的逗号分隔按键",
     )
     parser.add_argument("--fill-selector")
     parser.add_argument("--fill-selector-value")
     parser.add_argument("--fill-selector-index", type=int, default=0)
     parser.add_argument(
         "--dom-click-text",
-        help="dispatch a DOM click to the deepest exact-text element",
+        help="对文本完全匹配且层级最深的 DOM 元素触发点击",
     )
     parser.add_argument("--text-index", type=int, default=-1)
     parser.add_argument("--click-link")
     parser.add_argument(
         "--press-link",
-        help="Focus a visible accessible link and activate it with Enter",
+        help="聚焦可见且可访问的链接，并按 Enter 激活",
     )
     parser.add_argument(
         "--wait-after-ms",
         type=int,
         default=700,
-        help="Wait after a requested click/navigation before probing the page",
+        help="执行请求的点击或导航后，等待一段时间再探查页面",
     )
-    parser.add_argument("--upload", help="local file to set on a file input")
+    parser.add_argument("--upload", help="要设置到文件输入框的本地文件")
     parser.add_argument("--upload-index", type=int, default=0)
-    parser.add_argument("--fill-placeholder", help="placeholder of one text field to fill")
-    parser.add_argument("--fill-value", help="value used with --fill-placeholder")
+    parser.add_argument("--fill-placeholder", help="要填写的一个文本框的占位文本")
+    parser.add_argument("--fill-value", help="与 --fill-placeholder 配合使用的值")
     parser.add_argument(
         "--inspect-text",
-        help="print value-free DOM metadata for elements whose visible text matches",
+        help="输出可见文本匹配元素的不含值的 DOM 元数据",
     )
     args = parser.parse_args()
 
@@ -127,7 +126,7 @@ def main() -> None:
         if not pages and args.navigate_url:
             pages = [browser.contexts[0].new_page()]
         if not pages:
-            raise SystemExit(f"No open page matching host substring: {args.host}")
+            raise SystemExit(f"没有已打开页面匹配主机名子串： {args.host}")
         if args.application_id is not None:
             label = f"jobbot-application-{args.application_id}"
             matching_pages = []
@@ -139,7 +138,7 @@ def main() -> None:
                     continue
             if not matching_pages:
                 raise SystemExit(
-                    f"No open page matching application label: {label}"
+                    f"没有已打开页面匹配申请标签名称： {label}"
                 )
             pages = matching_pages
         if args.all_pages:
@@ -153,11 +152,11 @@ def main() -> None:
         if args.upload:
             upload_path = Path(args.upload).expanduser().resolve()
             if not upload_path.is_file():
-                raise RuntimeError(f"Upload file does not exist: {upload_path}")
+                raise RuntimeError(f"上传文件不存在：{upload_path}")
             file_inputs = page.locator("input[type=file]")
             if file_inputs.count() <= args.upload_index:
                 raise RuntimeError(
-                    f"File input index {args.upload_index} is unavailable"
+                    f"文件输入框索引 {args.upload_index} 不可用"
                 )
             file_inputs.nth(args.upload_index).set_input_files(
                 str(upload_path), timeout=10_000
@@ -165,14 +164,14 @@ def main() -> None:
             page.wait_for_timeout(args.wait_after_ms)
         if args.fill_placeholder:
             if args.fill_value is None:
-                raise RuntimeError("--fill-placeholder requires --fill-value")
+                raise RuntimeError("--fill-placeholder 需要同时提供 --fill-value")
             fields = page.locator(
                 f"input[placeholder='{args.fill_placeholder}'], "
                 f"textarea[placeholder='{args.fill_placeholder}']"
             )
             if not fields.count():
                 raise RuntimeError(
-                    f"No field with placeholder: {args.fill_placeholder}"
+                    f"没有占位文本匹配的字段： {args.fill_placeholder}"
                 )
             fields.first.fill(args.fill_value)
             page.wait_for_timeout(args.wait_after_ms)
@@ -208,13 +207,13 @@ def main() -> None:
             )
             if not clicked:
                 raise RuntimeError(
-                    f"No exact DOM text matching: {args.dom_click_text}"
+                    f"没有 DOM 文本完全匹配： {args.dom_click_text}"
                 )
             page.wait_for_timeout(args.wait_after_ms)
         if args.fill_selector:
             if args.fill_selector_value is None:
                 raise RuntimeError(
-                    "--fill-selector requires --fill-selector-value"
+                    "--fill-selector 需要同时提供 --fill-selector-value"
                 )
             fill_targets = page.locator(args.fill_selector)
             visible_targets = [
@@ -224,7 +223,7 @@ def main() -> None:
             ]
             if len(visible_targets) <= args.fill_selector_index:
                 raise RuntimeError(
-                    f"Visible selector index {args.fill_selector_index} is unavailable: "
+                    f"可见选择器索引 {args.fill_selector_index} 不可用："
                     f"{args.fill_selector}"
                 )
             visible_targets[args.fill_selector_index].fill(
@@ -250,7 +249,7 @@ def main() -> None:
                 if matches.nth(index).is_visible()
             ]
             if not visible_matches:
-                raise RuntimeError(f"No visible text matching: {args.hover_text}")
+                raise RuntimeError(f"没有可见文本匹配： {args.hover_text}")
             visible_matches[-1].hover(timeout=5_000)
             page.wait_for_timeout(args.wait_after_ms)
         if args.hover_selector:
@@ -262,7 +261,7 @@ def main() -> None:
             ]
             if not visible_targets:
                 raise RuntimeError(
-                    f"No visible element matching selector: {args.hover_selector}"
+                    f"没有可见元素匹配选择器： {args.hover_selector}"
                 )
             visible_targets[0].hover(timeout=5_000)
             page.wait_for_timeout(args.wait_after_ms)
@@ -276,11 +275,11 @@ def main() -> None:
                 if matches.nth(index).is_visible()
             ]
             if not visible_matches:
-                raise RuntimeError(f"No visible text matching: {args.click_text}")
+                raise RuntimeError(f"没有可见文本匹配： {args.click_text}")
             index = args.text_index if args.text_index >= 0 else len(visible_matches) - 1
             if index >= len(visible_matches):
                 raise RuntimeError(
-                    f"Visible text index {index} is unavailable: {args.click_text}"
+                    f"可见文本索引 {index} 不可用：{args.click_text}"
                 )
             visible_matches[index].click(force=True, timeout=5_000)
             page.wait_for_timeout(args.wait_after_ms)
@@ -293,7 +292,7 @@ def main() -> None:
             ]
             if len(visible_targets) <= args.selector_index:
                 raise RuntimeError(
-                    f"Selector index {args.selector_index} is unavailable: "
+                    f"选择器索引 {args.selector_index} 不可用："
                     f"{args.click_selector}"
                 )
             visible_targets[args.selector_index].click(force=True, timeout=5_000)
@@ -321,14 +320,14 @@ def main() -> None:
             links = page.get_by_role("link", name=args.click_link, exact=False)
             visible_links = [links.nth(i) for i in range(links.count()) if links.nth(i).is_visible()]
             if not visible_links:
-                raise RuntimeError(f"No visible link matching: {args.click_link}")
+                raise RuntimeError(f"没有可见链接匹配： {args.click_link}")
             visible_links[0].click(timeout=5_000)
             page.wait_for_timeout(args.wait_after_ms)
         if args.press_link:
             links = page.get_by_role("link", name=args.press_link, exact=False)
             visible_links = [links.nth(i) for i in range(links.count()) if links.nth(i).is_visible()]
             if not visible_links:
-                raise RuntimeError(f"No visible link matching: {args.press_link}")
+                raise RuntimeError(f"没有可见链接匹配： {args.press_link}")
             visible_links[0].focus()
             visible_links[0].press("Enter", timeout=5_000)
             page.wait_for_timeout(args.wait_after_ms)
@@ -397,9 +396,9 @@ def main() -> None:
                         caret="hide",
                     )
                 except Exception:
-                    # Some extension-heavy Windows Chrome pages never settle for
-                    # Playwright's screenshot lifecycle. Raw CDP still captures the
-                    # rendered viewport without navigating or changing the form.
+                    # 某些装有大量扩展的 Windows Chrome 页面始终无法满足
+                    # Playwright 的截图流程。原始 CDP 仍可截取
+                    # 已渲染的视口，且不会导航或更改表单。
                     session = page.context.new_cdp_session(page)
                     captured = session.send(
                         "Page.captureScreenshot",
@@ -458,8 +457,8 @@ def main() -> None:
                     return
                 control = controls.nth(index)
                 try:
-                    # Hidden file inputs are often activated by a visible
-                    # upload button and remain valid Playwright upload targets.
+                    # 隐藏的文件输入框通常由可见的
+                    # 上传按钮触发，仍可作为 Playwright 的有效上传目标。
                     input_type = control.get_attribute("type") or ""
                     if not control.is_visible() and input_type != "file":
                         continue

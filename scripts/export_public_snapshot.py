@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export the audited working tree into a new history-free directory."""
+"""将已审计的工作树导出到不含历史记录的新目录。"""
 
 from __future__ import annotations
 
@@ -17,21 +17,21 @@ def main() -> None:
     parser.add_argument(
         "--init",
         action="store_true",
-        help="initialize an empty Git repository with main as its initial branch",
+        help="以 main 作为初始分支，初始化空 Git 仓库",
     )
     args = parser.parse_args()
 
     destination = args.destination.expanduser().resolve()
     if destination.exists():
-        raise SystemExit(f"Destination already exists: {destination}")
+        raise SystemExit(f"目标路径已存在： {destination}")
     if destination == ROOT or ROOT in destination.parents:
-        raise SystemExit("Destination must be outside the source repository")
+        raise SystemExit("目标路径必须位于源仓库之外")
 
     problems = audit_current_tree()
     if problems:
         for problem in sorted(set(problems)):
             print(problem)
-        raise SystemExit("Public audit failed; snapshot was not created")
+        raise SystemExit("公开仓库审计失败；未创建快照")
 
     paths = publishable_paths()
     destination.mkdir(parents=True)
@@ -47,7 +47,7 @@ def main() -> None:
             cwd=destination,
             check=True,
         )
-    print(f"Exported {len(paths)} files to {destination}")
+    print(f"已将 {len(paths)} 个文件导出到 {destination}")
 
 
 if __name__ == "__main__":

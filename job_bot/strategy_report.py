@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the 2027 campus, US new-grad, and US internship review queues."""
+"""生成 2027 年校园招聘、美国应届生职位和美国实习职位审阅队列。"""
 
 from __future__ import annotations
 
@@ -165,7 +165,7 @@ FOUNDATION_OVERRIDES = [
 
 
 def configure_strategy(config: dict) -> None:
-    """Apply the strategy section while preserving defaults for legacy configs."""
+    """应用策略配置，同时保留旧版配置的默认值。"""
     global FOUNDATIONS, CHINA_HK, UNITED_STATES, INTERNSHIP, EXPLICIT_2027
     global CAMPUS, SUMMER, SPRING_WINTER_ONLY, SENIOR, OFF_DIRECTION
     global MINIMUM_SCORE, TIER_A_SCORE, TIER_B_SCORE, CLASSIFICATION_PRIORITY, TRACKS
@@ -319,7 +319,7 @@ def foundation_override(title: str) -> tuple[str, int] | None:
 
 
 def is_verification_only(title: str) -> bool:
-    """Conservatively hold verification-titled roles for explicit human override."""
+    """对职位名称含 verification 的岗位采取保守处理，等待人工明确覆盖。"""
     return EXCLUDE_VERIFICATION_ONLY and bool(VERIFICATION_TITLE.search(title))
 
 
@@ -336,7 +336,7 @@ def us_new_grad_signal(title: str, text: str, source: str) -> tuple[bool, str]:
 
 
 def hard_limit_capacity(conn: sqlite3.Connection) -> dict[str, dict[str, int]]:
-    """Return remaining employer/category slots in the current recruiting window."""
+    """返回当前招聘窗口内雇主/类别剩余的申请名额。"""
     today = dt.date.today().isoformat()
     result: dict[str, dict[str, int]] = {}
     for limit in conn.execute(
@@ -658,7 +658,7 @@ def render_section(title: str, items: list[Candidate]) -> list[str]:
 def sync_strategy_reviews(
     conn: sqlite3.Connection, config: dict, candidates: list[Candidate]
 ) -> str:
-    """Atomically replace the review queue without changing jobs or applications."""
+    """原子替换审阅队列，不修改职位或申请记录。"""
     policy = json.dumps(config.get("strategy", {}), sort_keys=True, ensure_ascii=False)
     policy_hash = hashlib.sha256(policy.encode("utf-8")).hexdigest()
     now = dt.datetime.now(dt.timezone.utc).isoformat()
@@ -695,19 +695,19 @@ def sync_strategy_reviews(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
-    parser.add_argument("--db", type=Path, help="Override the configured database path")
+    parser.add_argument("--db", type=Path, help="覆盖配置中的数据库路径")
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
     parser.add_argument(
         "--sync-db", action="store_true",
-        help="Replace the DB review queue; never changes jobs or application statuses",
+        help="替换数据库中的审阅队列；不会更改职位或申请状态",
     )
     parser.add_argument(
         "--since",
-        help="Only include jobs first discovered on or after this ISO timestamp",
+        help="仅包含在此 ISO 时间戳当天或之后首次发现的职位",
     )
     args = parser.parse_args()
     if args.sync_db and args.since:
-        parser.error("--sync-db requires a full snapshot without --since")
+        parser.error("--sync-db 要求使用完整快照，不能同时指定 --since")
 
     config = load_config(args.config)
     configure_strategy(config)

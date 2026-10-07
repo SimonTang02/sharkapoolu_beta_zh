@@ -1,4 +1,4 @@
-name: Core platform smoke
+name: 核心组件跨平台冒烟检查
 on:
   push:
   pull_request:
@@ -19,17 +19,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install core and PDF extra
+      - name: 安装核心组件与 PDF 扩展
         run: python -m pip install -e ".[resume]"
-      - name: Initialize and check blank private templates
+      - name: 初始化并检查空白私有模板
         run: |
           python -m job_bot.private_config init
           python -m job_bot.private_config check
           python -m job_bot.easy_cli check
-      - name: Test intake, manual database and material/template contracts
+      - name: 测试简历导入、手动数据库和材料/模板契约
         run: python -m unittest cv.test_resume_import job_bot.test_manual_database cv.bot.test_bot application_bot.test_manual_kit
-      - name: Exercise native PowerShell bootstrap
+      - name: 运行 PowerShell 原生初始化流程
         if: runner.os == 'Windows'
         shell: pwsh
         run: .\scripts\bootstrap.ps1 -WithResume
-      # Real accounts, portal submission, TeX rendering and SSH RPC are not smoke-tested here.
+      # 此处不对真实账户、门户提交、TeX 渲染或 SSH RPC 进行冒烟测试。

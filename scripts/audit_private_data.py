@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify that candidate values live only below the configured private root."""
+"""验证候选人信息仅存放在已配置的私有根目录下。"""
 
 from __future__ import annotations
 
@@ -123,7 +123,7 @@ def main() -> None:
         for path, label in leaks:
             print(f"PRIVATE_VALUE_OUTSIDE_PRIVATE_ROOT {path} marker={label}")
         raise SystemExit(1)
-    print(f"Private-data audit passed: private_root={PRIVATE_ROOT}")
+    print(f"私有数据审计通过：private_root={PRIVATE_ROOT}")
 
 
 if __name__ == "__main__":

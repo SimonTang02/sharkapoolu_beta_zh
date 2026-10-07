@@ -41,8 +41,8 @@ sudo apt update
 sudo apt install -y git python3 python3-venv
 mkdir -p ~/projects
 cd ~/projects
-git clone https://github.com/SimonTang02/sharkapoolu_beta.git
-cd sharkapoolu_beta
+git clone https://github.com/SimonTang02/sharkapoolu_zh.git
+cd sharkapoolu_zh
 ./scripts/bootstrap.sh --with-resume
 source .venv/bin/activate
 code .

@@ -1,4 +1,4 @@
-"""Validate beginner controls and translate them into existing runtime config."""
+"""验证入门模式控制项，并将其转换为现有运行时配置。"""
 from __future__ import annotations
 
 import copy
@@ -103,11 +103,11 @@ def compile_settings(base: dict, data: dict) -> dict:
         allowed = enabled_browser if uses_browser(source) else browser["HTTP采集"]
         if not allowed or not policy["enabled"] or not policy["modules"]["scan"]:
             source["enabled"] = False
-        # A regional subset is not a complete source snapshot for deactivation.
+        # 区域子集不构成完整来源快照，不能据此停用职位。
         source["sync_active"] = False
     result.setdefault("scan", {}).update(max_workers=browser["同时扫描来源数"], retry_attempts=browser["网络重试次数"], auto_start_windows_chrome=False)
     result.setdefault("application_browser", {})["auto_submit"] = False
-    result["application_browser"]["mode"] = "windows_cdp"  # Also used for our isolated built-in Chromium transport.
+    result["application_browser"]["mode"] = "windows_cdp"  # 内置的隔离 Chromium 传输也使用此项。
     result["application_browser"].setdefault("windows_cdp", {})["url_env"] = "CHROME_CDP_URL"
     policy["browser_enabled"] = enabled_browser
     policy["browser_transport"] = "builtin" if browser["浏览器选择"] == "内置" else "cdp"

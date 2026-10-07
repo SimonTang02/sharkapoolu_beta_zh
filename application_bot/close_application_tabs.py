@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Close only explicitly named application tabs after bounded evidence capture."""
+"""在限时采集证据后，仅关闭明确指定的申请标签页。"""
 
 from __future__ import annotations
 
@@ -33,19 +33,19 @@ def main() -> None:
         "--login-scope",
         action="append",
         default=[],
-        help="Close one exact jobbot-login-SCOPE tab after evidence capture.",
+        help="采集证据后关闭一个确切的 jobbot-login-SCOPE 标签页。",
     )
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
     parser.add_argument("--env", default=str(CREDENTIALS_FILE))
     args = parser.parse_args()
     if not args.application_ids and not args.login_scope:
-        raise SystemExit("Provide an application id or --login-scope")
+        raise SystemExit("请提供申请 ID 或 --login-scope")
 
     load_env_file(Path(args.env))
     config = load_config(Path(args.config))
     mode, cdp_url = resolve_browser_connection(config)
     if mode != "windows_cdp":
-        raise SystemExit("Exact tab cleanup requires windows_cdp mode")
+        raise SystemExit("精确清理标签页需要 windows_cdp 模式")
     conn = connect_db(config)
     requested = set(args.application_ids)
     known = set()
@@ -59,7 +59,7 @@ def main() -> None:
             )
         }
     if known != requested:
-        raise SystemExit(f"Unknown application ids: {sorted(requested - known)}")
+        raise SystemExit(f"未知的申请 ID： {sorted(requested - known)}")
 
     sync_playwright = _playwright_api()
     closed: list[int] = []
@@ -96,7 +96,7 @@ def main() -> None:
                     full_page=False,
                 )
             except Exception as exc:
-                print(f"SKIP {application_id}: evidence capture failed: {exc}")
+                print(f"跳过 {application_id}：采集证据失败：{exc}")
                 skipped.append(application_id)
                 continue
             page.close()
@@ -129,7 +129,7 @@ def main() -> None:
                     full_page=False,
                 )
             except Exception as exc:
-                print(f"SKIP {scope}: evidence capture failed: {exc}")
+                print(f"跳过 {scope}：采集证据失败：{exc}")
                 skipped_scopes.append(scope)
                 continue
             page.close()

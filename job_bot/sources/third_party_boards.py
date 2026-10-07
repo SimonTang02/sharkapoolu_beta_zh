@@ -1,9 +1,8 @@
-"""Adapters for third-party job boards.
+"""第三方招聘平台适配器。
 
-These adapters intentionally start conservative. The public pages for JobsDB,
-BOSS Zhipin, and Shixiseng are uneven and often dynamic; each adapter keeps the
-platform-specific assumptions in one place so stronger parsers or login/cookie
-flows can be added without changing the core bot.
+这些适配器有意采用保守的初始实现。JobsDB、BOSS Zhipin 和实习僧的公开页面差异较大，
+且经常动态变化；每个适配器都将平台专属假设集中在一处，便于后续增强解析器或添加
+登录/Cookie 流程，而无需修改核心程序。
 """
 
 from __future__ import annotations
@@ -30,4 +29,3 @@ def prepare_shixiseng_source(source: dict[str, Any]) -> dict[str, Any]:
     prepared.setdefault("timeout_seconds", 20)
     prepared.setdefault("platform_note", "Shixiseng public internship search page")
     return prepared
-

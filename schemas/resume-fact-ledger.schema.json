@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Private resume onboarding evidence ledger",
+  "title": "私有简历建档证据记录表",
   "type": "object",
   "required": ["schema_version", "source_documents", "facts", "keyword_proposals", "scoring_proposals", "unresolved_questions"],
   "properties": {

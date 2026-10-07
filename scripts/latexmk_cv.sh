@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
-  echo "usage: $0 /absolute/or/relative/path/to/resume.tex" >&2
+  echo "用法：$0 /absolute/or/relative/path/to/resume.tex" >&2
   exit 2
 fi
 

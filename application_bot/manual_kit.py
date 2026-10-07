@@ -1,4 +1,4 @@
-"""Render a reviewed, private application bundle as an offline manual kit."""
+"""将已审阅的私有申请材料包制作为离线手动申请包。"""
 
 from __future__ import annotations
 
@@ -34,10 +34,10 @@ def esc(value: object) -> str:
 def asset(root: Path, relative: str) -> Path:
     path = PurePosixPath(relative)
     if path.is_absolute() or ".." in path.parts or "\\" in relative or not path.parts:
-        raise ValueError("Material paths must be relative to the source bundle")
+        raise ValueError("材料路径必须相对于源材料包")
     resolved = (root / relative).resolve()
     if not resolved.is_relative_to(root.resolve()) or not resolved.is_file():
-        raise ValueError("A referenced material is missing or outside the bundle")
+        raise ValueError("引用的材料不存在或位于材料包之外")
     return resolved
 
 
@@ -45,7 +45,7 @@ def link(label: str, url: str, *, external: bool = False) -> str:
     if external:
         parsed = urlsplit(url)
         if parsed.scheme != "https" or not parsed.hostname or parsed.username:
-            raise ValueError("Application links must be HTTPS URLs without credentials")
+            raise ValueError("申请链接必须是无凭据的 HTTPS 网址")
         attrs = ' target="_blank" rel="noopener noreferrer"'
     else:
         url = quote(url, safe="/.")
@@ -94,30 +94,29 @@ def answer_sections(data: dict) -> str:
 
 
 def render_kit(manifest_path: Path, output: Path, progress_key: str) -> dict:
-    """Copy reviewed materials into a new private directory, preserving rank/order.
+    """将已审阅材料复制到新的私有目录，并保留原始序号/顺序。
 
-    Progress is always loaded from the user's browser; manifest status values do
-    not initialize it. This function never opens a portal or touches the database.
+    进度始终从用户的浏览器中读取；清单中的状态值不会初始化进度。此函数不会打开门户，也不会访问数据库。
     """
     if not re.fullmatch(r"[A-Za-z0-9_.:-]{1,120}", progress_key):
-        raise ValueError("Use an explicit, stable campaign progress key")
+        raise ValueError("请使用明确且稳定的批次进度键")
     source = manifest_path.resolve().parent
     output = output.resolve()
     if not output.is_relative_to(PRIVATE_ROOT.resolve()) or output == PRIVATE_ROOT.resolve():
-        raise ValueError("Output must be inside the canonical private root")
+        raise ValueError("输出必须位于规范私有根目录内")
     if output.exists():
-        raise FileExistsError("Output already exists; existing kits and progress must be preserved")
+        raise FileExistsError("输出目录已存在；必须保留现有材料包和进度")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
     jobs = manifest["jobs"]
     if not jobs:
-        raise ValueError("The manifest must contain at least one target")
+        raise ValueError("清单必须至少包含一个目标岗位")
     ranks = [j["rank"] for j in jobs]
     folders = [j["folder"] for j in jobs]
     if any(type(r) is not int or r < 1 for r in ranks) or len(set(ranks)) != len(ranks):
-        raise ValueError("Original ranks must be unique positive integers")
+        raise ValueError("原始序号必须是唯一的正整数")
     if len(set(folders)) != len(folders):
-        raise ValueError("Job folders must be unique")
+        raise ValueError("岗位文件夹名称必须唯一")
     copies: dict[str, Path] = {}
     rendered: dict[str, str] = {}
     cards = []
@@ -126,7 +125,7 @@ def render_kit(manifest_path: Path, output: Path, progress_key: str) -> dict:
     def include(relative: str, expected_hash: str | None = None) -> None:
         f = asset(source, relative)
         if expected_hash and hashlib.sha256(f.read_bytes()).hexdigest() != expected_hash:
-            raise ValueError("Material hash does not match the reviewed manifest")
+            raise ValueError("材料哈希与已审阅清单不匹配")
         copies[relative] = f
 
     for document in manifest.get("supporting_documents", []):
@@ -136,17 +135,17 @@ def render_kit(manifest_path: Path, output: Path, progress_key: str) -> dict:
     for job in jobs:
         rank, folder = job["rank"], job["folder"]
         if len(PurePosixPath(folder).parts) != 1 or folder in (".", "..") or "\\" in folder:
-            raise ValueError("Each job folder must be a single relative directory")
+            raise ValueError("每个岗位文件夹必须是单层相对目录")
         if job["role_kind"] not in ("full_time", "internship", "unknown"):
-            raise ValueError("Unrecognized role kind")
+            raise ValueError("无法识别的岗位类型")
         pdfs = job["pdfs"]
         if not pdfs:
-            raise ValueError("A job must have reviewed PDF materials")
+            raise ValueError("岗位必须包含已审阅的 PDF 材料")
         for pdf in pdfs:
             if PurePosixPath(pdf["pdf"]).suffix.lower() != ".pdf":
-                raise ValueError("Reviewed PDF entries must reference PDF files")
+                raise ValueError("已审阅的 PDF 条目必须指向 PDF 文件")
             if pdf.get("visual_review") != "passed":
-                raise ValueError("PDF materials require an explicit passed visual review")
+                raise ValueError("PDF 材料必须明确标记为视觉审阅通过")
             include(pdf["pdf"], pdf["sha256"])
         for filename in ROLE_FILES:
             relative = folder + "/" + filename
@@ -154,9 +153,9 @@ def render_kit(manifest_path: Path, output: Path, progress_key: str) -> dict:
                 include(relative)
         data = json.loads(asset(source, folder + "/Application_Data.json").read_text(encoding="utf-8"))
         if data.get("rank") != rank:
-            raise ValueError("Role data does not match the original rank")
+            raise ValueError("岗位数据与原始序号不匹配")
         if data.get("official_job_url") and data["official_job_url"] != job["url"]:
-            raise ValueError("Role data does not match the manifest target URL")
+            raise ValueError("岗位数据与清单中的目标网址不匹配")
         title = f'{rank:02d} {job["company"]} · {job["title"]}'
         apply = job.get("apply_url") or job["url"]
         portal = link("进入申请入口", apply, external=True)
@@ -197,7 +196,7 @@ def render_kit(manifest_path: Path, output: Path, progress_key: str) -> dict:
         (TEMPLATES / "handoff.md").read_text(encoding="utf-8")
     ).substitute(output=str(output), count=str(len(jobs)), progress_key=progress_key,
                  manifest_sha256=hashlib.sha256(manifest_text.encode("utf-8")).hexdigest())
-    # All source validation/rendering happens before any output directory exists.
+    # 所有源文件校验和渲染都会在创建任何输出目录之前完成。
     output.mkdir(parents=True, mode=0o700)
     try:
         for relative, f in copies.items():
@@ -223,12 +222,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=APPLICATION_OUTPUT / "manual_kit")
-    parser.add_argument("--progress-key", required=True, help="Stable, distinct browser key for this campaign")
+    parser.add_argument("--progress-key", required=True, help="此批次专用且稳定的浏览器键")
     args = parser.parse_args()
     try:
         result = render_kit(args.manifest, args.output, args.progress_key)
     except (OSError, ValueError, KeyError, TypeError):
-        parser.exit(1, "Manual kit generation failed: check manifest, reviewed materials, and new private output directory.\n")
+        parser.exit(1, "生成手动材料包失败：请检查清单、已审阅材料和新的私有输出目录。\n")
     print(json.dumps(result))
     return 0
 

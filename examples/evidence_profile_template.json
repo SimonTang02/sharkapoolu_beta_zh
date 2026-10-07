@@ -1,15 +1,15 @@
 {
   "_comment": {
-    "fiction": "Demonstration only: Mike Malon is fictional, including his NYU degree, dates and projects. Replace every claim with the real candidate's reviewed evidence.",
-    "identity": "display_name is for letter signing; headline_name is the resume header; email must match the application profile.",
-    "graduation_school": "Institution for the current degree. Keep it consistent with education and the resume.",
-    "expected_graduation_date": "Reviewed month and year used by tailoring; this example is May 2028, not a real candidate fact.",
-    "tailored_summaries": "Reviewed prose by role family; default is the fallback. The generator is hardware-oriented, so review its output for CS roles.",
-    "candidate_summary": "Supported introduction used in generated cover letters. Remove fictional project claims before real use.",
-    "closing_strength": "Evidence-backed closing sentence; do not invent outcomes or proficiency.",
-    "evidence_groups": "Each unique name has match keywords and one verifiable evidence statement. Keywords match jobs; they are not proof of expertise.",
-    "education_gpa": "Map institution to verified GPA display; leave empty when unknown.",
-    "graduation_confirmation": "Record school, integer month/year, confirmed_on and source only after candidate confirmation."
+    "fiction": "仅供演示：Mike Malon 为虚构人物，其纽约大学学位、日期和项目均属虚构。请将所有声明替换为真实候选人已审阅的证据。",
+    "identity": "display_name 用于求职信署名；headline_name 用于简历标题；email 必须与申请档案一致。",
+    "graduation_school": "当前学位所属院校。请确保与教育经历和简历一致。",
+    "expected_graduation_date": "经审阅的月份和年份，供定制材料时使用；本示例为 2028 年 5 月，并非真实候选人信息。",
+    "tailored_summaries": "按岗位类别编写的已审阅文案；default 为后备项。生成器侧重硬件岗位，因此用于计算机科学岗位时须审阅输出。",
+    "candidate_summary": "用于生成求职信的、有证据支持的介绍。实际使用前请删除虚构项目声明。",
+    "closing_strength": "有证据支持的结尾句；不得虚构成果或熟练程度。",
+    "evidence_groups": "每个唯一名称对应匹配关键词和一条可核实的证据陈述。关键词用于匹配岗位，本身不代表具备相关能力。",
+    "education_gpa": "将院校映射到已核实的 GPA 显示值；未知时留空。",
+    "graduation_confirmation": "仅在候选人确认后记录学校、整数月份/年份、confirmed_on 和来源。"
   },
   "schema_version": 1,
   "identity": {"display_name": "Mike Malon", "headline_name": "Mike Malon", "email": "mike.malon@example.com"},

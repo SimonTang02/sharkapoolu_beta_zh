@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Advance TI Oracle Candidate Experience applications without submission."""
+"""推进 TI Oracle Candidate Experience 申请，但不提交。"""
 
 from __future__ import annotations
 
@@ -54,13 +54,13 @@ def _replace_attachment(page, *, kind: str, path: Path) -> None:
         page.wait_for_timeout(300)
         uploads = page.locator("input[name='attachment-upload']")
     if not uploads.count():
-        raise RuntimeError(f"TI {kind.lower()} attachment upload control was not available")
+        raise RuntimeError(f"TI {kind.lower()} 附件上传控件不可用")
     uploads.last.set_input_files(str(path), timeout=10_000)
     for _ in range(15):
         page.wait_for_timeout(300)
         if page.locator("button").filter(has_text=remove_text).count():
             return
-    raise RuntimeError(f"TI did not confirm the new {kind.lower()} attachment")
+    raise RuntimeError(f"TI 未确认新的 {kind.lower()} 附件")
 
 
 def _fill_blank(page, selector: str, value: str) -> bool:
@@ -117,7 +117,7 @@ def _select_combobox_if_blank(
     if visible_options:
         visible_options[-1].click(force=True, timeout=5_000)
     else:
-        # Some Oracle dropdowns only materialize a filtered row after typing.
+        # 有些 Oracle 下拉列表只有在输入后才会显示筛选行。
         if field.first.is_editable():
             field.first.fill(answer)
         page.wait_for_timeout(350)
@@ -127,7 +127,7 @@ def _select_combobox_if_blank(
     updated = (field.first.input_value() or "").strip()
     if replace_conflict and updated.casefold() != answer.casefold():
         raise RuntimeError(
-            f"TI dropdown did not accept the authorized {answer!r} selection"
+            f"TI 下拉列表未接受已授权的 {answer!r} 选项"
         )
     return bool(updated)
 
@@ -157,7 +157,7 @@ def _fill_application_form(page, profile: dict) -> list[str]:
     if _fill_blank(page, "input[name='siteLink-1']", str(fields.get("linkedin_url", ""))):
         changed.append("linkedin_url")
 
-    # Read from profile instead of hardcoding
+    # 从档案中读取，而不是硬编码。
     work_auth = profile.get("custom_answers", {}).get(
         "Are you legally authorized to work in the country where this position is located?"
     )
@@ -232,12 +232,12 @@ def main() -> None:
     parser.add_argument(
         "--replace-documents",
         action="store_true",
-        help="Replace the existing resume and cover letter, then stop before submit.",
+        help="替换现有简历和求职信，然后在提交前停止。",
     )
     parser.add_argument(
         "--fill-form",
         action="store_true",
-        help="Fill authorized known fields and stop before Submit.",
+        help="填写已授权且已知的字段，并在 Submit 前停止。",
     )
     args = parser.parse_args()
 
@@ -253,13 +253,13 @@ def main() -> None:
         (args.application_id,),
     ).fetchone()
     if not row or row["platform"] != "oracle_candidate_experience":
-        raise SystemExit("Application is not a TI Oracle campaign role")
+        raise SystemExit("该申请不是 TI Oracle 批次岗位")
     profile = json.loads(Path(row["profile_path"]).read_text(encoding="utf-8"))
     if profile.get("safety", {}).get("allow_submit"):
-        raise SystemExit("Safety violation: allow_submit must remain false")
+        raise SystemExit("安全错误：allow_submit 必须保持为 false")
     email = str(profile.get("fields", {}).get("email", "")).strip()
     if not email:
-        raise SystemExit("The isolated profile has no email")
+        raise SystemExit("隔离的档案中没有电子邮箱")
 
     load_env_file(Path(args.env))
     _, cdp_url = resolve_browser_connection(config)
@@ -293,9 +293,9 @@ def main() -> None:
             resume_path = Path(row["tailored_resume_path"])
             cover_path = _document_path(profile, "cover_letter_path")
             if not resume_path.is_file():
-                raise SystemExit(f"Tailored resume is unavailable: {resume_path}")
+                raise SystemExit(f"定制简历不可用： {resume_path}")
             if cover_path is None:
-                raise SystemExit("Tailored cover letter is unavailable")
+                raise SystemExit("定制求职信不可用")
             _replace_attachment(page, kind="RESUME", path=resume_path)
             _replace_attachment(page, kind="COVER LETTER", path=cover_path)
             changed = _fill_application_form(page, profile) if args.fill_form else []
@@ -303,32 +303,30 @@ def main() -> None:
             if missing:
                 status = "manual_required"
                 note = (
-                    "TI tailored documents and authorized known fields were prepared; "
-                    "required fields remain for manual review: " + ", ".join(missing)
+                    "TI 定制材料和已授权的已知字段已准备就绪；以下必填字段仍待人工审阅：" + ", ".join(missing)
                 )
             else:
                 status = "review_ready"
                 note = (
-                    "TI tailored documents and authorized known fields were prepared; "
-                    "the application is ready for review and SUBMIT was not clicked."
+                    "TI 定制材料和已授权的已知字段已准备就绪；申请可供审阅，未点击 SUBMIT。"
                 )
         elif application_form_open and args.fill_form:
             changed = _fill_application_form(page, profile)
             missing = _missing_required(page)
             status = "manual_required" if missing else "review_ready"
             note = (
-                "TI authorized known fields were filled; "
+                "TI 已填写获授权的已知字段；"
                 + (
-                    "required fields remain: " + ", ".join(missing)
+                    "以下必填字段仍待处理：" + ", ".join(missing)
                     if missing
-                    else "the application is ready for review; SUBMIT was not clicked."
+                    else "申请可供审阅；未点击 SUBMIT。"
                 )
             )
         elif application_form_open:
             changed = []
             missing = _missing_required(page)
             status = "browser_form_started"
-            note = "TI application form is open; no document or submit control was used."
+            note = "TI 申请表已打开；未使用文档或提交控件。"
         else:
             email_field = page.locator("input[name='primary-email']")
             if not email_field.count():
@@ -351,7 +349,7 @@ def main() -> None:
                     email_field = page.locator("input[name='primary-email']")
             if not email_field.count():
                 status = "manual_required"
-                note = "TI job loaded without a detectable application email entry."
+                note = "TI 职位页面已加载，但未检测到申请邮箱输入框。"
             else:
                 email_field.fill(email)
                 body = " ".join(
@@ -370,8 +368,7 @@ def main() -> None:
                 if policy_present and not consent_checked:
                     status = "policy_consent_required"
                     note = (
-                        "TI email was filled; the required terms-and-conditions "
-                        "consent is awaiting explicit/manual approval."
+                        "已填写 TI 邮箱；必需的条款同意仍需明确授权并由人工确认。"
                     )
                 else:
                     next_button.click(timeout=5_000)
@@ -391,14 +388,12 @@ def main() -> None:
                     ):
                         status = "authentication_required"
                         note = (
-                            "TI accepted the authorized email and now requires "
-                            "account verification/sign-in."
+                            "TI 已接受获授权的邮箱，现在需要账户验证/登录。"
                         )
                     else:
                         status = "browser_form_started"
                         note = (
-                            "TI accepted the email and opened the application workflow; "
-                            "no submit control was clicked."
+                            "TI 已接受邮箱并打开申请流程；未点击提交控件。"
                         )
 
         artifact = save_fill_test_artifact(
@@ -414,9 +409,9 @@ def main() -> None:
                 "missing_required_fields": missing if application_form_open else [],
                 "submit_clicked": False,
             },
-            # Oracle CX intermittently stalls on raw Page.captureScreenshot over
-            # the Windows-to-WSL CDP proxy. Playwright's bounded full-page path is
-            # sufficient for this form and avoids blocking the campaign runner.
+            # 通过 Windows 到 WSL 的 CDP 代理使用原始 Page.captureScreenshot 时，Oracle CX
+            # 偶尔会卡住。Playwright 限时全页截图
+            # 足以覆盖此表单，并能避免阻塞批次运行器。
             use_cdp=False,
             full_page=False,
         )

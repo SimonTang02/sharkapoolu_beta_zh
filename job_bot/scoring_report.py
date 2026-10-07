@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the active Foundation scoring policy and current top matches."""
+"""呈现当前 Foundation 评分策略和匹配度最高的职位。"""
 
 from __future__ import annotations
 
@@ -37,24 +37,23 @@ def render(config: dict, rows: list[sqlite3.Row], generated_at: str) -> str:
     scoring = config["scoring"]
     bands = scoring.get("bands", {})
     lines = [
-        "# Foundation scoring report",
+        "# Foundation 评分报告",
         "",
-        f"Generated: {generated_at}",
+        f"生成时间：{generated_at}",
         "",
-        "A Foundation defines what the role fundamentally is. A role must match "
-        "at least one Foundation before resume evidence or preference modifiers "
-        "can raise its score.",
+        "Foundation 用于定义岗位的核心职业方向。一个职位必须至少匹配一个 Foundation，"
+        "之后简历证据或偏好修正项才会参与提升其评分。",
         "",
-        "## Decision bands",
+        "## 评分区间",
         "",
-        f"- **{bands.get('high', 75)}–100 — high:** draft/application queue candidate after early-career checks.",
-        f"- **{bands.get('relevant', 60)}–{int(bands.get('high', 75)) - 1} — relevant:** strong adjacent role; review manually.",
-        f"- **{bands.get('adjacent', 45)}–{int(bands.get('relevant', 60)) - 1} — adjacent:** keep in the digest, below automatic drafting threshold.",
-        f"- **0–{int(bands.get('adjacent', 45)) - 1} — low:** suppress from the focused application queue.",
+        f"- **{bands.get('high', 75)}–100 — high：通过早期职业阶段检查后，可进入材料草拟/申请队列。",
+        f"- **{bands.get('relevant', 60)}–{int(bands.get('high', 75)) - 1} — relevant：较匹配的相邻岗位，需人工审阅。",
+        f"- **{bands.get('adjacent', 45)}–{int(bands.get('relevant', 60)) - 1} — adjacent：保留在摘要中，但未达到自动草拟门槛。",
+        f"- **0–{int(bands.get('adjacent', 45)) - 1} — low：从重点申请队列中隐藏。",
         "",
-        "## Foundations",
+        "## Foundation 基础方向",
         "",
-        "| Foundation | Base | Body-only adjustment | Minimum body hits |",
+        "| Foundation | 基础分 | 仅职位描述修正分 | 职位描述最低匹配数 |",
         "|---|---:|---:|---:|",
     ]
     for group in scoring["foundation_groups"]:
@@ -63,7 +62,7 @@ def render(config: dict, rows: list[sqlite3.Row], generated_at: str) -> str:
             f"{group.get('body_only_adjustment', 0):+d} | "
             f"{group.get('min_body_hits', 1)} |"
         )
-    lines.extend(["", "## Foundation keywords", ""])
+    lines.extend(["", "## Foundation 关键词", ""])
     for group in scoring["foundation_groups"]:
         lines.extend(
             [
@@ -75,9 +74,9 @@ def render(config: dict, rows: list[sqlite3.Row], generated_at: str) -> str:
         )
     lines.extend(
         [
-            "## Modifiers",
+            "## 修正项",
             "",
-            "| Modifier | Points | Scope | Keywords |",
+            "| 修正项 | 分值 | 范围 | 关键词 |",
             "|---|---:|---|---|",
         ]
     )
@@ -90,9 +89,9 @@ def render(config: dict, rows: list[sqlite3.Row], generated_at: str) -> str:
     lines.extend(
         [
             "",
-            "## Current top active matches",
+            "## 当前匹配度最高的在招职位",
             "",
-            "| Score | Band | Kind | Company | Role | Location | Foundation/reason |",
+            "| 评分 | 区间 | 岗位类型 | 公司 | 职位 | 地点 | Foundation/原因 |",
             "|---:|---|---|---|---|---|---|",
         ]
     )
@@ -109,13 +108,9 @@ def render(config: dict, rows: list[sqlite3.Row], generated_at: str) -> str:
     lines.extend(
         [
             "",
-            "## Preference encoded for this resume",
+            "## 当前简历对应的偏好策略",
             "",
-            "Digital RTL design and CPU/computer architecture start at the highest "
-            "bases. Verification and EDA remain viable adjacent paths. Physical "
-            "design/DFT and analog/mixed-signal remain searchable but do not outrank "
-            "direct digital-design or architecture matches without exceptional evidence. "
-            "Senior, non-design, and software-first titles receive explicit penalties.",
+            "数字 RTL 设计和 CPU/计算机体系结构获得最高基础分。验证和 EDA 仍是可考虑的相邻方向。物理设计/DFT 与模拟/混合信号方向仍可检索，但除非有特别有力的证据，否则优先级低于直接匹配数字设计或体系结构的岗位。资深、非设计和以软件为主的职位标题会受到明确扣分。",
             "",
         ]
     )

@@ -1,4 +1,4 @@
-"""Separate Penn income-oriented leads from enterprise career scoring."""
+"""将宾大以收入为导向的线索与企业职业评分分开处理。"""
 
 import json
 import math
@@ -15,7 +15,7 @@ def numeric_range(value):
 
 
 def estimate_income(hourly, weekly):
-    """Average calendar month, no invented wage or guaranteed shifts."""
+    """按平均自然月计算；不虚构工资，也不保证班次。"""
     wage, hours = numeric_range(hourly), numeric_range(weekly)
     monthly = [round(v * 52 / 12, 1) for v in hours] if hours else None
     gross = ([round(wage[i] * hours[i] * 52 / 12, 2) for i in (0, 1)]

@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-"""Create an evidence-grounded cover-letter draft and fit report.
+"""创建有证据支持的求职信草稿和匹配度报告。
 
-The generator is intentionally deterministic. It selects only statements from
-the reviewed evidence profile and never invents metrics, employers, tools, or
-company facts. The result is a draft for human review, not an application-ready
-truth claim by itself.
+生成器特意保持确定性。它只从已审阅的证据档案中选择陈述，绝不虚构指标、雇主、工具或公司信息。结果是供人工审阅的草稿，本身并非可直接用于申请的事实声明。
 """
 
 from __future__ import annotations
@@ -42,7 +39,7 @@ DEFAULT_OUT_DIR = CV_BOT_OUTPUT
 DEFAULT_DATABASE = JOB_DATABASE
 DEFAULT_RESUME = CURRENT_RESUME_TEX
 DEFAULT_BUNDLE_DIR = CV_VARIANTS_DIR
-# Compatibility constant for external callers; normal generation uses the private profile.
+# 兼容外部调用方的常量；常规生成流程使用私有档案。
 FULL_TIME_GRADUATION_DATE = "Jun 2027 (Expected)"
 
 
@@ -103,32 +100,32 @@ def render_report(
     evidence_paragraphs = "\n\n".join(match.evidence for match in selected)
     match_lines = []
     for match in matches:
-        terms = ", ".join(match.matched_keywords) if match.matched_keywords else "none"
-        match_lines.append(f"- {match.name}: {match.score} matched terms ({terms})")
+        terms = ", ".join(match.matched_keywords) if match.matched_keywords else "无"
+        match_lines.append(f"- {match.name}：{match.score} 个匹配词（{terms}）")
 
     low_confidence = not any(match.score >= 2 for match in selected)
     confidence_note = (
-        "Low: the job description has little direct overlap with the reviewed evidence. "
-        "Do not strengthen the draft without adding verified evidence."
+        "低置信度：职位描述与已审阅证据直接重合较少。"
+        "没有新增已核实证据时，不要强化草稿中的表述。"
         if low_confidence
-        else "Review required: confirm every selected statement and adapt tone before use."
+        else "需要审阅：使用前请确认每项所选陈述并调整语气。"
     )
 
     keyword_notes = render_keyword_notes(keyword_selection) if keyword_selection else ""
-    return f"""# Cover letter review packet
+    return f"""# 求职信审阅包
 
-Company: {company}
-Role: {role}
-Resume version: {resume_version}
-Generated: {datetime.now(timezone.utc).isoformat(timespec='seconds')}
+公司：{company}
+职位：{role}
+简历版本：{resume_version}
+生成时间：{datetime.now(timezone.utc).isoformat(timespec='seconds')}
 
-## Fit snapshot
+## 匹配度概览
 
 {chr(10).join(match_lines)}
 
-Confidence: {confidence_note}
+置信度：{confidence_note}
 
-## Draft
+## 求职信草稿
 
 Dear Hiring Team,
 
@@ -141,15 +138,15 @@ I am writing to apply for the {role} position at {company}. {profile['candidate_
 Sincerely,  
 {display_name}
 
-## Mandatory human review
+## 必须由人工审阅
 
-- Confirm that the company and role names match the posting.
-- Remove any evidence that is not relevant to the specific team.
-- Do not add an unverified metric, responsibility, tool, authorization, or company fact.
-- Check work authorization and sponsorship questions separately; this draft does not answer them.
-- Review the final PDF and application fields before any submission.
+- 确认公司名和职位名称与招聘信息一致。
+- 删除与具体团队无关的证据。
+- 不要添加未经核实的指标、职责、工具、授权情况或公司事实。
+- 单独核实工作授权和签证赞助问题；此草稿不会回答这些问题。
+- 提交前审阅最终 PDF 和申请字段。
 
-## Job description record
+## 职位描述记录
 
 {job_description.strip()}
 
@@ -240,7 +237,7 @@ def tailored_summary(
     summary = summaries.get(primary) or summaries.get("default")
     if not summary:
         raise RuntimeError(
-            f"Private evidence profile lacks a tailored summary for {primary!r}"
+            f"私有证据档案缺少用于 {primary!r} 的定制摘要"
         )
     return str(summary)
 
@@ -250,11 +247,11 @@ def set_graduation_date(
     graduation_date: str | None,
     graduation_school: str,
 ) -> str:
-    """Override one explicitly configured school's expected graduation date."""
+    """覆盖某所已明确配置院校的预期毕业日期。"""
     if not graduation_date:
         return source_text
     if not graduation_school:
-        raise RuntimeError("Private evidence profile lacks graduation_school")
+        raise RuntimeError("私有证据档案缺少 graduation_school")
     pattern = re.compile(
         rf"(\{{\\bf {re.escape(graduation_school)}\}}\s*\\hfill\s*"
         r"\{\\em\s+[^{}\n]*?--\s*)[^{}\n]+(\})"
@@ -265,7 +262,7 @@ def set_graduation_date(
         count=1,
     )
     if count != 1:
-        raise RuntimeError("Could not locate the configured graduation date in the resume")
+        raise RuntimeError("无法在简历中找到已配置的毕业日期")
     return replaced
 
 
@@ -290,7 +287,7 @@ def render_tailored_resume(
     )
     replaced, count = pattern.subn(rf"\1{summary}\2", source_text, count=1)
     if count != 1:
-        raise RuntimeError("Could not locate exactly one Summary section in the resume")
+        raise RuntimeError("无法在简历中找到且仅找到一个 Summary 分区")
     if keyword_selection and keyword_selection.get("technical"):
         labels = [latex_escape(x.get("resume_label", x["english"]))
                   for x in keyword_selection["technical"]]
@@ -303,8 +300,8 @@ def render_tailored_resume(
             replaced, count=1,
         )
         if count != 1:
-            raise RuntimeError("Could not locate Technical Skills section for keyword tailoring")
-    return "% Generated job-specific variant; review before use.\n" + replaced
+            raise RuntimeError("无法找到用于关键词定制的 Technical Skills 分区")
+    return "% 已生成职位专用版本；使用前请审阅。\n" + replaced
 
 
 def render_cover_letter_tex(
@@ -353,7 +350,7 @@ def compile_latex(tex_path: Path, build_dir: Path) -> Path:
     tex_bin = ROOT / ".TinyTeX" / "bin" / "x86_64-linux" / "latexmk"
     engine = os.environ.get("JOBBOT_LATEX_ENGINE", "pdflatex")
     if engine not in ("pdflatex", "xelatex", "lualatex"):
-        raise ValueError("JOBBOT_LATEX_ENGINE must be pdflatex, xelatex or lualatex")
+        raise ValueError("JOBBOT_LATEX_ENGINE 必须为 pdflatex、xelatex 或 lualatex")
     command = [
         str(tex_bin if tex_bin.is_file() else "latexmk"),
         "-g",
@@ -387,10 +384,10 @@ def compile_latex(tex_path: Path, build_dir: Path) -> Path:
     )
     if completed.returncode:
         tail = "\n".join(completed.stdout.splitlines()[-40:])
-        raise RuntimeError(f"LaTeX build failed for {tex_path}:\n{tail}")
+        raise RuntimeError(f"LaTeX 编译 {tex_path} 失败：\n{tail}")
     pdf_path = build_dir / f"{tex_path.stem}.pdf"
     if not pdf_path.is_file():
-        raise RuntimeError(f"Expected PDF was not generated: {pdf_path}")
+        raise RuntimeError(f"未生成预期的 PDF：{pdf_path}")
     return pdf_path
 
 
@@ -415,7 +412,7 @@ def write_bundle(
         bundle_name or f"{safe_slug(company)}_{safe_slug(role)}"
     )
     bundle_path.mkdir(parents=True, exist_ok=True)
-    # Keep relative bibliography references usable in the isolated bundle.
+    # 确保隔离材料包中的相对参考文献路径仍可用。
     for bibliography in source_resume.parent.glob("*.bib"):
         destination = bundle_path / bibliography.name
         if bibliography.resolve() != destination.resolve():
@@ -438,7 +435,7 @@ def write_bundle(
         render_cover_letter_tex(profile, company, role, matches),
         encoding="utf-8",
     )
-    if "## Application keywords" not in review_packet:
+    if "## 申请关键词" not in review_packet:
         review_packet += "\n" + render_keyword_notes(keyword_selection)
     review_path.write_text(review_packet, encoding="utf-8")
     keyword_path = bundle_path / "application_keywords.json"
@@ -447,8 +444,8 @@ def write_bundle(
     build_path = bundle_path / "build"
     resume_pdf = compile_latex(resume_tex, build_path)
     cover_pdf = compile_latex(cover_tex, build_path)
-    # Compilation is not visual approval. Keep the page budget and review status
-    # visible to both the resume bot and the application preparation workflow.
+    # 编译成功不等于视觉审阅通过。保留页数预算和审阅状态，
+    # 使简历机器人和申请准备流程都能看到这些信息。
     log_path = build_path / "resume.log"
     build_log = log_path.read_text(encoding="utf-8", errors="replace") if log_path.is_file() else ""
     page_match = re.search(r"Output written on .*?\((\d+) pages?[,)]", build_log, re.S)
@@ -469,7 +466,7 @@ def write_bundle(
             "page_count": page_count,
             "within_page_budget": page_count <= 2 if page_count is not None else None,
             "rendered_pdf_review": "pending",
-            "instruction": "Inspect every rendered page before upload; trim content and repair pagination if over two pages.",
+            "instruction": "上传前逐页检查渲染结果；如超过两页，请精简内容并调整分页。",
         },
         "application_keywords": str(keyword_path),
     }
@@ -490,7 +487,7 @@ def load_stored_job(database: Path, url: str) -> tuple[str, str, str]:
     finally:
         conn.close()
     if row is None:
-        raise SystemExit(f"Job URL is not stored in {database}: {url}")
+        raise SystemExit(f"岗位网址未存储在 {database} 中：{url}")
     company, title, description, location = (str(value or "").strip() for value in row)
     job_text = "\n".join(value for value in (title, location, description) if value)
     return company, title, job_text
@@ -498,26 +495,26 @@ def load_stored_job(database: Path, url: str) -> tuple[str, str, str]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate a truthful, evidence-grounded cover-letter review packet"
+        description="生成真实且有证据支持的求职信审阅包"
     )
     input_group = parser.add_mutually_exclusive_group(required=True)
-    input_group.add_argument("--job-description", help="Path to a UTF-8 job description")
-    input_group.add_argument("--job-url", help="Load a job already stored in the local database")
+    input_group.add_argument("--job-description", help="UTF-8 编码的职位描述文件路径")
+    input_group.add_argument("--job-url", help="载入已存储在本地数据库中的岗位")
     parser.add_argument("--database", default=str(DEFAULT_DATABASE))
-    parser.add_argument("--company", help="Required with --job-description; optional override with --job-url")
-    parser.add_argument("--role", help="Required with --job-description; optional override with --job-url")
+    parser.add_argument("--company", help="与 --job-description 同用时必填；与 --job-url 同用时可选覆盖")
+    parser.add_argument("--role", help="与 --job-description 同用时必填；与 --job-url 同用时可选覆盖")
     parser.add_argument("--profile", default=str(DEFAULT_PROFILE))
-    parser.add_argument("--keyword-library", type=Path, help="Override the private application keyword library")
+    parser.add_argument("--keyword-library", type=Path, help="覆盖私有申请关键词库")
     parser.add_argument("--resume-version", default="current.tex")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     parser.add_argument("--generate-bundle", action="store_true")
     parser.add_argument("--resume-source", default=str(DEFAULT_RESUME))
     parser.add_argument("--bundle-dir", default=str(DEFAULT_BUNDLE_DIR))
-    parser.add_argument("--latex-engine", choices=("pdflatex", "xelatex", "lualatex"), help="Optional rendering engine, especially XeLaTeX for reviewed Unicode source")
+    parser.add_argument("--latex-engine", choices=("pdflatex", "xelatex", "lualatex"), help="可选的渲染引擎；已审阅的 Unicode 源文件尤其适合使用 XeLaTeX")
     parser.add_argument(
         "--role-kind",
         choices=("internship", "full_time"),
-        help="Record role kind; graduation date comes from the private evidence profile",
+        help="记录岗位类型；毕业日期取自私有证据档案",
     )
     return parser
 
@@ -539,7 +536,7 @@ def main() -> None:
         role = args.role or stored_role
     else:
         if not args.company or not args.role:
-            raise SystemExit("--company and --role are required with --job-description")
+            raise SystemExit("与 --job-description 同用时必须提供 --company 和 --role")
         job_description = Path(args.job_description).read_text(encoding="utf-8")
         company = args.company
         role = args.role

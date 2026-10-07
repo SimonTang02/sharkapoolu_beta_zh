@@ -1,42 +1,33 @@
-# Composed configuration
+# 组合式配置
 
-`jobbot.json` is the canonical composition root. The older
-`../config.china_hk_ic_foreign.json` includes it so existing commands continue
-to work.
+`jobbot.json` 是规范的组合配置根。旧版 `../config.china_hk_ic_foreign.json` 会包含它，以保持既有命令兼容。
 
-## Ownership by file
+## 各文件职责
 
-| File | Owns | Does not own |
+| 文件 | 负责内容 | 不负责内容 |
 |---|---|---|
-| `runtime.json` | database, retry/concurrency, lifecycle guard, browser, report and email runtime | job preference |
-| `workflows.json` | named sequences of independently runnable modules | credentials or selectors inside websites |
-| `sources.json` | endpoints, pagination, source filters, source category and active-sync policy | global ranking |
-| `scoring.json` | broad retrieval relevance: Foundation scores and resume-evidence modifiers | graduation/location eligibility |
-| `strategy.json` | narrow application eligibility and priority for the current two tracks | HTTP/browser mechanics |
-| `portals.json` | ATS detection, login probes and adapter routing | candidate facts |
-| `field_mappings.json` | logical form mappings and no-submit safety | credentials |
+| `runtime.json` | 数据库、重试/并发、生命周期保护、浏览器、报告和邮件运行参数 | 岗位偏好 |
+| `workflows.json` | 可独立运行模块的具名序列 | 凭据或网站内选择器 |
+| `sources.json` | 端点、分页、来源筛选、来源类别和活跃同步策略 | 全局排序 |
+| `scoring.json` | 广义相关性：Foundation 分数和简历证据修正项 | 毕业/地点资格 |
+| `strategy.json` | 当前两条轨道的窄口径申请资格和优先级 | HTTP/浏览器机制 |
+| `portals.json` | ATS 识别、登录探测和适配器路由 | 候选人事实 |
+| `field_mappings.json` | 逻辑表单映射和禁止提交的安全策略 | 凭据 |
 
-The two keyword layers are deliberate. `scoring` answers “is this broadly
-related to the candidate?” and writes `jobs.fit_score`. `strategy` answers
-“is this role eligible and worth applying to under the current campaign?” It
-applies geography, graduation term, degree, seniority and track-specific
-ranking. A retrieval keyword should not silently bypass a strategy exclusion.
+评分有意分为两层。`scoring` 判断“职位是否广义符合候选人方向”，并写入 `jobs.fit_score`。`strategy` 判断“按当前 campaign，此岗位是否符合资格并值得申请”，会应用地理位置、毕业学期、学位、资历和轨道专属排序。检索关键词不能暗中绕过策略排除项。
 
-Merge rules are deterministic:
+合并规则确定且固定：
 
-1. Includes are loaded in listed order, relative to the including file.
-2. Objects are merged recursively.
-3. Lists and scalar values are replaced by the later value.
-4. The including file is the final overlay.
-5. `patches` are applied after that file's merge.
-6. Include cycles, ambiguous patches, duplicate IDs, invalid scores/workflows,
-   unsafe lifecycle parameters, and an enabled final-submit policy are rejected
-   before work starts.
+1. 按列出的顺序加载 includes，路径相对于包含它的文件。
+2. 递归合并对象。
+3. 后出现的列表和标量替换前值。
+4. 最后应用当前包含文件自身。
+5. 文件合并后再应用 `patches`。
+6. 开始工作前会拒绝 include 循环、含糊 patch、重复 ID、无效分数/工作流、不安全的生命周期参数和启用最终提交策略的配置。
 
-## Small, reviewable experiments
+## 小范围、可审阅的实验
 
-Do not copy all of `sources.json` or `scoring.json` to change one value. An
-overlay can patch exactly one named list item:
+只调整一个值时，不要复制全部 `sources.json` 或 `scoring.json`。覆盖配置可 patch 恰好一个具名列表项：
 
 ```json
 {
@@ -61,19 +52,16 @@ overlay can patch exactly one named list item:
 }
 ```
 
-`$append` de-duplicates values, `$remove` removes exact values, and `$replace`
-explicitly replaces the list. A patch must match exactly one object; a typo is
-an error rather than a silent no-op. See
-`experiments/keyword_tuning.example.json` for a runnable example.
+`$append` 会去重，`$remove` 会移除精确值，`$replace` 用于显式替换列表。patch 必须恰好匹配一个对象；拼写错误会报错，不会静默跳过。可运行示例见 `experiments/keyword_tuning.example.json`。
 
-Validate and inspect the effective config:
+验证并查看生效配置：
 
 ```bash
 make config-check
 make config-check CONFIG=job_bot/config/experiments/keyword_tuning.example.json
 ```
 
-Evaluate keyword/weight changes without changing SQLite:
+不更改 SQLite，评估关键词/权重变化：
 
 ```bash
 make workflow \
@@ -81,34 +69,31 @@ make workflow \
   CONFIG=job_bot/config/experiments/keyword_tuning.example.json
 ```
 
-The experiment report records an effective-config SHA-256, score distribution,
-largest deltas and top jobs. Only use the explicit `rescore` module after
-reviewing that report.
+实验报告会记录 effective-config SHA-256、分数分布、最大变化值及高分职位。审阅报告后才使用显式 `rescore` 模块。
 
-## Independently runnable modules
+## 可独立运行的模块
 
-Named workflows are defined in `workflows.json`:
+`workflows.json` 定义具名工作流：
 
-- `daily`: existing complete daily pipeline.
-- `digest_24h`: build/send only the rolling 24-hour digest from SQLite.
-- `report_only`: rebuild all reports without network access or database scoring writes.
-- `weekly_only`: database-only weekly rebuild.
-- `http_refresh`: HTTP sources, rescore, score report, strategy report, weekly.
-- `browser_refresh`: CDP sources followed by the same reports.
-- `score_experiment`: read-only score simulation using an overlay.
-- `login_audit`: read-only login/session probes.
+- `daily`：现有完整每日流程。
+- `digest_24h`：只根据 SQLite 构建/发送滚动 24 小时摘要。
+- `report_only`：不访问网络或写入数据库评分，只重建所有报告。
+- `weekly_only`：只访问数据库重建周报。
+- `http_refresh`：HTTP 来源、重新评分、评分报告、策略报告和周报。
+- `browser_refresh`：CDP 来源后生成相同报告。
+- `score_experiment`：使用覆盖配置进行只读分数模拟。
+- `login_audit`：只读登录/会话探测。
 
-Preview the exact argv commands before doing work, or execute them:
+运行前可先预览精确 argv 命令，或直接执行：
 
 ```bash
 make workflow-plan WORKFLOW=http_refresh
 make workflow WORKFLOW=http_refresh
 ```
 
-The runner writes `module_run_*.json` with the config hash, selector, commands,
-durations and return codes. It never contains credential values.
+运行器会写入 `module_run_*.json`，记录配置哈希、选择器、命令、耗时和返回码，不包含凭据值。
 
-The low-level scanner can also select sources without editing JSON:
+低层扫描器也可通过命令行选择来源，无需编辑 JSON：
 
 ```bash
 python3 job_bot/bot.py scan --source-browser http --max-workers 3
@@ -118,30 +103,18 @@ python3 job_bot/bot.py scan \
 python3 job_bot/bot.py scan --source-type workday --exclude-source "NXP Greater China IC Design"
 ```
 
-Different selector fields are intersected; repeated values within one field are
-alternatives. Disabled sources are never selected.
+不同字段的选择条件会相交；同一字段内重复的值表示任选其一。已禁用来源不会被选择。
 
-## Parameters worth tuning
+## 值得调整的参数
 
-- `scan.max_workers`: network concurrency. Start with 3 on J1900 and 8 on the
-  current workstation.
-- `retry_attempts` / `retry_backoff_seconds`: transient network recovery, not a
-  bypass for authentication or anti-bot controls.
-- Per-source `max_pages`, `page_size`, `request_delay_seconds`: collector load
-  and coverage.
-- Foundation `base_score`, `body_only_adjustment`, `min_body_hits`: determines
-  the role's underlying category before bonuses.
-- Modifier `points`, `scope`, `keywords`: resume evidence, preference and
-  explicit penalties.
-- `scoring.bands`: reporting/queue bands for broad relevance.
-- `strategy.minimum_score`, `tier_thresholds`, `tracks` and `patterns`: final
-  campaign eligibility and priority.
+- `scan.max_workers`：网络并发数。J1900 从 3 开始；当前工作站从 8 开始。
+- `retry_attempts` / `retry_backoff_seconds`：恢复瞬时网络失败，不得用于绕过认证或反机器人控制。
+- 每来源的 `max_pages`、`page_size`、`request_delay_seconds`：采集负载和覆盖范围。
+- Foundation 的 `base_score`、`body_only_adjustment`、`min_body_hits`：奖励前岗位的基础类别分。
+- Modifier 的 `points`、`scope`、`keywords`：简历证据、偏好和明确扣分项。
+- `scoring.bands`：广义相关性报告/队列分段。
+- `strategy.minimum_score`、`tier_thresholds`、`tracks` 和 `patterns`：最终 campaign 资格和优先级。
 
-`sync_active` is not an ordinary tuning switch. It means a successful source
-response is a complete snapshot and missing jobs may be marked inactive. The
-runtime lifecycle guard rejects empty or implausibly small snapshots before
-changing active states. Override its thresholds per source only after proving
-that source's pagination is complete.
+`sync_active` 不是普通调参开关。它表示来源成功响应构成完整快照，缺失职位可能被标记为不活跃。运行时生命周期保护器会在更改活跃状态前拒绝空快照或异常小的快照。只有确认该来源分页完整后，才可按来源覆盖阈值。
 
-Secrets and candidate facts never belong here. Keep them in the ignored
-`private_data/` tree and refer to them through `private_paths.py`.
+密钥和候选人事实绝不能放在这里。它们应保存在被忽略的 `private_data/` 目录树中，并通过 `private_paths.py` 引用。

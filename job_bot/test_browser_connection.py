@@ -36,7 +36,7 @@ class CdpHealthTests(unittest.TestCase):
         build_opener.return_value = self._opener_with(
             urllib.error.URLError(ConnectionRefusedError(111, "refused"))
         )
-        with self.assertRaisesRegex(CdpHealthError, "refused"):
+        with self.assertRaisesRegex(CdpHealthError, "拒绝了连接"):
             check_cdp_health("http://172.23.0.1:9223")
 
     @patch("job_bot.browser_connection.urllib.request.build_opener")
@@ -44,7 +44,7 @@ class CdpHealthTests(unittest.TestCase):
         build_opener.return_value = self._opener_with(
             urllib.error.URLError(socket.timeout("timed out"))
         )
-        with self.assertRaisesRegex(CdpHealthError, "Timed out"):
+        with self.assertRaisesRegex(CdpHealthError, "连接 Chrome CDP 端点超时"):
             check_cdp_health("http://172.23.0.1:9223")
 
     @patch("job_bot.browser_connection.urllib.request.build_opener")
@@ -58,7 +58,7 @@ class CdpHealthTests(unittest.TestCase):
     @patch("job_bot.browser_connection.urllib.request.build_opener")
     def test_health_rejects_malformed_response(self, build_opener) -> None:
         build_opener.return_value = self._opener_with(b"not-json")
-        with self.assertRaisesRegex(CdpHealthError, "malformed JSON"):
+        with self.assertRaisesRegex(CdpHealthError, "格式错误的 JSON"):
             check_cdp_health("http://172.23.0.1:9223")
 
     @patch("job_bot.browser_connection.urllib.request.build_opener")
@@ -67,7 +67,7 @@ class CdpHealthTests(unittest.TestCase):
             b'{"Browser":"Firefox/145.0",'
             b'"webSocketDebuggerUrl":"ws://172.23.0.1:9223/devtools/browser/abc"}'
         )
-        with self.assertRaisesRegex(CdpHealthError, "Unsupported CDP browser"):
+        with self.assertRaisesRegex(CdpHealthError, "不受支持的 CDP 浏览器"):
             check_cdp_health("http://172.23.0.1:9223")
 
 

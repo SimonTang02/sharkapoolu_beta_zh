@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_beta/main/schemas/evidence-profile.schema.json",
+  "$schema": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_zh/main/schemas/evidence-profile.schema.json",
   "schema_version": 1,
   "identity": {
     "display_name": "",

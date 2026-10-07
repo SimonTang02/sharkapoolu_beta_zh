@@ -55,7 +55,7 @@ class StructuredCareerSourceTests(unittest.TestCase):
                 "INSERT INTO jobs (title,url,source_name,is_active) VALUES ('RTL','https://example.com','Fixture',1)"
             )
             conn.commit()
-            with self.assertRaisesRegex(RuntimeError, "Existing active states were preserved"):
+            with self.assertRaisesRegex(RuntimeError, "现有在招状态已保留"):
                 validate_sync_snapshot(
                     conn,
                     {"name": "Fixture", "sync_active": True},
@@ -193,8 +193,8 @@ class StructuredCareerSourceTests(unittest.TestCase):
         )
         score, reason = score_job(job, config)
         self.assertGreaterEqual(score, 82)
-        self.assertIn("Foundation: architecture", reason)
-        self.assertIn("Secondary: digital RTL", reason)
+        self.assertIn("基础方向：architecture", reason)
+        self.assertIn("次要方向：digital RTL", reason)
 
     def test_foundation_gate_blocks_incidental_validation_word(self) -> None:
         config = {
@@ -218,7 +218,7 @@ class StructuredCareerSourceTests(unittest.TestCase):
         )
         score, reason = score_job(job, config)
         self.assertEqual(score, 0)
-        self.assertIn("Foundation: none", reason)
+        self.assertIn("基础方向：无", reason)
 
     def test_specific_physical_design_title_beats_generic_asic_word(self) -> None:
         config = {
@@ -246,8 +246,8 @@ class StructuredCareerSourceTests(unittest.TestCase):
         )
         score, reason = score_job(job, config)
         self.assertEqual(score, 48)
-        self.assertIn("Foundation: physical design", reason)
-        self.assertIn("Secondary: digital RTL", reason)
+        self.assertIn("基础方向：physical design", reason)
+        self.assertIn("次要方向：digital RTL", reason)
 
     def test_campaign_profile_demotes_generic_soc_dft_and_software_titles(self) -> None:
         config = load_config(Path(__file__).with_name("config.china_hk_ic_foreign.json"))
@@ -261,7 +261,7 @@ class StructuredCareerSourceTests(unittest.TestCase):
             ),
             config,
         )
-        self.assertIn("Foundation: physical design and DFT", dft_reason)
+        self.assertIn("基础方向：physical design and DFT", dft_reason)
         self.assertLess(dft_score, 75)
 
         software_score, _ = score_job(
@@ -732,7 +732,7 @@ class StructuredCareerSourceTests(unittest.TestCase):
             conn.commit()
             conn.close()
             subject, body = render_digest(config, 24, all_active=True, edition=1)
-            self.assertIn("Daily Job Digest #1: 2 active postings", subject)
+            self.assertIn("每日职位摘要 #1：2 个在招职位", subject)
             self.assertLess(body.index("RTL Intern"), body.index("RTL Engineer"))
 
     @patch("job_bot.bot.fetch_source")

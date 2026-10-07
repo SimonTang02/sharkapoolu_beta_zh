@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit, adopt, and safely clean tabs in the dedicated job Chrome."""
+"""审计、认领并安全清理专用求职 Chrome 中的标签页。"""
 
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ class TabAssessment:
 
 
 def form_activity_score(page) -> int:
-    """Count populated controls without returning any field values."""
+    """统计已填写的控件数量，但不返回任何字段值。"""
     try:
         return int(
             page.locator("body").evaluate(
@@ -74,7 +74,7 @@ def form_activity_score(page) -> int:
             )
         )
     except Exception:
-        # Failure to inspect is treated as potentially dirty.
+        # 检查失败时按可能包含填写内容处理。
         return 1
 
 
@@ -105,7 +105,7 @@ def application_candidates(conn: sqlite3.Connection) -> dict[str, list[dict]]:
 
 
 def adopt_legacy_tabs(context, conn: sqlite3.Connection) -> list[dict]:
-    """Bind the best matching legacy page for each unregistered application."""
+    """为每个未登记的申请匹配最合适的旧标签页。"""
     ensure_browser_tab_schema(conn)
     registered_targets = {
         str(row["target_id"])
@@ -183,9 +183,9 @@ def assess_tabs(context, conn: sqlite3.Connection) -> list[tuple[object, TabAsse
         try:
             title = page.title()
         except Exception:
-            # A page can be closed by the user or the portal between the CDP
-            # page-list snapshot and metadata collection. It has no remaining
-            # browser state to preserve or clean.
+            # 用户或门户可能会在 CDP
+            # 页面列表快照和元数据采集之间关闭页面。此时已无
+            # 浏览器状态需要保留或清理。
             continue
         anchor = is_session_anchor(page.url, title)
         normalized_url = canonical_url(page.url)
@@ -204,8 +204,8 @@ def assess_tabs(context, conn: sqlite3.Connection) -> list[tuple[object, TabAsse
             )
         )
 
-    # If every copy of an exact URL is otherwise disposable, preserve one copy.
-    # A protected registered/form/session page already fulfils that role.
+    # 如果某个完全相同的网址对应的所有标签页都可清理，则保留其中一个。
+    # 已受保护的已登记/表单/会话页面已满足此要求。
     clean_duplicate_keepers: set[int] = set()
     for item in page_metadata:
         index, _, _, _, _, _, _, normalized_url = item
@@ -229,30 +229,30 @@ def assess_tabs(context, conn: sqlite3.Connection) -> list[tuple[object, TabAsse
         if registration and str(registration["application_status"] or "") == "submitted":
             decision = "close_submitted_explicit"
             reason = (
-                "Application is recorded as submitted; close only with "
-                "--close-submitted after preserving screenshot evidence."
+                "申请已记录为 submitted；保留截图证据后，仅通过 "
+                "--close-submitted 关闭。"
             )
         elif registration:
             decision = "keep_registered"
-            reason = "Application-bound tab; preserve its target ID and current page state."
+            reason = "与申请关联的标签页；保留其 target ID 和当前页面状态。"
         elif anchor:
             decision = "keep_session_anchor"
-            reason = "Authenticated tenant home anchors the shared login session."
+            reason = "已认证的租户主页是共享登录会话的锚点。"
         elif activity:
             decision = "keep_possible_form_state"
-            reason = "At least one form control is populated; closing could lose state."
+            reason = "至少有一个表单控件已填写；关闭页面可能会丢失状态。"
         elif page.url in {"about:blank", "chrome://newtab/"}:
             decision = "close_safe"
-            reason = "Blank unregistered tab."
+            reason = "空白且未登记的标签页。"
         elif index in clean_duplicate_keepers:
             decision = "keep_duplicate_anchor"
-            reason = "Last clean copy of this exact URL; preserve one navigable page."
+            reason = "这是此确切网址最后一个干净副本；保留一个可导航页面。"
         elif duplicate_count > 1:
             decision = "close_safe"
-            reason = "Clean unregistered exact-URL duplicate."
+            reason = "干净且未登记的网址重复页面。"
         else:
             decision = "close_clean_legacy_optional"
-            reason = "Clean legacy tab; close only with --include-clean-legacy."
+            reason = "干净的旧标签页；仅使用 --include-clean-legacy 时关闭。"
         assessment = TabAssessment(
             target_id=target_id,
             domain=urlsplit(page.url).hostname or "local",
@@ -287,15 +287,15 @@ def render_report(
 ) -> str:
     counts = Counter(item.decision for item in assessments)
     lines = [
-        "# Dedicated Chrome tab-management report",
+        "# 专用 Chrome 标签页管理报告",
         "",
-        f"Generated: {datetime.now().astimezone().isoformat(timespec='seconds')}",
-        f"Mode: {'cleanup applied' if applied else 'audit only'}",
-        f"Open tabs observed: {len(assessments)} (configured budget: {max_tabs})",
-        f"Legacy tabs adopted into application registry: {len(adopted)}",
-        f"Tabs closed: {len(closed)}",
+        f"生成时间：{datetime.now().astimezone().isoformat(timespec='seconds')}",
+        f"模式：{'已执行清理' if applied else '仅审计'}",
+        f"观察到的已打开标签页：{len(assessments)}（配置上限：{max_tabs}）",
+        f"已认领到申请注册表的旧标签页：{len(adopted)}",
+        f"已关闭标签页：{len(closed)}",
         "",
-        "## Decision counts",
+        "## 决策计数",
         "",
     ]
     for key, value in sorted(counts.items()):
@@ -303,9 +303,9 @@ def render_report(
     lines.extend(
         [
             "",
-            "## Tabs",
+            "## 标签页",
             "",
-            "| Decision | App | Status | Activity | Domain | Title | Reason |",
+            "| 决策 | 申请 | 状态 | 表单活动 | 域名 | 标题 | 原因 |",
             "|---|---:|---|---:|---|---|---|",
         ]
     )
@@ -321,14 +321,13 @@ def render_report(
         lines.extend(
             [
                 "",
-                f"Warning: the browser is {len(assessments) - max_tabs} tabs over budget.",
+                f"警告：浏览器标签页超出配置上限 {len(assessments) - max_tabs} 个。",
             ]
         )
     lines.extend(
         [
             "",
-            "Safety: populated forms, registered applications, and tenant session anchors "
-            "are never closed by the default cleanup policy.",
+            "安全说明：默认清理策略绝不会关闭已填写的表单、已登记的申请或租户会话锚点。",
         ]
     )
     return "\n".join(lines) + "\n"
@@ -344,7 +343,7 @@ def main() -> None:
     parser.add_argument(
         "--close-submitted",
         action="store_true",
-        help="Close registered tabs whose applications are already submitted.",
+        help="关闭申请已提交的已登记标签页。",
     )
     args = parser.parse_args()
 
@@ -352,7 +351,7 @@ def main() -> None:
     config = load_config(Path(args.config))
     mode, cdp_url = resolve_browser_connection(config)
     if mode != "windows_cdp":
-        raise SystemExit("Tab manager requires application_browser.mode=windows_cdp")
+        raise SystemExit("标签页管理器需要 application_browser.mode=windows_cdp")
     health = check_cdp_health(cdp_url)
     conn = connect_db(config)
     tab_config = config.get("tab_management", {})
@@ -391,9 +390,9 @@ def main() -> None:
                         "application_id": item.application_id,
                         "reason": item.reason,
                     },
-                    # Windows CDP pages can stall while expanding extension-heavy
-                    # documents. A bounded viewport is sufficient evidence for a
-                    # tab-close operation and keeps cleanup deterministic.
+                    # 展开安装了大量扩展的 Windows CDP 页面时可能会卡住。
+                    # 有时间限制的视口截图足以作为
+                    # 关闭标签页的证据，并能保证清理行为可预测。
                     use_cdp=False,
                     full_page=False,
                 )

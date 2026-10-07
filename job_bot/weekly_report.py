@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Regenerate a database-backed weekly job and application report.
+"""重新生成基于数据库的每周职位与申请报告。
 
-Daily delta files stay independent. Re-running this module updates the current
-week from SQLite instead of appending duplicated report text.
+每日增量文件保持独立。重新运行此模块时，会根据 SQLite 更新当前周报，
+而不是追加重复的报告内容。
 """
 
 from __future__ import annotations
@@ -293,9 +293,9 @@ def build_report(
     try:
         timezone = ZoneInfo(timezone_name)
     except ZoneInfoNotFoundError as exc:
-        raise ValueError(f"Unknown reporting timezone: {timezone_name}") from exc
+        raise ValueError(f"未知的报告时区： {timezone_name}") from exc
     if str(weekly.get("week_start", "monday")).casefold() != "monday":
-        raise ValueError("Only Monday week_start is currently supported")
+        raise ValueError("目前仅支持将 week_start 设为 Monday")
     start, end = week_window(now, timezone)
     limit = max(1, int(weekly.get("max_items_per_section", 25)))
 
@@ -511,24 +511,24 @@ def build_report(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Regenerate the current database-backed weekly report."
+        description="重新生成当前的数据库每周报告。"
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--db", type=Path)
     parser.add_argument("--out-dir", type=Path, default=JOBBOT_OUTPUT)
     parser.add_argument(
         "--as-of",
-        help="ISO date/time inside the desired week; defaults to the current time",
+        help="目标周内的 ISO 日期/时间；默认为当前时间",
     )
     args = parser.parse_args()
     config = load_config(args.config)
     weekly = config.get("reporting", {}).get("weekly", {})
     if weekly.get("enabled", True) is False:
-        print("Weekly reporting is disabled by configuration")
+        print("配置已禁用每周报告")
         return 0
     now = parse_timestamp(args.as_of) if args.as_of else dt.datetime.now().astimezone()
     if now is None:
-        raise SystemExit(f"Invalid --as-of timestamp: {args.as_of}")
+        raise SystemExit(f"--as-of 时间戳无效： {args.as_of}")
     md_path, json_path, payload = build_report(
         config=config,
         database=args.db or db_path(config),

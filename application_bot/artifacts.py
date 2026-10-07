@@ -1,4 +1,4 @@
-"""Private, append-only evidence for browser-assisted fill tests."""
+"""用于浏览器辅助填写测试的私有追加式证据。"""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ def _png_dimensions(path: Path) -> tuple[int, int]:
 
 
 def _prepare_long_page(page: Any) -> dict[str, Any]:
-    """Expand the form's internal scroll container before a full-page capture."""
+    """截取整页之前，展开表单内部的滚动容器。"""
 
     try:
         return page.evaluate(
@@ -143,10 +143,10 @@ def capture_long_page(
     full_page: bool = True,
     full_page_timeout_ms: int = 60_000,
 ) -> dict[str, Any]:
-    """Capture a reviewable long page, including SPA-internal form scrolling.
+    """截取可供审阅的长页面，包括单页应用内部表单的滚动区域。
 
-    CDP clips are used for very tall pages so Chromium's maximum bitmap height
-    cannot silently reduce the evidence to the current viewport.
+    对于非常高的页面，使用 CDP 分段截图，以避免超出 Chromium 的最大位图高度。
+    不会静默地将证据缩减为当前视口。
     """
 
     prepared = (
@@ -221,13 +221,13 @@ def capture_long_page(
                     caret="hide",
                 )
             except TypeError:
-                # Minimal test doubles and older Playwright versions.
+                # 用于精简测试替身和旧版 Playwright。
                 page.screenshot(path=str(screenshot_path), full_page=full_page)
             except Exception:
-                # Some Oracle CX pages stall indefinitely while Chromium tries
-                # to capture their transformed full-page surface. Preserve a
-                # bounded, reviewable viewport artifact instead of losing all
-                # evidence for the fill attempt.
+                # Chromium 尝试截取某些 Oracle CX 页面时会无限期卡住，
+                # 原因是页面全页表面已被转换。请保留
+                # 有时限且可审阅的视口截图，避免丢失
+                # 此次填写操作的全部证据。
                 page.screenshot(
                     path=str(screenshot_path),
                     full_page=False,
@@ -275,7 +275,7 @@ def save_fill_test_artifact(
     full_page: bool = True,
     full_page_timeout_ms: int = 60_000,
 ) -> dict[str, Any]:
-    """Save a timestamped screenshot plus a value-free JSONL audit record."""
+    """保存带时间戳的截图和不含字段值的 JSONL 审计记录。"""
     artifact_dir = output_dir / "fill_tests"
     artifact_dir.mkdir(parents=True, exist_ok=True)
     _private_mode(output_dir, 0o700)
@@ -294,7 +294,7 @@ def save_fill_test_artifact(
     )
     screenshot_paths = capture["screenshot_paths"]
     if not screenshot_paths:
-        raise RuntimeError("Long screenshot capture produced no files")
+        raise RuntimeError("长页面截图未生成任何文件")
     screenshot_path = Path(screenshot_paths[0])
     record = {
         "captured_at": now.isoformat(timespec="seconds"),

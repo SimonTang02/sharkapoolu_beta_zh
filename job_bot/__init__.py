@@ -1,2 +1,1 @@
-"""Job collection, scoring, and digest package."""
-
+"""岗位采集、评分与摘要生成包。"""

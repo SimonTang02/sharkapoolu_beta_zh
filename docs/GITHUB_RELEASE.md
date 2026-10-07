@@ -1,8 +1,6 @@
-# GitHub release checklist
+# GitHub 发布检查清单
 
-The repository is designed to publish code and placeholder configuration while
-keeping all candidate-specific state local. Run these checks before creating a
-GitHub remote:
+本仓库的设计目标是发布代码和占位配置，同时将所有候选人专属状态留在本地。创建 GitHub remote 前运行以下检查：
 
 ```bash
 make release-check
@@ -10,22 +8,18 @@ git status --short
 git remote -v
 ```
 
-Review every file that will enter the first public commit:
+检查将进入首次公开提交的每个文件：
 
 ```bash
 git ls-files --cached --others --exclude-standard
 git diff --check
 ```
 
-## Existing history
+## 现有历史
 
-Do not push the current historical commits unchanged if they have ever contained
-resumes, contact details, credentials, browser exports, databases, or generated
-application artifacts. Removing a file in the current tree leaves its earlier
-blob downloadable from Git history.
+如果当前历史提交曾包含简历、联系方式、凭据、浏览器导出、数据库或生成的申请材料，不要原样推送这些历史提交。从当前工作树移除文件并不会删除其早期 blob，仍可从 Git 历史下载。
 
-The safest publication path is a new repository made from the audited working
-tree. Create it without copying the old `.git` directory:
+最稳妥的发布方式是根据审计过的工作树创建新仓库，不复制旧 `.git` 目录：
 
 ```bash
 make public-snapshot DEST=../26fall_intern_public
@@ -33,30 +27,17 @@ cd ../26fall_intern_public
 make release-check
 ```
 
-The destination must not already exist. The exporter copies only existing files
-reported by `git ls-files --cached --others --exclude-standard`, initializes an
-empty `main` branch, and creates no commit. Use a GitHub `noreply` address for
-the first commit if the existing Git author email should remain private.
+目标目录必须尚不存在。导出器只复制 `git ls-files --cached --others --exclude-standard` 报告的现有文件，初始化空的 `main` 分支，不创建提交。如果现有 Git 作者邮箱需要保密，首次提交时使用 GitHub `noreply` 地址。
 
-If preserving history is essential, rewrite it with `git filter-repo`, inspect
-all rewritten commits, and rotate any credential that ever entered a commit.
-History rewriting changes commit IDs and should be completed before a remote is
-shared.
+若必须保留历史，则使用 `git filter-repo` 重写，检查所有重写后的提交，并轮换任何曾进入提交的凭据。历史重写会改变提交 ID，应在共享 remote 之前完成。
 
-`make history-audit` provides an additional local check when the private profile
-is available. It reports paths and marker labels rather than printing the
-private values themselves.
+私有档案可用时，`make history-audit` 会提供额外本地检查。它报告路径和标记类型，不会打印私有具体值。
 
-## Repository settings
+## 仓库设置
 
-Before making the repository public:
+公开仓库之前：
 
-1. Choose and add a license. Until a license is added, others have no general
-   permission to copy, modify, or redistribute the code.
-2. Add a short repository description and topics such as `job-search`,
-   `resume`, `python`, and `browser-automation` only if they match the intended
-   audience.
-3. Keep GitHub Actions enabled so the public audit, tests, and shared config
-   validation run on every push and pull request.
-4. Never upload `private_data/`, `GPT_CONTEXT.md`, local browser profiles,
-   cookies, SQLite databases, rendered PDFs, or local configuration overrides.
+1. 选择并添加许可证。尚未添加许可证时，其他人通常没有复制、修改或再分发代码的许可。
+2. 添加简短仓库说明，并且只有在符合目标读者时才添加 `job-search`、`resume`、`python` 和 `browser-automation` 等主题标签。
+3. 保持 GitHub Actions 启用，使公开审计、测试和共享配置验证在每次 push 和 pull request 时运行。
+4. 绝不要上传 `private_data/`、`GPT_CONTEXT.md`、本地浏览器 profile、cookie、SQLite 数据库、渲染后的 PDF 或本地配置覆盖文件。

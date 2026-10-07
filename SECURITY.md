@@ -1,15 +1,7 @@
-# Security policy
+# 安全政策
 
-Do not report a vulnerability by attaching real credentials, cookies, browser
-state, resumes, application screenshots, or database files to a public issue.
-Create a minimal synthetic reproduction and use GitHub's private vulnerability
-reporting channel when it is available.
+报告漏洞时，不要在公开 issue 中附上真实凭据、cookie、浏览器状态、简历、申请截图或数据库文件。请创建最小化的合成复现，并在 GitHub 提供私密漏洞报告渠道时使用该渠道。
 
-Treat every file below `private_data/` as sensitive except its tracked README.
-If a credential enters Git history, revoke or rotate it before rewriting the
-history. History removal alone does not invalidate a leaked credential.
+除被跟踪的 README 外，`private_data/` 下所有文件都应视为敏感信息。若凭据进入 Git 历史，应先撤销或轮换，再重写历史。仅从历史中移除文件无法使已泄露凭据失效。
 
-The application workflow is designed to stop before final submission. A change
-that weakens the submit guard, infers legal/immigration answers, bypasses MFA or
-CAPTCHA, or exports browser credentials is a security-sensitive change and
-requires explicit review.
+申请工作流的设计目标是在最终提交前停止。任何削弱提交保护、推断法律或移民问题答案、绕过 MFA 或 CAPTCHA，或导出浏览器凭据的更改都属于安全敏感更改，必须经过明确审查。

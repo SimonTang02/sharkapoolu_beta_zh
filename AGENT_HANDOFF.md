@@ -1,5 +1,7 @@
 # Sharkapoolu 完整操作与新对话交接手册
 
+本仓库是简体中文发布版；功能开发请回到[英文主开发仓库](https://github.com/SimonTang02/sharkapoolu_beta)，中文版负责翻译维护并保持兼容。本版本对应的上游提交为 `bd90331c16d9f128f985928ae7752b49e8e758c9`。本地化术语与许可说明见 `docs/localization.md` 和 `docs/license-zh-CN.md`。
+
 本文面向从 GitHub 下载本项目的人和首次进入仓库的 coding agent。它介绍当前
 代码能做什么、输入放在哪里、每项命令的影响及共享数据库规则。真实候选人和
 机器的配置由本地私有文件提供；公开仓库不保存私人历史状态。
@@ -77,15 +79,15 @@ NYU 用户不能据此使用 Penn 登录；启用新学校渠道需要合法访�
 Linux / WSL 需要 Git、Python 3.10+ 与 venv。TeX 和浏览器按任务另装。
 
 ```bash
-git clone https://github.com/SimonTang02/sharkapoolu_beta.git
-cd sharkapoolu_beta
+git clone https://github.com/SimonTang02/sharkapoolu_zh.git
+cd sharkapoolu_zh
 ./scripts/bootstrap.sh
 source .venv/bin/activate
 jobbot-private check
 make config-check
 ```
 
-bootstrap 创建 `.venv`、editable install、缺失的空白私有模板并运行合成测试。
+bootstrap 创建 `.venv`、editable install、缺失的空白私有模板并运行合成测试。按仓库实际访问权限克隆，不能假定可匿名访问。英文上游和中文发布版使用独立 clone 与 `.venv`，避免相同入口互相覆盖。
 空白事实产生提示，不能解释为事实已确认。已有私有文件保留；不要使用
 `jobbot-private init --force` 替换真实资料。
 
@@ -281,9 +283,9 @@ SSH 配置，先查清机器角色；不要令主机连回自己。两台安装�
 客户端使用实际已授权 SSH 别名，路径填主机的实际项目位置：
 
 ```bash
-ssh -o BatchMode=yes example-db 'cd ~/workspace/sharkapoolu_beta && .venv/bin/python -m job_bot.shared_database check'
-jobbot-db configure --host example-db --project-dir '~/workspace/sharkapoolu_beta'
-jobbot-db configure --host example-db --project-dir '~/workspace/sharkapoolu_beta' --apply
+ssh -o BatchMode=yes example-db 'cd ~/workspace/sharkapoolu_zh && .venv/bin/python -m job_bot.shared_database check'
+jobbot-db configure --host example-db --project-dir '~/workspace/sharkapoolu_zh'
+jobbot-db configure --host example-db --project-dir '~/workspace/sharkapoolu_zh' --apply
 jobbot-db check
 ```
 

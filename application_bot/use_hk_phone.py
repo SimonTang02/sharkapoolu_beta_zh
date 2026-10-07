@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Use the resume's Hong Kong phone for the China/HK application campaign."""
+"""在中国/香港申请批次中使用简历里的香港电话号码。"""
 
 from __future__ import annotations
 
@@ -37,11 +37,11 @@ def main() -> None:
     resume = RESUME.read_text(encoding="utf-8")
     match = re.search(r"HK:\s*([+\d][\d ()-]+)", resume)
     if not match:
-        raise SystemExit("No explicitly labelled HK phone was found in current.tex")
+        raise SystemExit("在 current.tex 中未找到明确标注的香港电话号码")
     phone = match.group(1).strip()
     paths = [BASE_PROFILE, *APPLICATIONS.glob("*/profile.json")]
     count = sum(update(path, phone) for path in paths)
-    print(f"Updated {count} authorized China/Hong Kong profiles with the HK contact number")
+    print(f"已为 {count} 个获授权的中国/香港档案更新香港联系号码")
 
 
 if __name__ == "__main__":

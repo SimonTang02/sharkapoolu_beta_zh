@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fill the Infineon Eightfold form and stop before Submit application."""
+"""填写 Infineon Eightfold 表单，并在提交申请前停止。"""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def choose(page, field, value: str) -> None:
     visible = [option.nth(i) for i in range(option.count()) if option.nth(i).is_visible()]
     if not visible:
         page.keyboard.press("Escape")
-        raise RuntimeError(f"Infineon option not found: {value}")
+        raise RuntimeError(f"未找到 Infineon 选项：{value}")
     visible[-1].click(force=True, timeout=5_000)
 
 
@@ -68,10 +68,10 @@ def main() -> None:
         (args.application_id,),
     ).fetchone()
     if not row or row["company"] != "Infineon Technologies":
-        raise SystemExit("Application is not the Infineon campaign role")
+        raise SystemExit("该申请不是 Infineon 批次岗位")
     profile = json.loads(Path(row["profile_path"]).read_text(encoding="utf-8"))
     if profile.get("safety", {}).get("allow_submit"):
-        raise SystemExit("Safety violation: allow_submit must remain false")
+        raise SystemExit("安全错误：allow_submit 必须保持为 false")
     fields = profile.get("fields", {})
 
     load_env_file(Path(args.env))
@@ -105,7 +105,7 @@ def main() -> None:
                 break
             page.wait_for_timeout(500)
         if not page.get_by_role("button", name="Submit application", exact=True).count():
-            raise RuntimeError("Infineon application form did not finish loading")
+            raise RuntimeError("Infineon 申请表单未能完成加载")
         page.keyboard.press("Escape")
 
         location = page.locator(
@@ -141,9 +141,8 @@ def main() -> None:
 
         status = "browser_form_started"
         note = (
-            "Infineon location, tailored resume/cover letter, contact details, authorized gender, "
-            "phone and application language were filled. Country of residence and preferred start "
-            "date remain unanswered. Submit application was not clicked."
+            "已填写 Infineon 地点、定制简历/求职信、联系方式、获授权的性别、电话和申请语言。"
+            "居住国家和首选入职日期仍未回答。未点击提交申请。"
         )
         artifact = save_fill_test_artifact(
             page,

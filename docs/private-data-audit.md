@@ -1,64 +1,35 @@
-# Private data structure audit
+# 私有数据结构审计
 
-The candidate data model is split into four author-maintained files plus
-generated state. This audit evaluates usability and consistency without
-recording any candidate values.
+候选人数据模型分为四个由用户维护的文件以及生成状态。本审计检查可用性和一致性，不记录任何候选人具体值。
 
-## Findings
+## 发现
 
-The earlier layout had three practical weaknesses:
+早期目录布局有三个实际问题：
 
-1. The application template did not describe several sections already consumed
-   by adapters, so a fresh user could not discover all supported fields.
-2. Identity, graduation dates, and GPA can appear in application, evidence, and
-   resume source files. These copies are useful to different tools but can
-   silently drift.
-3. Keyword presets referenced IDs by convention without a standalone integrity
-   check.
+1. 申请资料模板没有说明适配器已读取的若干部分，新用户无法发现所有受支持字段。
+2. 身份、毕业日期和 GPA 可能同时出现在申请档案、证据档案和简历源文件中。这些副本服务于不同工具，却可能在不知情时发生偏差。
+3. 关键词预设按约定引用 ID，但没有独立的完整性检查。
 
-The public runtime configuration was already reasonably modular: runtime,
-sources, scoring, strategy, workflows, portals, and field mappings have separate
-owners and can be composed without copying the full configuration.
+公开运行配置已经较为模块化：runtime、sources、scoring、strategy、workflows、portals 和 field mappings 分别维护，可组合而不必复制整份配置。
 
-## Changes made
+## 已作更改
 
-- Replaced the partial application-profile template with complete redacted
-  examples under `examples/`.
-- Added JSON Schemas under `schemas/` for the application profile, evidence
-  profile, and keyword library.
-- Added `jobbot-private init`, which creates missing files with mode `600` and
-  does not overwrite existing data unless `--force` is explicitly supplied.
-- Added `jobbot-private check`, which validates types, safety gates,
-  authorization scopes, credential syntax and permissions, duplicate records,
-  keyword references, and cross-file email consistency without printing values.
-- Added one canonical path module and support for relocating the entire private
-  tree with `JOBBOT_PRIVATE_DIR`.
+- 在 `examples/` 下用完整的脱敏示例替换不完整的申请档案模板。
+- 在 `schemas/` 下为申请档案、证据档案和关键词库添加 JSON Schema。
+- 添加 `jobbot-private init`，以权限 `600` 创建缺失文件；除非显式提供 `--force`，否则不会覆盖已有数据。
+- 添加 `jobbot-private check`，检查类型、安全门、授权范围、凭据格式和权限、重复记录、关键词引用及跨文件邮箱一致性，且不打印具体值。
+- 添加唯一规范路径模块，并支持通过 `JOBBOT_PRIVATE_DIR` 重定位整个私有目录树。
 
-## Authoring assessment
+## 编写建议
 
-The generated files are now self-contained enough to fill by hand. Stable facts
-belong in `application_profile.json`; claim evidence and resume positioning
-belong in `evidence_profile.json`; reusable application vocabulary belongs in
-`application_keywords.json`; secrets and session endpoints belong in
-`passport.env`.
+现在生成的文件已足以供用户独立填写。稳定事实放在 `application_profile.json`；声明证据和简历定位放在 `evidence_profile.json`；可复用的申请用语放在 `application_keywords.json`；密钥和会话端点放在 `passport.env`。
 
-Some factual duplication remains for compatibility with existing adapters.
-Treat the application profile as the canonical source for form facts and the
-evidence profile as the canonical source for claims. Run the checker after any
-identity, education, graduation, or keyword change. Resume `.tex` files are
-rendered artifacts from a data-governance perspective and should be reviewed
-against both profiles before use.
+为兼容现有适配器，仍有少量事实重复。将申请档案视为表单事实的权威来源，将证据档案视为简历声明的权威来源。每次更改身份、教育、毕业信息或关键词后都运行检查器。就数据治理而言，简历 `.tex` 是渲染材料，使用前应对照这两个档案审阅。
 
-The checker deliberately warns about blank identity fields in a newly generated
-template. Warnings allow installation to finish; application preparation should
-begin only after the candidate has filled and reviewed those fields.
+检查器有意对新生成模板中的空白身份字段发出警告。警告不会阻止安装；但候选人填写并审阅这些字段后，才能开始准备申请。
 
-## Remaining design opportunities
+## 后续设计机会
 
-- A future schema version can replace duplicated education facts with stable
-  record IDs shared by the application and evidence profiles.
-- Portal-specific answer dictionaries can move into separate files if the
-  application profile becomes difficult to review.
-- An encrypted sync provider can back up `JOBBOT_PRIVATE_DIR`, but decryption
-  and mount management should remain outside this repository.
-
+- 未来的 Schema 版本可以用申请档案和证据档案共用的稳定记录 ID，替代重复的教育事实。
+- 如果申请档案难以审阅，可将门户专用答案字典拆为独立文件。
+- 可使用加密同步服务备份 `JOBBOT_PRIVATE_DIR`，但解密和挂载管理应留在本仓库之外。

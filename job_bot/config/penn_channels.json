@@ -12,7 +12,7 @@
           "myworkday.com",
           "upenn.edu"
         ],
-        "note": "Student recruiting, not Penn staff careers. Keep work-study eligibility explicit; do not apply enterprise IC filters."
+        "note": "这是学生招聘渠道，不是宾大教职员工招聘。须明确核实勤工助学资格；不要套用企业集成电路岗位筛选条件。"
       },
       {
         "id": "engineering",
@@ -45,7 +45,7 @@
         "hosts": [
           "interstride.com"
         ],
-        "note": "Student login required; authenticated job-list mapping must be verified before enabling ingestion."
+        "note": "需要学生账户登录；启用采集前必须验证登录后的职位列表映射。"
       },
       {
         "id": "careershift",
@@ -55,7 +55,7 @@
         "hosts": [
           "careershift.com"
         ],
-        "note": "Login or first-time registration may be required."
+        "note": "可能需要登录或首次注册。"
       },
       {
         "id": "goinglobal",
@@ -65,7 +65,7 @@
         "hosts": [
           "goinglobal.com"
         ],
-        "note": "Paused at user request; interpreted \"coin\" platform as GoinGlobal. Skip reads and login-page reopening until resumed.",
+        "note": "按用户要求暂停；将“coin”平台理解为 GoinGlobal。恢复前不要读取内容或重新打开登录页。",
         "official_reference": "https://careerservices.upenn.edu/resources/goinglobal/",
         "enabled": false
       },
@@ -77,7 +77,7 @@
         "hosts": [
           "mypenn.upenn.edu"
         ],
-        "note": "Navigation and login status only. Do not harvest alumni profiles or send outreach."
+        "note": "仅检查导航和登录状态。不得采集校友档案或发送联系信息。"
       },
       {
         "id": "curf",
@@ -88,7 +88,7 @@
           "curf.upenn.edu"
         ],
         "link_pattern": "^https://curf\\.upenn\\.edu/rd/[^/]+",
-        "note": "Primarily undergraduate research leads; listing does not prove pay, current availability, or master's eligibility. Current visible page only."
+        "note": "该目录主要提供本科研究机会线索；列表不能证明是否付薪、当前是否开放或是否符合硕士生资格。仅检查当前可见页面。"
       }
     ],
     "campus_employment": {

@@ -19,12 +19,12 @@
     "mode": "windows_cdp",
     "auto_submit": false,
     "local_persistent": {
-      "description": "Launch the original isolated Chromium profile inside WSL"
+      "description": "在 WSL 中启动原有的隔离 Chromium 配置文件"
     },
     "windows_cdp": {
       "url_env": "CHROME_CDP_URL",
       "url": "",
-      "description": "Connect through the WSL-only Windows portproxy to the dedicated JobApplyChrome profile"
+      "description": "通过仅供 WSL 使用的 Windows portproxy 连接专用 JobApplyChrome 配置文件"
     }
   },
   "tab_management": {

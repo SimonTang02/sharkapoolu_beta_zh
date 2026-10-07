@@ -1,4 +1,4 @@
-"""Deterministic source selection shared by CLI commands and workflows."""
+"""供 CLI 命令和工作流共用的确定性来源选择逻辑。"""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def _folded_set(values: Any) -> set[str]:
     if values in (None, ""):
         return set()
     if not isinstance(values, list):
-        raise ValueError("source selector values must be lists")
+        raise ValueError("来源选择器的值必须为列表")
     return {str(value).casefold() for value in values}
 
 
@@ -52,7 +52,7 @@ def select_sources(
     ]
     browser = str(selector.get("browser", "any")).casefold()
     if browser not in {"any", "http", "cdp"}:
-        raise ValueError("source selector browser must be any, http, or cdp")
+        raise ValueError("来源选择器的浏览器选项必须为 any、http 或 cdp")
 
     selected: list[dict[str, Any]] = []
     for source in config.get("sources", []):
@@ -90,7 +90,7 @@ def select_sources(
 
 
 def selector_from_cli(args: Any) -> dict[str, Any]:
-    """Translate optional argparse fields without coupling the selector to a CLI."""
+    """转换可选 argparse 字段，同时避免选择器依赖特定 CLI。"""
     return {
         "include_names": getattr(args, "source", None) or [],
         "exclude_names": getattr(args, "exclude_source", None) or [],

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Job monitor for internship postings.
+"""实习岗位监控工具。
 
-The bot is intentionally conservative: it collects, deduplicates, scores, and
-summarizes jobs. It only sends email when the config explicitly disables
-dry_run and valid SMTP settings are provided.
+本工具采取保守策略：采集、去重、评分并汇总职位。只有配置明确关闭
+dry_run 且提供有效 SMTP 设置时，才会发送邮件。
 """
 
 from __future__ import annotations
@@ -160,8 +159,8 @@ def parse_time(value: str) -> dt.datetime:
 def load_config(path: Path) -> dict[str, Any]:
     try:
         config = load_composed_config(path)
-        # Small fixtures and legacy user configs may not yet define portal or
-        # field policy sections; validate the full contract only when either is present.
+        # 小型 fixture 和旧版用户配置可能尚未定义 portal 或字段策略部分；
+        # 仅当其中至少一项存在时才验证完整契约。
         if "portals" in config or "field_mappings" in config:
             validate_config(config)
     except ConfigError as exc:
@@ -174,9 +173,9 @@ def load_config(path: Path) -> dict[str, Any]:
 
 
 def load_env_file(path: Path) -> None:
-    """Load KEY=VALUE secrets without overriding the process environment."""
+    """读取 KEY=VALUE 格式的机密配置，不覆盖进程环境变量。"""
     if not path.is_file():
-        raise SystemExit(f"Environment file not found: {path}")
+        raise SystemExit(f"未找到环境文件： {path}")
     for line_number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
         line = raw_line.strip()
         if not line or line.startswith("#"):
@@ -184,12 +183,12 @@ def load_env_file(path: Path) -> None:
         if line.startswith("export "):
             line = line[7:].lstrip()
         if "=" not in line:
-            raise SystemExit(f"Invalid environment entry at {path}:{line_number}")
+            raise SystemExit(f"环境文件中存在无效条目： {path}:{line_number}")
         key, value = line.split("=", 1)
         key = key.strip()
         value = value.strip()
         if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
-            raise SystemExit(f"Invalid environment variable name at {path}:{line_number}")
+            raise SystemExit(f"环境文件中存在无效的环境变量名称： {path}:{line_number}")
         if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
             value = value[1:-1]
         os.environ.setdefault(key, value)
@@ -201,7 +200,7 @@ def db_path(config: dict[str, Any]) -> Path:
     if not path.is_absolute() and path.parts[:2] == ("private_data", "database"):
         resolved = DATABASE_DIR.joinpath(*path.parts[2:]).resolve()
         if not resolved.is_relative_to(DATABASE_DIR.resolve()):
-            raise ValueError("Database path escapes the canonical private database directory")
+            raise ValueError("数据库路径超出规范的私有数据库目录")
         return resolved
     return path if path.is_absolute() else ROOT / path
 
@@ -293,7 +292,7 @@ def source_cookie_env_vars(source: dict[str, Any]) -> list[str]:
 
 
 def source_session_env_var(source: dict[str, Any]) -> str:
-    """Return the active cookie variable, retaining the old public helper name."""
+    """返回当前启用的 cookie 变量，同时保留旧的公开辅助函数名称。"""
     candidates = source_cookie_env_vars(source)
     return next(
         (name for name in candidates if name and os.environ.get(name, "").strip()),
@@ -340,8 +339,8 @@ def validate_cookie_for_source(
     attributes = sorted(name for name in names if name.lower() in COOKIE_ATTRIBUTE_NAMES)
     if attributes:
         raise ValueError(
-            f"{variable} looks like a Set-Cookie response, not a Cookie request header "
-            f"(attributes found: {', '.join(attributes)})"
+            f"{variable} 看起来是 Set-Cookie 响应，而不是 Cookie 请求标头 "
+            f"（检测到的属性：{', '.join(attributes)})"
         )
 
     raw_url = str(source.get("url") or source.get("host") or "")
@@ -349,9 +348,9 @@ def validate_cookie_for_source(
     linkedin_names = sorted(names & LINKEDIN_ONLY_COOKIE_NAMES)
     if linkedin_names and not hostname.endswith("linkedin.com"):
         raise ValueError(
-            f"{variable} contains LinkedIn-only cookies for non-LinkedIn host "
-            f"{hostname or '(unknown)'}: {', '.join(linkedin_names)}. "
-            "Use a domain-scoped Playwright storage-state file for OAuth flows."
+            f"{variable} 包含 LinkedIn 专用 cookie，但目标主机不是 LinkedIn："
+            f"{hostname or '（未知）'}: {', '.join(linkedin_names)}. "
+            "OAuth 流程请使用限定域名的 Playwright storage-state 文件。"
         )
 
     google_names = sorted(
@@ -363,8 +362,8 @@ def validate_cookie_for_source(
         hostname.endswith("google.com") or hostname.endswith("youtube.com")
     ):
         raise ValueError(
-            f"{variable} contains Google-only cookies for non-Google host "
-            f"{hostname or '(unknown)'}: {', '.join(google_names)}"
+            f"{variable} 包含 Google 专用 cookie，但目标主机不是 Google："
+            f"{hostname or '（未知）'}: {', '.join(google_names)}"
         )
 
 
@@ -401,7 +400,7 @@ def http_get(
         except http.client.IncompleteRead:
             if attempt:
                 raise
-    raise RuntimeError("unreachable HTTP retry state")
+    raise RuntimeError("不可达的 HTTP 重试状态")
 
 
 def fetch_greenhouse(source: dict[str, Any]) -> list[JobPosting]:
@@ -430,7 +429,7 @@ def fetch_greenhouse(source: dict[str, Any]) -> list[JobPosting]:
 
 
 def fetch_ashby(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch a public Ashby job board through its documented posting endpoint."""
+    """通过 Ashby 文档说明的职位接口获取公开招聘信息。"""
     board = str(source["board_name"]).strip()
     url = f"https://api.ashbyhq.com/posting-api/job-board/{urllib.parse.quote(board)}"
     data = json.loads(
@@ -485,7 +484,7 @@ def fetch_lever(source: dict[str, Any]) -> list[JobPosting]:
 
 
 def fetch_jobsyn(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch the public Jobsyn/Symphony Talent search API."""
+    """调用公开的 Jobsyn/Symphony Talent 搜索 API。"""
     api_url = source["api_url"]
     params = {str(key): str(value) for key, value in source.get("params", {}).items()}
     page_size = max(1, int(source.get("page_size", 10)))
@@ -534,7 +533,7 @@ def fetch_jobsyn(source: dict[str, Any]) -> list[JobPosting]:
 
 
 def fetch_jibe(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch a public Jibe career API without relying on rendered job cards."""
+    """调用公开的 Jibe 招聘 API，不依赖页面渲染出的职位卡片。"""
     api_url = source["api_url"]
     params = {str(key): str(value) for key, value in source.get("params", {}).items()}
     max_pages = max(1, int(source.get("max_pages", 20)))
@@ -613,7 +612,7 @@ def fetch_jibe(source: dict[str, Any]) -> list[JobPosting]:
 
 
 def fetch_eightfold(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch anonymous public search results from an Eightfold career site."""
+    """从 Eightfold 招聘网站获取无需登录的公开搜索结果。"""
     host = source["host"].rstrip("/")
     domain = source["domain"]
     search_texts = source.get("search_texts") or [source.get("search_text", "")]
@@ -690,7 +689,7 @@ def fetch_eightfold(source: dict[str, Any]) -> list[JobPosting]:
 
 
 def fetch_apple_jobs(source: dict[str, Any]) -> list[JobPosting]:
-    """Read Apple's server-rendered search state, which includes real locations."""
+    """读取 Apple 服务端渲染的搜索状态，其中包含实际工作地点。"""
     body = http_get(
         source["url"],
         request_timeout_seconds(source),
@@ -703,7 +702,7 @@ def fetch_apple_jobs(source: dict[str, Any]) -> list[JobPosting]:
         re.S,
     )
     if not match:
-        raise RuntimeError("Apple search page did not expose its public search state")
+        raise RuntimeError("Apple 搜索页面未提供公开搜索状态")
     hydration = json.loads(json.loads(match.group(1)))
     items = hydration.get("loaderData", {}).get("search", {}).get("searchResults", [])
     jobs: list[JobPosting] = []
@@ -738,7 +737,7 @@ def fetch_apple_jobs(source: dict[str, Any]) -> list[JobPosting]:
 
 
 def fetch_oracle_candidate_experience(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch Oracle Recruiting Candidate Experience's anonymous search API."""
+    """调用 Oracle Recruiting Candidate Experience 无需登录的搜索 API。"""
     api_host = source["api_host"].rstrip("/")
     public_host = source.get("public_host", api_host).rstrip("/")
     site = source["site"]
@@ -950,7 +949,7 @@ def post_json(source: dict[str, Any], url: str, payload: dict[str, Any]) -> dict
 
 
 def fetch_hotjob(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch public Hotjob/Wecruit position lists for campus and social hiring."""
+    """获取 Hotjob/Wecruit 上公开的校园招聘和社会招聘职位列表。"""
     suite_key = source["suite_key"]
     endpoint = (
         f"https://wecruit.hotjob.cn/wecruit/positionInfo/listPosition/{suite_key}"
@@ -1036,7 +1035,7 @@ def fetch_hotjob(source: dict[str, Any]) -> list[JobPosting]:
 
 
 def fetch_zhiye(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch public Beisen iTalent/Zhiye job lists."""
+    """获取公开的北森 iTalent/智业职位列表。"""
     api_url = source["api_url"]
     categories = [str(value) for value in source.get("categories", [])]
     page_size = max(1, int(source.get("page_size", 100)))
@@ -1099,7 +1098,7 @@ def fetch_zhiye(source: dict[str, Any]) -> list[JobPosting]:
 
 
 def fetch_zhiye_html(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch server-rendered Beisen pages that do not expose the newer JSON API."""
+    """读取未提供新版 JSON API 的北森服务端渲染页面。"""
     host = str(source["host"]).rstrip("/")
     sections = [str(value).strip("/") for value in source.get("sections", ["Social"])]
     keywords = [str(value) for value in source.get("search_texts", [""])]
@@ -1226,7 +1225,7 @@ def fetch_cuhk_careers(source: dict[str, Any]) -> list[JobPosting]:
         }
         data = post_json(source, api_url, payload)
         if data.get("status") != "success":
-            raise RuntimeError(f"CUHK API returned non-success status: {data.get('errorCode') or data.get('status')}")
+            raise RuntimeError(f"CUHK API 返回失败状态： {data.get('errorCode') or data.get('status')}")
         result = data.get("data") or {}
         for item in result.get("objectList", []):
             job_id = item.get("jobLinkJobId") or item.get("id") or ""
@@ -1336,22 +1335,21 @@ def fetch_html(source: dict[str, Any]) -> list[JobPosting]:
 
 
 def xiaomi_published_at(value: Any) -> str:
-    """Normalize Xiaomi's YYYY-MM-DD publication date to an ISO timestamp."""
+    """将 Xiaomi 的 YYYY-MM-DD 发布日期规范化为 ISO 时间戳。"""
     clean = str(value or "").strip()
     if not clean:
         return ""
     try:
         parsed = dt.datetime.strptime(clean[:10], "%Y-%m-%d")
-        # The public portal exposes a date without a time or timezone. Keep the
-        # date boundary explicit in China Standard Time instead of pretending it
-        # is a precise UTC publication instant.
+        # 公开门户仅提供日期，没有时间或时区。明确按中国标准时间处理日期边界，
+        # 不要将其伪装成精确的 UTC 发布时间。
         return parsed.replace(tzinfo=dt.timezone(dt.timedelta(hours=8))).isoformat()
     except ValueError:
         return ""
 
 
 def fetch_xiaomi(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch Xiaomi's official public job-search API with keyword pagination."""
+    """通过关键词分页调用 Xiaomi 官方公开职位搜索 API。"""
     api_url = str(
         source.get("api_url")
         or "https://hr.xiaomi.com/website/api/agent/searchJobPage"
@@ -1431,7 +1429,7 @@ def configured_cdp_connect_url(config: dict[str, Any]) -> str:
     browser_config = config.get("application_browser", {})
     if browser_config.get("mode") != "windows_cdp":
         raise RuntimeError(
-            "This source requires application_browser.mode=windows_cdp"
+            "此来源要求 application_browser.mode=windows_cdp"
         )
     cdp_config = browser_config.get("windows_cdp", {})
     env_name = str(cdp_config.get("url_env", "CHROME_CDP_URL"))
@@ -1440,7 +1438,7 @@ def configured_cdp_connect_url(config: dict[str, Any]) -> str:
         or str(cdp_config.get("url", "")).strip()
     )
     if not endpoint:
-        raise RuntimeError(f"Missing Windows Chrome endpoint: {env_name}")
+        raise RuntimeError(f"缺少 Windows Chrome 端点： {env_name}")
     from job_bot.browser_connection import check_cdp_health
 
     return check_cdp_health(endpoint).connect_url
@@ -1457,7 +1455,7 @@ def fetch_jobsdb_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[Job
     with sync_playwright() as playwright:
         browser = playwright.chromium.connect_over_cdp(connect_url, timeout=30_000)
         if not browser.contexts:
-            raise RuntimeError("Dedicated Chrome exposed no persistent context")
+            raise RuntimeError("专用 Chrome 未提供持久化上下文")
         context = browser.contexts[0]
         page = new_scan_page(context)
         try:
@@ -1469,7 +1467,7 @@ def fetch_jobsdb_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[Job
                     page_url, wait_until="domcontentloaded", timeout=45_000
                 )
                 if response is not None and response.status >= 400:
-                    raise RuntimeError(f"JobsDB browser page returned HTTP {response.status}")
+                    raise RuntimeError(f"JobsDB 浏览器页面返回 HTTP {response.status}")
                 try:
                     page.locator('article[data-testid="job-card"]').first.wait_for(
                         state="visible", timeout=20_000
@@ -1477,9 +1475,9 @@ def fetch_jobsdb_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[Job
                 except Exception as exc:
                     body = page.locator("body").inner_text(timeout=3000).lower()
                     if "just a moment" in body or "security check" in body:
-                        raise RuntimeError("JobsDB browser session reached an access check") from exc
+                        raise RuntimeError("JobsDB 浏览器会话触发了访问检查") from exc
                     if page_number == 1:
-                        raise RuntimeError("JobsDB returned no visible job cards") from exc
+                        raise RuntimeError("JobsDB 未返回可见的职位卡片") from exc
                     break
                 cards = page.locator('article[data-testid="job-card"]').evaluate_all(
                     """
@@ -1548,7 +1546,7 @@ def fetch_shixiseng_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[
     with sync_playwright() as playwright:
         browser = playwright.chromium.connect_over_cdp(connect_url, timeout=30_000)
         if not browser.contexts:
-            raise RuntimeError("Dedicated Chrome exposed no persistent context")
+            raise RuntimeError("专用 Chrome 未提供持久化上下文")
         context = browser.contexts[0]
         page = new_scan_page(context)
         try:
@@ -1560,14 +1558,14 @@ def fetch_shixiseng_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[
                     page_url, wait_until="domcontentloaded", timeout=45_000
                 )
                 if response is not None and response.status >= 400:
-                    raise RuntimeError(f"Shixiseng browser page returned HTTP {response.status}")
+                    raise RuntimeError(f"实习僧浏览器页面返回 HTTP {response.status}")
                 try:
                     page.locator(".intern-wrap").first.wait_for(
                         state="visible", timeout=20_000
                     )
                 except Exception:
                     if page_number == 1:
-                        raise RuntimeError("Shixiseng returned no visible internship cards")
+                        raise RuntimeError("实习僧未返回可见的实习职位卡片")
                     break
                 page_cards = page.locator(".intern-wrap").evaluate_all(
                     """
@@ -1636,7 +1634,7 @@ def fetch_shixiseng_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[
 
 
 def fetch_moka_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[JobPosting]:
-    """Read public Moka job cards in a real browser when its API payload is encrypted."""
+    """当 Moka 的 API 载荷加密时，在真实浏览器中读取公开职位卡片。"""
     from job_bot.applications.nvidia_workday import _playwright_api
 
     connect_url = configured_cdp_connect_url(config)
@@ -1645,14 +1643,14 @@ def fetch_moka_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[JobPo
     with sync_playwright() as playwright:
         browser = playwright.chromium.connect_over_cdp(connect_url, timeout=30_000)
         if not browser.contexts:
-            raise RuntimeError("Dedicated Chrome exposed no persistent context")
+            raise RuntimeError("专用 Chrome 未提供持久化上下文")
         page = new_scan_page(browser.contexts[0])
         try:
             response = page.goto(
                 source["url"], wait_until="domcontentloaded", timeout=60_000
             )
             if response is not None and response.status >= 400:
-                raise RuntimeError(f"Moka browser page returned HTTP {response.status}")
+                raise RuntimeError(f"Moka 浏览器页面返回 HTTP {response.status}")
             cards = page.locator('a[href*="#/job/"]')
             cards.first.wait_for(state="visible", timeout=25_000)
             previous_count = 0
@@ -1727,7 +1725,7 @@ def fetch_moka_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[JobPo
 
 
 def fetch_huawei_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[JobPosting]:
-    """Query Huawei's public job API from the site context required by its gateway."""
+    """在网关要求的网站上下文中查询 Huawei 公开职位 API。"""
     from job_bot.applications.nvidia_workday import _playwright_api
 
     connect_url = configured_cdp_connect_url(config)
@@ -1761,12 +1759,12 @@ def fetch_huawei_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[Job
     with sync_playwright() as playwright:
         browser = playwright.chromium.connect_over_cdp(connect_url, timeout=30_000)
         if not browser.contexts:
-            raise RuntimeError("Dedicated Chrome exposed no persistent context")
+            raise RuntimeError("专用 Chrome 未提供持久化上下文")
         page = new_scan_page(browser.contexts[0])
         try:
             response = page.goto(public_url, wait_until="domcontentloaded", timeout=60_000)
             if response is not None and response.status >= 400:
-                raise RuntimeError(f"Huawei browser page returned HTTP {response.status}")
+                raise RuntimeError(f"Huawei 浏览器页面返回 HTTP {response.status}")
             page.wait_for_timeout(4_000)
             for mode in query_modes:
                 for page_number in range(1, max_pages + 1):
@@ -1849,7 +1847,7 @@ def fetch_huawei_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[Job
 
 
 def fetch_alibaba_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[JobPosting]:
-    """Use Alibaba's public department filter and paginator in the dedicated browser."""
+    """在专用浏览器中使用 Alibaba 的公开部门筛选器和分页器。"""
     from job_bot.applications.nvidia_workday import _playwright_api
 
     connect_url = configured_cdp_connect_url(config)
@@ -1863,7 +1861,7 @@ def fetch_alibaba_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[Jo
     with sync_playwright() as playwright:
         browser = playwright.chromium.connect_over_cdp(connect_url, timeout=30_000)
         if not browser.contexts:
-            raise RuntimeError("Dedicated Chrome exposed no persistent context")
+            raise RuntimeError("专用 Chrome 未提供持久化上下文")
         for batch in batches:
             page = new_scan_page(browser.contexts[0])
             try:
@@ -1873,7 +1871,7 @@ def fetch_alibaba_cdp(source: dict[str, Any], config: dict[str, Any]) -> list[Jo
                 )
                 if response is not None and response.status >= 400:
                     raise RuntimeError(
-                        f"Alibaba browser page returned HTTP {response.status}"
+                        f"Alibaba 浏览器页面返回 HTTP {response.status}"
                     )
                 page.wait_for_timeout(5_000)
                 department = page.get_by_text(department_label, exact=True)
@@ -2029,7 +2027,7 @@ def url_with_query(url: str, **updates: Any) -> str:
 
 
 def fetch_icims(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch public iCIMS result cards, including their location and summary."""
+    """获取 iCIMS 公开职位卡片，包括地点和简介。"""
     base_url = url_with_query(source["url"], in_iframe=1, pr=0)
     max_pages = max(1, int(source.get("max_pages", 10)))
     jobs: list[JobPosting] = []
@@ -2102,7 +2100,7 @@ def fetch_icims(source: dict[str, Any]) -> list[JobPosting]:
 
 
 def fetch_attrax(source: dict[str, Any]) -> list[JobPosting]:
-    """Fetch public Attrax vacancy tiles with official filters and pagination."""
+    """使用官方筛选条件和分页获取 Attrax 公开职位信息。"""
     option_ids = source.get("option_ids", [])
     page_size = max(1, int(source.get("page_size", 48)))
     max_pages = max(1, int(source.get("max_pages", 10)))
@@ -2291,17 +2289,16 @@ def fetch_source(
         prepared = prepare_jobsdb_hk_source(source)
         if prepared.get("fetch_via_cdp"):
             if config is None:
-                raise RuntimeError("JobsDB CDP collection requires the runtime config")
+                raise RuntimeError("JobsDB CDP 采集需要运行时配置")
             return fetch_jobsdb_cdp(prepared, config)
         try:
             return fetch_html(prepared)
         except urllib.error.HTTPError as exc:
             if exc.code == 403:
                 raise RuntimeError(
-                    "JobsDB returned Cloudflare 403. Its cf_clearance session is "
-                    "bound to the original browser environment; refresh the search "
-                    "through a supported browser/session or use a JobsDB saved-search "
-                    "email feed. A copied Cookie header alone may not be reusable."
+            "JobsDB 返回 Cloudflare 403。其 cf_clearance 会话绑定到原始浏览器环境；"
+            "请通过受支持的浏览器/会话刷新搜索，或使用 JobsDB 保存的搜索邮件订阅。"
+            "仅复制 Cookie 标头可能无法复用该会话。"
                 ) from exc
             raise
     if source_type == "zhipin":
@@ -2310,29 +2307,29 @@ def fetch_source(
         prepared = prepare_shixiseng_source(source)
         if prepared.get("fetch_via_cdp"):
             if config is None:
-                raise RuntimeError("Shixiseng CDP collection requires the runtime config")
+                raise RuntimeError("实习僧 CDP 采集需要运行时配置")
             return fetch_shixiseng_cdp(prepared, config)
         return fetch_html(prepared)
     if source_type == "moka_cdp":
         if config is None:
-            raise RuntimeError("Moka CDP collection requires the runtime config")
+            raise RuntimeError("Moka CDP 采集需要运行时配置")
         return fetch_moka_cdp(source, config)
     if source_type == "huawei_cdp":
         if config is None:
-            raise RuntimeError("Huawei CDP collection requires the runtime config")
+            raise RuntimeError("Huawei CDP 采集需要运行时配置")
         return fetch_huawei_cdp(source, config)
     if source_type == "alibaba_cdp":
         if config is None:
-            raise RuntimeError("Alibaba CDP collection requires the runtime config")
+            raise RuntimeError("Alibaba CDP 采集需要运行时配置")
         return fetch_alibaba_cdp(source, config)
     if source_type == "cuhk_careers":
         return fetch_cuhk_careers(prepare_cuhk_careers_source(source))
     if source_type == "handshake":
         if config is None:
-            raise RuntimeError("Handshake collection requires the runtime config")
+            raise RuntimeError("Handshake 采集需要运行时配置")
         from job_bot.sources.handshake import fetch_handshake
         return fetch_handshake(source, config)
-    raise ValueError(f"Unsupported source type: {source_type}")
+    raise ValueError(f"不支持的来源类型： {source_type}")
 
 
 def validate_required_env_vars(source: dict[str, Any]) -> None:
@@ -2348,7 +2345,7 @@ def validate_required_env_vars(source: dict[str, Any]) -> None:
     ]
     if missing:
         raise RuntimeError(
-            f"Missing required environment variables for {source['name']}: {', '.join(missing)}"
+            f"以下来源缺少必需的环境变量：{source['name']}: {', '.join(missing)}"
         )
 
 
@@ -2363,10 +2360,10 @@ def score_job(job: JobPosting, config: dict[str, Any]) -> tuple[int, str]:
     foundations = scoring.get("foundation_groups", [])
     if algorithm == "foundation_v2":
         if not foundations:
-            raise ConfigError("foundation_v2 requires scoring.foundation_groups")
+            raise ConfigError("foundation_v2 需要配置 scoring.foundation_groups")
         return score_job_foundations(job, scoring)
     if algorithm != "weighted_keywords_v1":
-        raise ConfigError(f"Unsupported scoring.algorithm: {algorithm}")
+        raise ConfigError(f"不支持的 scoring.algorithm：{algorithm}")
     groups = scoring.get("keyword_groups", [])
     haystack = " ".join([job.title, job.description]).lower()
     title_haystack = job.title.lower()
@@ -2401,7 +2398,7 @@ def score_job(job: JobPosting, config: dict[str, Any]) -> tuple[int, str]:
                 score += points
                 reasons.append(f"{group.get('name', matched_keyword)} ({matched_keyword}, +{points})")
         score = max(0, min(100, score))
-        reason = "Matched: " + "; ".join(reasons) if reasons else "No configured direction match"
+        reason = "已匹配：" + "; ".join(reasons) if reasons else "未匹配到已配置的岗位方向"
         return score, reason
 
     keywords = scoring.get("target_keywords", [])
@@ -2415,7 +2412,7 @@ def score_job(job: JobPosting, config: dict[str, Any]) -> tuple[int, str]:
     if re.search(r"\b(cpu|rtl|systemverilog|microarchitecture|verification|eda)\b", haystack):
         score += 10
     score = min(score, 100)
-    reason = "Matched: " + ", ".join(hits[:10]) if hits else "No configured keyword match"
+    reason = "已匹配：" + ", ".join(hits[:10]) if hits else "未匹配到已配置的关键词"
     return score, reason
 
 
@@ -2427,11 +2424,10 @@ def score_job_foundations(
     job: JobPosting,
     scoring: dict[str, Any],
 ) -> tuple[int, str]:
-    """Score a role using one primary foundation and smaller modifiers.
+    """使用一个主要基础项和较小的修正项为职位评分。
 
-    A foundation describes the job's actual discipline. Title hits receive the
-    full base score. Body-only classification requires multiple independent
-    high-signal terms so generic mentions cannot manufacture a strong match.
+    基础方向描述职位所属的实际领域。职位标题中的匹配项获得完整基础分。仅根据职位描述
+    分类时，必须匹配多个相互独立且信号较强的词项，避免泛泛提及就被误判为高度匹配。
     """
 
     title = job.title.casefold()
@@ -2476,7 +2472,7 @@ def score_job_foundations(
         )
 
     if not foundation_matches:
-        return 0, "Foundation: none (no defining role direction matched)"
+        return 0, "基础方向：无（未匹配到明确岗位方向）"
 
     foundation_matches.sort(
         key=lambda match: (
@@ -2491,7 +2487,7 @@ def score_job_foundations(
     primary = foundation_matches[0]
     score = int(primary["points"])
     reasons = [
-        f"Foundation: {primary['name']} ({primary['scope']}: "
+        f"基础方向：{primary['name']}（{primary['scope']}："
         f"{', '.join(primary['hits'][:3])}, {score:+d})"
     ]
 
@@ -2502,7 +2498,7 @@ def score_job_foundations(
             break
         score += secondary_bonus
         reasons.append(
-            f"Secondary: {secondary['name']} "
+            f"次要方向：{secondary['name']} "
             f"({', '.join(secondary['hits'][:2])}, {secondary_bonus:+d})"
         )
 
@@ -2518,7 +2514,7 @@ def score_job_foundations(
         points = int(modifier.get("points", 0))
         score += points
         reasons.append(
-            f"Modifier: {modifier.get('name', hits[0])} "
+            f"修正项：{modifier.get('name', hits[0])} "
             f"({', '.join(hits[:3])}, {points:+d})"
         )
 
@@ -2527,7 +2523,7 @@ def score_job_foundations(
 
 
 def rescore_jobs(config: dict[str, Any]) -> int:
-    """Recompute fit scores after the matching profile changes."""
+    """匹配资料发生变化后重新计算契合度分数。"""
     conn = connect_db(config)
     rows = conn.execute(
         """
@@ -2647,7 +2643,7 @@ def source_uses_cdp(source: dict[str, Any]) -> bool:
 
 
 def source_parallel_key(source: dict[str, Any]) -> str:
-    """Keep endpoints owned by one employer/tenant out of each other's way."""
+    """隔离不同雇主或租户拥有的接口，避免相互干扰。"""
     explicit = str(source.get("concurrency_group", "")).strip()
     if explicit:
         return explicit.casefold()
@@ -2669,7 +2665,7 @@ def validate_sync_snapshot(
     postings: list[JobPosting],
     config: dict[str, Any],
 ) -> None:
-    """Prevent a broken/partial collector response from mass-deactivating jobs."""
+    """防止采集器故障或仅返回部分结果时批量停用职位。"""
     if not source.get("sync_active", False):
         return
     global_guard = config.get("scan", {}).get("lifecycle_guard", {})
@@ -2695,9 +2691,9 @@ def validate_sync_snapshot(
     required = max(minimum_items, math.ceil(previous * minimum_fraction))
     if current < required:
         raise RuntimeError(
-            f"Lifecycle guard rejected suspicious snapshot for {source['name']}: "
-            f"received {current}, previously active {previous}, required at least "
-            f"{required}. Existing active states were preserved."
+            f"生命周期保护拒绝了来源 {source['name']} 的可疑快照："
+            f"当前收到 {current} 条，之前有 {previous} 条在招职位，至少需要 "
+            f"{required} 条。现有在招状态已保留。"
         )
 
 
@@ -2740,14 +2736,14 @@ def fetch_source_with_retry(
                 raise
             delay = backoff * (2 ** (attempt - 1))
             print(
-                f"{source['name']}: transient error; retry {attempt + 1}/{attempts} "
-                f"in {delay:g}s ({exc})",
+                f"{source['name']}：临时错误；将在 {delay:g} 秒后重试 "
+                f"{attempt + 1}/{attempts}（{exc}）",
                 file=sys.stderr,
                 flush=True,
             )
             if delay:
                 time.sleep(delay)
-    raise AssertionError("unreachable retry loop")
+    raise AssertionError("不可达的重试循环")
 
 
 def scan(
@@ -2767,7 +2763,7 @@ def scan(
         if selected_requested and str(source.get("name", "")).casefold() not in selected:
             continue
         if source.get("enabled", True) is False:
-            print(f"{source['name']}: skipped disabled source", flush=True)
+            print(f"{source['name']}：跳过已禁用的来源", flush=True)
             continue
         sources.append(source)
 
@@ -2775,7 +2771,7 @@ def scan(
     worker_count = max(1, int(max_workers or configured_workers))
 
     def begin(source: dict[str, Any]) -> int:
-        print(f"{source['name']}: scanning...", flush=True)
+        print(f"{source['name']}：正在扫描……", flush=True)
         started = utc_now()
         run_id = conn.execute(
             "INSERT INTO scan_runs(source_name, started_at, status) VALUES (?, ?, 'running')",
@@ -2814,7 +2810,7 @@ def scan(
         conn.commit()
         total_seen += len(postings)
         total_new += new_count
-        print(f"{source['name']}: seen={len(postings)} new={new_count}", flush=True)
+        print(f"{source['name']}：已发现={len(postings)} 新增={new_count}", flush=True)
 
     def fail(source: dict[str, Any], run_id: int, exc: BaseException) -> None:
         conn.execute(
@@ -2822,7 +2818,7 @@ def scan(
             (utc_now(), str(exc), run_id),
         )
         conn.commit()
-        print(f"{source['name']}: ERROR {exc}", file=sys.stderr, flush=True)
+        print(f"{source['name']}：错误 {exc}", file=sys.stderr, flush=True)
 
     if worker_count == 1 or len(sources) < 2:
         for source in sources:
@@ -2846,8 +2842,8 @@ def scan(
             return fetch_source_with_retry(source, config)
 
     print(
-        f"Parallel scan: http={len(http_sources)} workers={worker_count}; "
-        f"cdp_serial={len(cdp_sources)}; same_company_serial=true",
+        f"并行扫描：http={len(http_sources)} 工作线程={worker_count}；"
+        f"cdp_serial={len(cdp_sources)}；same_company_serial=true",
         flush=True,
     )
     with ThreadPoolExecutor(max_workers=worker_count, thread_name_prefix="job-source") as executor:
@@ -2855,7 +2851,7 @@ def scan(
             run_id = begin(source)
             futures[executor.submit(fetch_http_guarded, source)] = (source, run_id)
 
-        # CDP sources share one interactive browser profile, so they remain serial.
+        # CDP 来源共用一个交互式浏览器配置，因此仍需串行运行。
         for source in cdp_sources:
             run_id = begin(source)
             try:
@@ -2986,31 +2982,31 @@ def render_digest(
     today = dt.datetime.now().strftime("%Y-%m-%d")
     edition_label = f" #{edition}" if edition is not None else ""
     if all_active:
-        subject = f"Daily Job Digest{edition_label}: {len(jobs)} active postings ({today})"
-        window_label = "all currently active postings (baseline inventory)"
+        subject = f"每日职位摘要{edition_label}：{len(jobs)} 个在招职位（{today}）"
+        window_label = "全部当前在招职位（基准清单）"
     else:
-        subject = f"Daily Job Digest{edition_label}: {len(jobs)} new postings ({today})"
-        window_label = f"last {hours} hours"
+        subject = f"每日职位摘要{edition_label}：{len(jobs)} 个新职位（{today}）"
+        window_label = f"过去 {hours} 小时"
         if since:
-            window_label += f", first discovered after baseline {since}"
+            window_label += f"；首次发现时间晚于基准 {since}"
     lines = [
         subject,
         "",
-        f"Window: {window_label}",
-        f"Database: {db_path(config)}",
+        f"时间范围：{window_label}",
+        f"数据库：{db_path(config)}",
         "",
     ]
     if not jobs:
-        lines.append("No new postings found.")
+        lines.append("没有找到新职位。")
     if hidden_count:
         lines.extend([
-            f"Showing top {len(jobs)} postings; {hidden_count} lower-ranked postings are still in the database.",
+            f"当前显示前 {len(jobs)} 个职位；数据库中仍有 {hidden_count} 个排名较低的职位。",
             "",
         ])
     sections = (
-        ("Part 1 — Internships", "internship"),
-        ("Part 2 — Full-time Roles", "full_time"),
-        ("Part 3 — Role Type To Confirm", "unknown"),
+        ("第一部分：实习", "internship"),
+        ("第二部分：全职岗位", "full_time"),
+        ("第三部分：岗位类型待确认", "unknown"),
     )
     for section_title, role_kind in sections:
         section_jobs = [job for job in jobs if (job["role_kind"] or "unknown") == role_kind]
@@ -3018,7 +3014,7 @@ def render_digest(
             continue
         lines.extend([f"{section_title} ({len(section_jobs)})", ""])
         if not section_jobs:
-            lines.extend(["No matching postings in this section.", ""])
+            lines.extend(["此类别中没有匹配的职位。", ""])
             continue
         for index, job in enumerate(section_jobs, start=1):
             fit_score = int(job["fit_score"] or 0)
@@ -3030,22 +3026,22 @@ def render_digest(
                 match_tier = "adjacent"
             lines.extend([
                 f"{index}. {job['title']} — {job['company']}",
-                f"   Location: {job['location'] or 'N/A'}",
-                f"   Match tier: {match_tier}",
-                f"   Fit score: {fit_score}/100",
-                f"   Reason: {job['score_reason'] or 'N/A'}",
-                f"   Source: {job['source_name']}",
+                f"   地点：{job['location'] or 'N/A'}",
+                f"   匹配层级：{match_tier}",
+                f"   契合度评分：{fit_score}/100",
+                f"   原因：{job['score_reason'] or 'N/A'}",
+                f"   来源：{job['source_name']}",
                 *(
-                    [f"   Published: {job['published_at']}"]
+                    [f"   发布于：{job['published_at']}"]
                     if job["published_at"]
                     else []
                 ),
-                f"   URL: {job['url']}",
+                f"   URL：{job['url']}",
                 "",
             ])
     if scan_errors:
         lines.extend([
-            "Source warnings:",
+            "来源警告：",
             "",
         ])
         for error in scan_errors:
@@ -3070,7 +3066,7 @@ def send_or_write_digest(
         prefix = f"daily_report_{edition:03d}" if edition is not None else "digest"
         out = DEFAULT_OUT / f"{prefix}_{timestamp}.txt"
         out.write_text(body, encoding="utf-8")
-        print(f"Dry run digest written to {out}")
+        print(f"试运行摘要已写入 {out}")
         return out
 
     host = email_config["smtp_host"]
@@ -3090,10 +3086,10 @@ def send_or_write_digest(
     recipients = [*recipients, *env_recipients]
     if not recipients:
         raise RuntimeError(
-            f"No digest recipient configured; set {recipient_env} in the private env file"
+            f"未配置摘要收件人；请在私有环境文件中设置 {recipient_env}"
         )
     if not username or not password:
-        raise SystemExit("SMTP username/password env vars are required when dry_run=false")
+        raise SystemExit("dry_run=false 时必须配置 SMTP 用户名和密码环境变量")
 
     msg = email.message.EmailMessage()
     msg["From"] = sender
@@ -3106,7 +3102,7 @@ def send_or_write_digest(
             smtp.starttls()
         smtp.login(username, password)
         smtp.send_message(msg)
-    print(f"Digest sent to {', '.join(recipients)}")
+    print(f"摘要已发送至 {', '.join(recipients)}")
     return None
 
 
@@ -3114,7 +3110,7 @@ def cmd_init(args: argparse.Namespace) -> None:
     config = load_config(Path(args.config))
     path = db_path(config)
     connect_db(config).close()
-    print(f"Database initialized: {path}")
+    print(f"数据库已初始化：{path}")
 
 
 def cmd_scan(args: argparse.Namespace) -> None:
@@ -3122,13 +3118,13 @@ def cmd_scan(args: argparse.Namespace) -> None:
     selector = selector_from_cli(args)
     selected = select_sources(config, selector)
     if not selected:
-        raise SystemExit("Source selector matched no enabled sources")
+        raise SystemExit("来源选择器未匹配到已启用的来源")
     summary = scan(
         config,
         selected_sources=[str(source["name"]) for source in selected],
         max_workers=args.max_workers,
     )
-    print(f"Scan complete: seen={summary['seen']} new={summary['new']}")
+    print(f"扫描完成：已发现={summary['seen']} 新增={summary['new']}")
 
 
 def cmd_digest(args: argparse.Namespace) -> None:
@@ -3149,12 +3145,12 @@ def cmd_digest(args: argparse.Namespace) -> None:
 def cmd_rescore(args: argparse.Namespace) -> None:
     config = load_config(Path(args.config))
     count = rescore_jobs(config)
-    print(f"Rescored {count} stored jobs")
+    print(f"已重新计算 {count} 个已保存职位的评分")
 
 
 def cmd_auth_status(args: argparse.Namespace) -> None:
     config = load_config(Path(args.config))
-    print("Credential status (values are never displayed):")
+    print("凭据状态（绝不显示具体值）：")
     for source in config.get("sources", []):
         cookie_variable = source_session_env_var(source)
         cookie_configured = bool(
@@ -3206,7 +3202,7 @@ def cmd_run(args: argparse.Namespace) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Monitor job postings and generate a daily email digest.",
+        description="监控招聘信息并生成每日邮件摘要。",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent(
             """
@@ -3220,97 +3216,97 @@ def build_parser() -> argparse.ArgumentParser:
             """
         ),
     )
-    parser.add_argument("--config", default=str(DEFAULT_CONFIG), help="Path to JSON config")
-    parser.add_argument("--env-file", help="Optional local KEY=VALUE secrets file")
+    parser.add_argument("--config", default=str(DEFAULT_CONFIG), help="JSON 配置文件路径")
+    parser.add_argument("--env-file", help="可选的本地 KEY=VALUE 机密配置文件")
     sub = parser.add_subparsers(required=True)
 
-    init_p = sub.add_parser("init", help="Initialize the SQLite database")
-    init_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="Path to JSON config")
-    init_p.add_argument("--env-file", help="Optional local KEY=VALUE secrets file")
+    init_p = sub.add_parser("init", help="初始化 SQLite 数据库")
+    init_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="JSON 配置文件路径")
+    init_p.add_argument("--env-file", help="可选的本地 KEY=VALUE 机密配置文件")
     init_p.set_defaults(func=cmd_init)
 
-    scan_p = sub.add_parser("scan", help="Fetch sources and store new jobs")
-    scan_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="Path to JSON config")
-    scan_p.add_argument("--env-file", help="Optional local KEY=VALUE secrets file")
+    scan_p = sub.add_parser("scan", help="采集来源并保存新职位")
+    scan_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="JSON 配置文件路径")
+    scan_p.add_argument("--env-file", help="可选的本地 KEY=VALUE 机密配置文件")
     scan_p.add_argument(
         "--source",
         action="append",
-        help="Scan only this exact source name; repeat for multiple sources",
+        help="仅扫描此来源名称；可重复指定多个来源",
     )
     scan_p.add_argument(
         "--exclude-source",
         action="append",
-        help="Exclude this exact source name; repeat for multiple sources",
+        help="排除此来源名称；可重复指定多个来源",
     )
     scan_p.add_argument(
         "--source-category",
         action="append",
-        help="Include only this source_category; repeat for multiple categories",
+        help="仅包含此 source_category；可重复指定多个类别",
     )
     scan_p.add_argument(
         "--source-type",
         action="append",
-        help="Include only this adapter type; repeat for multiple types",
+        help="仅包含此适配器类型；可重复指定多个类型",
     )
     scan_p.add_argument(
         "--company",
         action="append",
-        help="Include only this exact company; repeat for multiple companies",
+        help="仅包含此公司；可重复指定多个公司",
     )
     scan_p.add_argument(
         "--source-browser",
         choices=("any", "http", "cdp"),
         default="any",
-        help="Restrict sources by whether they need the CDP browser",
+        help="按是否需要 CDP 浏览器限制来源",
     )
     scan_p.add_argument(
         "--max-workers",
         type=int,
-        help="Override parallel HTTP source workers; CDP/browser sources remain serial",
+        help="覆盖 HTTP 来源的并行工作线程数；CDP/浏览器来源仍按串行运行",
     )
     scan_p.set_defaults(func=cmd_scan)
 
-    rescore_p = sub.add_parser("rescore", help="Recompute scores for stored jobs")
-    rescore_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="Path to JSON config")
-    rescore_p.add_argument("--env-file", help="Optional local KEY=VALUE secrets file")
+    rescore_p = sub.add_parser("rescore", help="重新计算已保存职位的评分")
+    rescore_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="JSON 配置文件路径")
+    rescore_p.add_argument("--env-file", help="可选的本地 KEY=VALUE 机密配置文件")
     rescore_p.set_defaults(func=cmd_rescore)
 
-    auth_p = sub.add_parser("auth-status", help="Show session variable coverage without revealing values")
-    auth_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="Path to JSON config")
-    auth_p.add_argument("--env-file", help="Optional local KEY=VALUE secrets file")
+    auth_p = sub.add_parser("auth-status", help="显示会话变量覆盖情况，不泄露变量值")
+    auth_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="JSON 配置文件路径")
+    auth_p.add_argument("--env-file", help="可选的本地 KEY=VALUE 机密配置文件")
     auth_p.set_defaults(func=cmd_auth_status)
 
-    digest_p = sub.add_parser("digest", help="Create a digest from recent jobs")
-    digest_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="Path to JSON config")
-    digest_p.add_argument("--env-file", help="Optional local KEY=VALUE secrets file")
+    digest_p = sub.add_parser("digest", help="根据近期职位创建摘要")
+    digest_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="JSON 配置文件路径")
+    digest_p.add_argument("--env-file", help="可选的本地 KEY=VALUE 机密配置文件")
     digest_p.add_argument("--hours", type=int, default=24)
     digest_p.add_argument(
         "--since",
-        help="Optional ISO timestamp; suppress jobs already covered by a later baseline",
+        help="可选 ISO 时间戳；隐藏已被较新基准时间涵盖的职位",
     )
     digest_p.add_argument(
         "--all-active",
         action="store_true",
-        help="Include the full active inventory instead of only newly seen jobs",
+        help="包含全部在招职位，而非仅包含新发现的职位",
     )
-    digest_p.add_argument("--edition", type=int, help="Optional numbered report edition")
-    digest_p.add_argument("--print", action="store_true", help="Print instead of writing/sending")
+    digest_p.add_argument("--edition", type=int, help="可选的报告版本编号")
+    digest_p.add_argument("--print", action="store_true", help="直接打印，不写入文件或发送")
     digest_p.set_defaults(func=cmd_digest)
 
-    run_p = sub.add_parser("run", help="Scan, then write/send digest")
-    run_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="Path to JSON config")
-    run_p.add_argument("--env-file", help="Optional local KEY=VALUE secrets file")
+    run_p = sub.add_parser("run", help="扫描后写入或发送摘要")
+    run_p.add_argument("--config", default=str(DEFAULT_CONFIG), help="JSON 配置文件路径")
+    run_p.add_argument("--env-file", help="可选的本地 KEY=VALUE 机密配置文件")
     run_p.add_argument("--hours", type=int, default=24)
     run_p.add_argument(
         "--since",
-        help="Optional ISO timestamp; suppress jobs already covered by a later baseline",
+        help="可选 ISO 时间戳；隐藏已被较新基准时间涵盖的职位",
     )
     run_p.add_argument(
         "--all-active",
         action="store_true",
-        help="Create a full active-inventory report after scanning",
+        help="扫描后生成完整的在招职位报告",
     )
-    run_p.add_argument("--edition", type=int, help="Optional numbered report edition")
+    run_p.add_argument("--edition", type=int, help="可选的报告版本编号")
     run_p.set_defaults(func=cmd_run)
     return parser
 

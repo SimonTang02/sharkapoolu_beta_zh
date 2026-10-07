@@ -1,23 +1,14 @@
-# Configuration reference
+# 配置参考
 
-Sharkapoolu separates shareable behavior from candidate-owned facts. Public
-configuration is versioned in Git. Identity, claims, credentials, browser state,
-databases, and generated documents live in the ignored private tree.
+Sharkapoolu 将可共享的行为配置与候选人自有事实分开。公开配置纳入 Git 版本管理。身份、经历声明、凭据、浏览器状态、数据库和生成文档保存在被忽略的私有目录树中。
 
-## Paths and precedence
+## 路径与优先级
 
-`private_paths.py` defines every private location. In a source checkout the
-default root is `private_data/`. A wheel installation uses
-`$XDG_DATA_HOME/sharkapoolu` (normally `~/.local/share/sharkapoolu`) so it never
-writes into `site-packages`. `JOBBOT_PRIVATE_DIR` overrides either default. Use
-one stable absolute location on each machine.
+`private_paths.py` 定义所有私有位置。在源码 checkout 中，默认根目录为 `private_data/`。wheel 安装使用 `$XDG_DATA_HOME/sharkapoolu`（通常为 `~/.local/share/sharkapoolu`），避免写入 `site-packages`。`JOBBOT_PRIVATE_DIR` 可覆盖这两种默认值。每台机器应使用一个稳定的绝对路径。
 
-The shared entry point is `job_bot/config/jobbot.json`. Its `includes` are
-loaded in order, with later mappings overriding earlier ones. A local file can
-include the shared entry point and override a few keys. Relative include paths
-are resolved from the file containing them.
+共享配置入口为 `job_bot/config/jobbot.json`。它按顺序加载 `includes`，后加载的映射会覆盖先前映射。本地文件可包含共享入口并覆盖少量键。相对 include 路径以声明该项的文件所在目录为基准。
 
-Validate the two layers separately:
+分别验证两层配置：
 
 ```bash
 jobbot-config --config job_bot/config/jobbot.json
@@ -25,58 +16,43 @@ jobbot-private check
 jobbot-private paths
 ```
 
-## Public configuration
+## 公开配置
 
 ### `runtime.json`
 
-- `database.path`: SQLite destination. Keep it under the private root.
-- `scan.max_workers`: maximum parallel source requests.
-- `scan.retry_attempts` and `retry_backoff_seconds`: bounded retry policy.
-- `scan.lifecycle_guard`: blocks suspiciously small or empty refreshes from
-  replacing a previously healthy source result.
-- `scan.auto_start_windows_chrome` and `browser_start_wait_seconds`: optional
-  dedicated-browser startup behavior.
-- `application_browser.mode`: `local_persistent` or `windows_cdp`.
-- `application_browser.auto_submit`: must remain `false`.
-- `application_browser.windows_cdp`: endpoint or environment-variable name for
-  a restricted dedicated Chrome connection.
-- `tab_management`: limits active tabs, protects populated forms and session
-  anchors, and controls duplicate cleanup and screenshots.
-- `digest`: report limit, minimum score, title filters, deduplication, and scan
-  error visibility.
-- `reporting`: timezone and weekly-report generation policy.
-- `email`: SMTP transport and environment-variable names. `dry_run` should stay
-  enabled until delivery is intentionally configured.
+- `database.path`：SQLite 文件位置，应位于私有根目录下。
+- `scan.max_workers`：来源请求的最大并行数。
+- `scan.retry_attempts` 和 `retry_backoff_seconds`：有上限的重试策略。
+- `scan.lifecycle_guard`：阻止可疑的小批或空刷新覆盖先前健康的来源结果。
+- `scan.auto_start_windows_chrome` 和 `browser_start_wait_seconds`：可选的专用浏览器启动行为。
+- `application_browser.mode`：`local_persistent` 或 `windows_cdp`。
+- `application_browser.auto_submit`：必须保持 `false`。
+- `application_browser.windows_cdp`：受限专用 Chrome 连接的端点或环境变量名称。
+- `tab_management`：限制活动标签页，保护已填写表单和会话锚点，并控制重复页清理和截图。
+- `digest`：报告条数、最低分数、标题筛选、去重和扫描错误可见性。
+- `reporting`：时区和周报生成策略。
+- `email`：SMTP 传输及环境变量名称。除非明确配置投递，否则应保持 `dry_run` 开启。
 
 ### `sources.json`
 
-Each `sources[]` item describes one collector. Common fields include `name`,
-`type`, company/tenant identifiers, `source_category`, `sync_active`,
-`role_kinds`, search text, include/exclude patterns, and an official reference.
-Adapter-specific endpoint and pagination fields are allowed. Disable a source
-instead of deleting it when its definition may be useful later.
+每个 `sources[]` 项描述一个采集器。常见字段包括 `name`、`type`、公司/租户标识、`source_category`、`sync_active`、`role_kinds`、搜索文本、包含/排除模式和官方参考链接。允许适配器专用的端点及分页字段。若某来源定义日后可能还会使用，应停用而不是删除。
 
 ### `scoring.json`
 
-- `bands`: score thresholds shown in collection reports.
-- `foundation_groups`: primary role families and their evidence keywords.
-- `modifiers`: bounded additions or deductions by title/body scope.
-- `keyword_groups`: compatibility scoring weights and title bonuses.
+- `bands`：职位采集报告中展示的分数区间。
+- `foundation_groups`：主要岗位族及其证据关键词。
+- `modifiers`：按标题/正文范围设置的有界加分或扣分。
+- `keyword_groups`：兼容评分权重和标题加分。
 
-Scores rank review order; they do not assert candidate qualification.
+分数用于安排审查顺序，不代表候选人具备相应资格。
 
 ### `strategy.json`
 
-Defines geographic and degree tracks, target direction order, classification
-priority, A/B thresholds, stored-score bonuses, role-pattern classifiers,
-foundation overrides, and track-specific eligibility windows. Update dates and
-graduation assumptions when the candidate's recruiting cycle changes.
+定义地区和学位轨道、目标方向顺序、分类优先级、A/B 阈值、已存分数加成、岗位模式分类器、基础方向覆盖规则和按轨道划分的资格窗口。候选人的招聘周期变化时，应更新日期和毕业时间假设。
 
 ### `workflows.json`
 
-`workflows` maps a name to ordered modules, an optional source selector,
-parallelism, and error policy. `experiment_tracking` controls reproducibility
-manifests and effective-config hashes. Always preview an unfamiliar workflow:
+`workflows` 将工作流名称映射到有序模块、可选来源选择器、并行设置和错误策略。`experiment_tracking` 控制可复现 manifest 和 effective-config 哈希。遇到不熟悉的工作流，务必先预览：
 
 ```bash
 make workflow-plan WORKFLOW=<name>
@@ -84,191 +60,142 @@ make workflow-plan WORKFLOW=<name>
 
 ### `portals.json`
 
-- `session_audit`: login-probe concurrency and timeout.
-- `company_profiles`: company matching and account rules.
-- `adapters`: platform/host routing, scripts, timeouts, session probes, and
-  draft capability.
+- `session_audit`：登录探测的并发数和超时。
+- `company_profiles`：公司匹配和账户规则。
+- `adapters`：平台/主机路由、脚本、超时、会话探测和草稿能力。
 
-Declaring an adapter does not authorize an application submission.
+声明适配器并不等于授权提交申请。
 
 ### `field_mappings.json`
 
-Maps neutral profile paths to form concepts for identity and documents. Its
-regional policy records which values require explicit confirmation. Safety
-settings require authorized values, block inferred legal answers, capture a
-review artifact, and keep submission disabled.
+将中性的档案路径映射到身份信息和文档等表单概念。地区策略记录哪些值必须显式确认。安全设置要求授权后才能填入相应值，禁止推断法律答案，捕获审阅材料，并保持提交功能关闭。
 
 ### `penn_channels.json`
 
-Defines university career channels and campus-employment leads. Hour scenarios
-support estimated monthly pay in reports. Login-required channels remain
-browser-assisted rather than embedding institutional credentials.
+定义大学职业渠道和校园就业线索。工时方案用于在报告中估算月薪。要求登录的渠道仍通过浏览器辅助访问，不能将机构凭据写入配置。
 
-## Private application profile
+## 私有申请档案
 
-Create it from `examples/application_profile.json`. It is the canonical source
-for facts copied into application forms.
+根据 `examples/application_profile.json` 创建。该文件是写入申请表单的事实的权威来源。
 
-### Top-level metadata
+### 顶层元数据
 
-- `$schema`: editor hint pointing at the checked-in JSON Schema.
-- `schema_version`: currently `1`; change only with a repository migration.
+- `$schema`：指向仓库 JSON Schema 的编辑器提示。
+- `schema_version`：当前为 `1`；只有执行仓库迁移时才修改。
 
 ### `fields`
 
-Holds stable contact and identity values: referral source, previous-employer
-status, legal/preferred/native names, email, phone, postal address, country,
-date of birth, and public profile URLs. Use the exact form expected by official
-documents where a portal asks for legal identity. Leave an unknown value blank
-or `null`; do not guess.
+保存稳定的联系与身份信息：推荐来源、是否曾在雇主处工作、法定/偏好/本族姓名、邮箱、电话、邮寄地址、国家、出生日期和公开个人资料 URL。门户询问法定身份时，使用与正式证件一致的格式。未知值留空或设为 `null`，不要猜测。
 
 ### `documents`
 
-`resume_path` and `cover_letter_path` select reviewed upload files. Paths may be
-relative to the project root. Confirm that each file matches the role and
-language policy before opening an application adapter.
+`resume_path` 和 `cover_letter_path` 选择已审阅的上传文件。路径可相对于项目根目录。打开申请适配器前，确认文件符合目标岗位和语言要求。
 
 ### `education`
 
-Each record stores school, degree, field, GPA, and start/end month and year.
-`portal_values` stores verified spellings or hierarchical choices required by a
-specific portal without changing the neutral facts. Keep graduation month as
-well as year when known.
+每条记录保存学校、学位、专业、GPA、开始/结束月份和年份。`portal_values` 保存特定门户要求的已核实拼写或层级选项，不更改中性事实。已知时同时保留毕业月份和年份。
 
-### `languages`, `work_experience`, `projects`, and `skills`
+### `languages`、`work_experience`、`projects` 和 `skills`
 
-These are reusable structured form entries. Language records contain the
-language, native flag, and self-assessed proficiency. Experience and project
-records may contain portal-supported fields, but every claim must match the
-evidence profile or reviewed resume. `skills` is a list of concise labels.
+这些字段是可复用的结构化表单条目。语言记录包含语言、是否母语和自评熟练度。工作和项目记录可包含门户支持的字段，但每项声明必须与证据档案或已审阅简历一致。`skills` 是简短标签列表。
 
-### `workday_checkbox_groups` and `custom_answers`
+### `workday_checkbox_groups` 和 `custom_answers`
 
-These map exact portal prompts to candidate-confirmed answers. Keep uncertain
-answers `null`. Text changes by a portal may invalidate an exact prompt match,
-so review every resulting form.
+将门户精确提示映射到候选人确认的答案。不确定答案保持 `null`。门户文字变化会使精确提示匹配失效，因此应检查最终表单中的每一项。
 
 ### `answer_rules`
 
-Stores narrowly scoped reusable answer rules for compatible prompts. Rules must
-identify their scope and source of truth. Do not create a broad rule for a
-legal, immigration, demographic, compensation, or declaration question.
+保存适用于兼容提示的、范围严格限定的可复用答案规则。每条规则必须注明适用范围和事实来源。法律、移民、人口统计、薪酬或声明类问题不得使用宽泛规则。
 
 ### `voluntary_disclosures`
 
-Contains optional demographic choices and terms acceptance. A blank value means
-no selection. Terms must be reviewed for the particular application before
-`accept_terms` is set.
+包含可选人口统计选择和条款接受状态。空值表示未选择。设置 `accept_terms` 前，必须审阅本次申请对应的条款。
 
 ### `explicit_authorization`
 
-- `user_confirmed`: whether the candidate explicitly confirmed the recorded
-  authorization facts.
-- `location_scopes`: countries or jurisdictions covered by that confirmation.
-- `work_authorized` and `sponsorship_required`: confirmed answers, or `null`.
-- `company_consents`: company-specific confirmed consents.
+- `user_confirmed`：候选人是否明确确认了记录的授权事实。
+- `location_scopes`：该确认涵盖的国家或司法辖区。
+- `work_authorized` 和 `sponsorship_required`：已确认答案，或 `null`。
+- `company_consents`：针对具体公司的已确认同意。
 
-Authorization in one country must not be reused for another country.
+某个国家的授权不得挪用于其他国家。
 
 ### `career_preferences`
 
-Stores role/city adjustment preference and `resume_language_policy`. The latter
-selects default resume language by employer group, lets an explicit job-language
-requirement override the default, records the preferred page limit, requires
-rendered-PDF review, and names the chosen Chinese font.
+保存岗位/城市调整偏好和 `resume_language_policy`。后者按雇主组选择简历默认语言，允许明确的职位语言要求覆盖默认值，记录期望页数，要求审阅渲染 PDF，并注明所选中文字体。
 
 ### `safety`
 
-- `allow_sensitive_answers`: permits only already confirmed sensitive answers
-  to be filled; it does not permit inference.
-- `allow_server_draft`: permits an explicit adapter action to save a server-side
-  draft.
-- `allow_submit`: must remain `false`.
+- `allow_sensitive_answers`：允许填写已确认的敏感答案；不允许推断答案。
+- `allow_server_draft`：允许适配器在明确操作下保存服务端草稿。
+- `allow_submit`：必须保持 `false`。
 
 ### `personal_facts_confirmation`
 
-This optional compatibility object records dated provenance for candidate facts
-that do not yet have a stable first-class field, such as an advisor/laboratory
-clarification. Prefer a normal structured field when one exists. Each entry
-should identify when and how the candidate confirmed it.
+此可选兼容对象记录尚无稳定一等字段的候选人事实来源和确认日期，例如顾问/实验室澄清。已有常规结构化字段时应优先使用。每条记录都应注明候选人何时、如何确认。
 
-## Private evidence profile
+## 私有证据档案
 
-`evidence_profile.json` is the canonical claim inventory used by CV tools.
+`evidence_profile.json` 是简历工具使用的权威声明清单。
 
-- `identity`: display/headline names and cross-file email.
-- `graduation_school` and `expected_graduation_date`: normalized current-degree
-  completion facts.
-- `tailored_summaries`: reviewed summaries keyed by target family.
-- `candidate_summary` and `closing_strength`: reusable positioning statements.
-- `evidence_groups`: named groups with match keywords and a factual evidence
-  statement.
-- `education_gpa`: reviewed GPA display by institution.
-- `graduation_confirmation`: school, month/year, confirmation date, and source
-  for the current graduation fact.
+- `identity`：展示名/标题姓名及跨文件邮箱。
+- `graduation_school` 和 `expected_graduation_date`：规范化的当前学位完成信息。
+- `tailored_summaries`：按目标岗位族记录的已审阅摘要。
+- `candidate_summary` 和 `closing_strength`：可复用的个人定位陈述。
+- `evidence_groups`：具名证据组、匹配关键词和事实陈述。
+- `education_gpa`：按学校整理并已审阅的 GPA 展示格式。
+- `graduation_confirmation`：当前毕业信息的学校、月份/年份、确认日期和来源。
 
-The checker compares the identity email with the application profile. Other
-duplicated education facts still require human review.
+检查器会将身份邮箱与申请档案比对。其他重复教育信息仍需人工审阅。
 
-## Private keyword library
+## 私有关键词库
 
-`application_keywords.json` contains evidence-backed vocabulary usable by the
-CV and application bots.
+`application_keywords.json` 保存简历和申请工具可使用的、有证据支持的词汇。
 
-- `sources`: stable source IDs with paths/descriptions.
-- `usage_rules`: restrictions applied to every selection.
-- `technical_keywords`: technical skill records.
-- `collaboration_personality_keywords`: teamwork and working-style records.
-- `role_presets`: curated keyword IDs for a target role family.
+- `sources`：带稳定 ID 的来源路径/说明。
+- `usage_rules`：应用于每次选择的限制。
+- `technical_keywords`：技术技能记录。
+- `collaboration_personality_keywords`：团队协作和工作风格记录。
+- `role_presets`：适用于目标岗位族的精选关键词 ID。
 
-Each keyword needs a unique `id`, English and Chinese labels, factual evidence,
-an English example, valid `source_ids`, and `claim_status`. Optional fields can
-record proficiency, matching variants, and a shorter resume label. Presets may
-reference only IDs that exist in the matching section; the checker enforces
-this.
+每个关键词都需要唯一的 `id`、中英文标签、事实证据、英文示例、有效的 `source_ids` 和 `claim_status`。可选字段记录熟练程度、匹配变体和简历短标签。预设只能引用对应分组中存在的 ID；检查器会验证。
 
-Inspect selections without editing forms:
+查看选择结果，不要修改表单：
 
 ```bash
 applybot keywords --help
 cvbot --help
 ```
 
-## Credentials and session pointers
+## 凭据和会话指针
 
-`private_data/credentials/passport.env` uses `NAME=VALUE` lines and mode `600`.
-Supported naming families include:
+`private_data/credentials/passport.env` 使用 `NAME=VALUE` 格式，文件权限为 `600`。支持的命名族包括：
 
 - `COMPANY_<SLUG>_{USERNAME,PASSWORD,COOKIE,STORAGE_STATE}`
 - `PLATFORM_<SLUG>_{USERNAME,PASSWORD,COOKIE,STORAGE_STATE}`
 - `CHROME_CDP_URL`
-- `SMTP_USERNAME`, `SMTP_PASSWORD`, and `JOBBOT_EMAIL_TO`
+- `SMTP_USERNAME`、`SMTP_PASSWORD` 和 `JOBBOT_EMAIL_TO`
 
-Populate only variables used by enabled integrations. Prefer browser storage
-state for SSO, MFA, or localStorage-backed sessions. A cookie value is a request
-header for one exact target domain and must not be reused elsewhere.
+只填写已启用集成实际使用的变量。SSO、MFA 或依赖 localStorage 的会话优先使用浏览器 storage state。cookie 值只适用于一个确切目标域的请求头，不能在其他地方复用。
 
-## Local runtime override
+## 本地运行覆盖
 
-`examples/job_bot.local.json` demonstrates a private overlay for database path,
-browser endpoint, and email routing. Keep behavior changes here; keep secret
-values in the environment file. When the private root is outside the clone,
-adjust the shared-config include to an absolute path.
+`examples/job_bot.local.json` 演示用于数据库路径、浏览器端点和邮件路由的私有覆盖。行为更改放在此处；密钥放在环境文件中。私有根目录在 clone 外部时，将共享配置 include 调整为绝对路径。
 
-## Editing checklist
+## 编辑检查清单
 
-After changing a public configuration file:
+更改公开配置文件后：
 
 ```bash
 make config-check
 make test
 ```
 
-After changing private facts or keywords:
+更改私有事实或关键词后：
 
 ```bash
 make private-check
 make public-audit
 ```
 
-Review any generated resume PDF and application field report before use.
+使用前审阅生成的简历 PDF 和申请字段报告。

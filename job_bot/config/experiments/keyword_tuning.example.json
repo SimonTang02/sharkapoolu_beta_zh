@@ -2,7 +2,7 @@
   "includes": ["../jobbot.json"],
   "experiment": {
     "name": "keyword_tuning_example",
-    "hypothesis": "Raise direct RTL/CDC evidence and test a smaller JobsDB page budget."
+    "hypothesis": "提高 RTL/CDC 直接证据的权重，并测试更小的 JobsDB 页面抓取上限。"
   },
   "patches": [
     {

@@ -1,4 +1,4 @@
-"""Explicitly authorized application answers and geographic safeguards."""
+"""明确授权的申请答案与地域保护措施。"""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ HONG_KONG_LOCATION_MARKERS = ("hong kong", "香港")
 
 def location_in_authorized_scope(location: str, scopes: list[str]) -> bool:
     normalized = (location or "").casefold()
-    # A mixed-country requisition is not covered merely because one office is.
+    # 招聘职位涉及多个国家时，仅覆盖其中一个办公室并不足够。
     parts = re.split(r"[;|/]|\bor\b", normalized)
     if len(parts) > 1:
         return all(location_in_authorized_scope(part.strip(), scopes) for part in parts)
@@ -44,15 +44,15 @@ def location_in_authorized_scope(location: str, scopes: list[str]) -> bool:
         normalized,
     ):
         return False
-    # 'Hong Kong, China' must not inherit mainland-only work permission.
+    # “Hong Kong, China” 不得继承仅适用于中国大陆的工作许可。
     if any(marker in normalized for marker in HONG_KONG_LOCATION_MARKERS):
         remainder = re.sub(r"hong kong|香港|china|中国|sar|特别行政区", "", normalized)
         return "hong_kong" in scopes and not re.sub(r"[\s,，()（）.\-]+", "", remainder)
     if "mainland_china" in scopes and any(
         marker.casefold() in normalized for marker in CHINA_LOCATION_MARKERS
     ):
-        # Reject unrecognized geographic fragments instead of accepting any
-        # string containing 'China' (for example 'China, Shanghai, London').
+        # 拒绝无法识别的地域片段，不要因为字符串中含有
+        # “China” 就接受（例如“China, Shanghai, London”）。
         known = list(CHINA_LOCATION_MARKERS) + [
             "shanghai", "beijing", "shenzhen", "guangzhou", "chengdu", "wuhan",
             "hangzhou", "nanjing", "suzhou", "xi'an", "xian", "hefei",
@@ -67,7 +67,7 @@ def location_in_authorized_scope(location: str, scopes: list[str]) -> bool:
 
 
 def is_work_permission_question(question: str) -> bool:
-    """Recognize legal work/visa answers even in legacy custom-answer maps."""
+    """即使在旧版自定义答案映射中，也识别法律/签证问题的答案。"""
     return bool(re.search(
         r"authori[sz]ed to work|right to work|sponsor|work permit|"
         r"employer support.*authori[sz]ation|合法工作|工作许可|工作簽證|工作签证",
@@ -94,7 +94,7 @@ def apply_explicit_authorization(
     scopes: list[str],
     amd_privacy_accepted: bool,
 ) -> dict[str, Any]:
-    """Store only answers explicitly supplied by the user."""
+    """仅保存用户明确提供的答案。"""
     gender_value = {
         "male": "Male",
         "female": "Female",

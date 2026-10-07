@@ -1,11 +1,11 @@
-"""Bounded, caller-owned page preparation for one verified Synopsys flow.
+"""为一个已验证的 Synopsys 流程准备页面，限于调用方所拥有的页面。
 
-This module owns no browser, navigation, credentials, database or CLI runner.
-An authorized caller supplies an already-open page and a private profile.
-No button is clicked, including Continue: account creation and intermediate
-POSTs are not safe substitutes for a review checkpoint. Public Register has
-password fields and is therefore refused. Compliance/Review was not learned
-from an authenticated template and remains a manual boundary.
+本模块不拥有浏览器、导航、凭据、数据库或 CLI 运行器。
+授权调用方须提供已打开的页面和私有档案。
+本模块不会点击任何按钮，包括 Continue（继续）：创建账户和中间 POST 请求
+都不能安全地替代人工审阅检查点。公开的 Register（注册）页面含有密码字段，
+因此会被拒绝。Compliance/Review（合规/审阅）页面尚未通过已认证模板了解，
+仍须由人工处理。
 """
 
 from __future__ import annotations
@@ -39,8 +39,8 @@ CHALLENGE_SELECTOR = (
     'input[name="verificationCode"], input[name="securityCode"]'
 )
 
-# Numeric Avature IDs are matched as attributes, not invalid CSS such as #162.
-# Each input must also retain its observed label and input type.
+# Avature 数字 ID 按属性匹配，不使用 #162 这类无效 CSS 选择器。
+# 每个输入框还必须保留观察到的标签和输入类型。
 FIELD_SPECS = (
     ("162", "first_name", "First name", "text"),
     ("163", "last_name", "Last name", "text"),
@@ -72,8 +72,8 @@ def _normalise(text: str) -> str:
 
 
 def _report(status: str, reason: str, stage: str | None = None) -> dict[str, Any]:
-    # Values, DOM text, URLs with query data, document paths and exceptions are
-    # intentionally excluded. All emitted strings are controlled metadata.
+    # 字段值、DOM 文本、含查询参数的网址、文档路径和异常信息
+    # 均会有意排除。所有输出字符串都是受控元数据。
     return {
         "adapter": "synopsys_avature", "employer_req_id": JOB_ID,
         "status": status, "reason": reason, "stage": stage,
@@ -107,13 +107,13 @@ def _form_is_local(page: Any, selector: str) -> bool:
     if forms.count() != 1:
         return False
     action = forms.first.get_attribute("action")
-    # The public forms post back to their current route with no action attr.
-    # Do not infer the meaning of a newly introduced explicit action.
+    # 公开表单会提交回当前路由，且没有 action 属性。
+    # 不要推断新出现的显式 action 的含义。
     return not action and (forms.first.get_attribute("method") or "").lower() == "post"
 
 
 def inspect_page(page: Any) -> dict[str, Any]:
-    """Read only req/heading/stage structure; never read a contact value."""
+    """仅读取岗位编号/标题/阶段结构；绝不读取联系方式字段值。"""
     try:
         route = _route(page.url)
         if route is None:
@@ -172,7 +172,7 @@ def _questions(page: Any, report: dict[str, Any]) -> None:
     labels = {_normalise(x) for x in inventory_questions(page, QUESTION_SELECTOR)}
     contact_labels = {_normalise(spec[2]) for spec in FIELD_SPECS}
     report["pending_questions"] = sorted(labels & KNOWN_QUESTIONS)
-    # Unknown labels can contain user data; emit a count, not arbitrary text.
+    # 未知标签可能包含用户数据；仅输出数量，不输出任意文本。
     report["unknown_question_count"] = len(labels - KNOWN_QUESTIONS - contact_labels)
 
 
@@ -209,11 +209,9 @@ def prepare_page(
     resume_reviewed: bool = False,
     allow_submit: bool = False,
 ) -> dict[str, Any]:
-    """Prepare only the current verified step; caller advances manually.
+    """仅准备当前已验证的步骤；由调用方手动推进。
 
-    A reviewed resume can only be uploaded to one explicitly labelled file
-    input inside the learned resume form. No unlabeled fallback is attempted.
-    All declaration/consent/country/education/custom answers remain manual.
+    已审阅的简历只能上传到学习所得简历表单中一个带有明确标签的文件输入框。不会尝试无标签的后备输入框。所有声明/同意/国家/教育/自定义答案均由人工填写。
     """
     if (
         allow_submit is not False or not isinstance(profile, dict)

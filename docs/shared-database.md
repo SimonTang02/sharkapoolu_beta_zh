@@ -1,8 +1,7 @@
 # 两台 WSL 共用私人数据库
 
 一台主机保存 SQLite，两台 WSL 联网读写同一份数据库。主机使用本地 SQLite；
-客户端经 SSH 发送 SQL 和参数，SQLite 引擎在主机上执行操作。私人库继续位于
-`private_data/database/`，无需提交 GitHub。
+客户端经 SSH 发送 SQL 和参数，SQLite 引擎在主机上执行操作。默认情况下，私人库位于 clone 内的 `private_data/database/`；设置 `JOBBOT_PRIVATE_DIR` 后，路径会随私有根目录迁移。无需提交 GitHub。
 
 ```mermaid
 flowchart LR

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Advance Eightfold application entries to their authentication boundary."""
+"""推进 Eightfold 申请入口至身份验证边界。"""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ def _fill_if_present(page, selector: str, value: str) -> bool:
 
 
 def _local_phone(phone: str) -> str:
-    """Return a local HK number when Eightfold already selected +852."""
+    """Eightfold 已选 +852 时，返回本地香港电话号码。"""
     compact = "".join(character for character in phone if character.isdigit())
     return compact[3:] if compact.startswith("852") else compact
 
@@ -69,13 +69,13 @@ def main() -> None:
         (args.application_id,),
     ).fetchone()
     if not row or row["platform"] != "eightfold":
-        raise SystemExit("Application is not an Eightfold campaign role")
+        raise SystemExit("该申请不是 Eightfold 批次岗位")
     profile = json.loads(Path(row["profile_path"]).read_text(encoding="utf-8"))
     if profile.get("safety", {}).get("allow_submit"):
-        raise SystemExit("Safety violation: allow_submit must remain false")
+        raise SystemExit("安全错误：allow_submit 必须保持为 false")
     email = str(profile.get("fields", {}).get("email", "")).strip()
     if not email:
-        raise SystemExit("The isolated profile has no email")
+        raise SystemExit("隔离的档案中没有电子邮箱")
 
     load_env_file(Path(args.env))
     _, cdp_url = resolve_browser_connection(config)
@@ -111,9 +111,9 @@ def main() -> None:
         page.wait_for_timeout(1_500)
         body = _body_text(page)
 
-        # Current Eightfold tenants may begin with resume bootstrapping instead
-        # of email authentication. Uploading here only creates a candidate
-        # profile draft; it is not the job application's final Submit action.
+        # 当前的 Eightfold 租户可能会先进入简历初始化流程，
+        # 而不是电子邮件身份验证。在此上传只会创建候选人
+        # 档案草稿，不是岗位申请的最终提交操作。
         files = page.locator("input[type=file]")
         if (
             files.count()
@@ -137,8 +137,8 @@ def main() -> None:
             )
             if phone_fields.count() and phone:
                 phone_fields.first.fill(_local_phone(phone))
-            # This tightly guarded Submit creates/updates the Eightfold
-            # candidate profile only. Never click a Submit after this screen.
+            # 此处受严格保护的 Submit 操作仅会创建/更新 Eightfold
+            # 候选人档案。离开此页面后绝不要点击任何 Submit。
             profile_submit = page.get_by_role("button", name="提交", exact=True)
             if not profile_submit.count():
                 profile_submit = page.get_by_role("button", name="Submit", exact=True)
@@ -169,7 +169,7 @@ def main() -> None:
 
         if any(term in body for term in ("创建新帐户", "创建帐户", "create account")):
             status = "account_creation_required"
-            note = "Eightfold candidate profile is prepared; account creation/verification remains."
+            note = "Eightfold 候选人档案已准备就绪；账户创建/验证仍待完成。"
         elif any(
             term in body
             for term in (
@@ -183,19 +183,19 @@ def main() -> None:
             )
         ):
             status = "authentication_required"
-            note = "Eightfold candidate profile is prepared; password or verification remains."
+            note = "Eightfold 候选人档案已准备就绪；密码或验证步骤仍待完成。"
         elif any(term in body for term in ("privacy", "consent", "terms")):
             status = "policy_consent_required"
-            note = "Eightfold reached an unapproved policy/consent step; no consent was accepted."
+            note = "Eightfold 已进入未经批准的政策/同意步骤；未接受任何同意条款。"
         elif profile_form.count():
             status = "profile_bootstrap_required"
-            note = "Eightfold resume was parsed and corrected, but candidate profile creation did not advance."
+            note = "Eightfold 已解析并更正简历，但候选人档案创建流程未能继续。"
         elif any(term in body for term in ("job application", "申请职位", "apply for")):
             status = "browser_form_started"
-            note = "Eightfold candidate profile is ready and the job application form is open; final submit was not clicked."
+            note = "Eightfold 候选人档案已就绪，岗位申请表已打开；未点击最终提交。"
         else:
             status = "manual_required"
-            note = "Eightfold state changed but no safe editable job form or authentication boundary was detected."
+            note = "Eightfold 状态已变化，但未检测到安全且可编辑的岗位申请表或身份验证边界。"
 
         artifact = save_fill_test_artifact(
             page,
@@ -223,8 +223,8 @@ def main() -> None:
         add_event(conn, row["id"], "eightfold_progress", {"status": status, "url": page.url})
         conn.commit()
         print(
-            f"Eightfold application {row['id']}: {status}; "
-            f"screenshot={artifact['screenshot_path']}"
+            f"Eightfold 申请 {row['id']}：{status}；"
+            f"截图={artifact['screenshot_path']}"
         )
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-command daily collection, scoring, reporting, and intervention tracking."""
+"""通过单条命令完成每日采集、评分、报告和跟进记录。"""
 
 from __future__ import annotations
 
@@ -81,17 +81,17 @@ def windows_path(path: Path) -> str:
 
 
 def start_windows_job_chrome() -> str:
-    """Start the isolated Windows Chrome profile without changing portproxy state."""
+    """启动隔离的 Windows Chrome 配置，不更改 portproxy 状态。"""
     if not is_wsl():
-        raise RuntimeError("automatic Windows Chrome launch is only available inside WSL")
+        raise RuntimeError("仅可在 WSL 中自动启动 Windows Chrome")
     powershell = Path(
         "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
     )
     script = ROOT / "job_bot" / "scripts" / "windows" / "start-job-chrome.ps1"
     if not powershell.is_file():
-        raise RuntimeError(f"PowerShell executable not found: {powershell}")
+        raise RuntimeError(f"未找到 PowerShell 可执行文件： {powershell}")
     if not script.is_file():
-        raise RuntimeError(f"Chrome launcher not found: {script}")
+        raise RuntimeError(f"未找到 Chrome 启动脚本： {script}")
     result = subprocess.run(
         [
             str(powershell),
@@ -109,7 +109,7 @@ def start_windows_job_chrome() -> str:
     )
     if result.returncode:
         detail = (result.stderr or result.stdout).strip()
-        raise RuntimeError(f"Windows Chrome launcher failed: {detail}")
+        raise RuntimeError(f"Windows Chrome 启动器运行失败： {detail}")
     return (result.stdout or "Chrome launch requested").strip()
 
 
@@ -118,34 +118,34 @@ def ensure_cdp(
 ) -> tuple[bool, str]:
     sources = enabled_cdp_sources(config)
     if not sources:
-        return True, "No enabled CDP sources"
+        return True, "没有启用的 CDP 来源"
     endpoint = cdp_endpoint(config)
     if not endpoint:
-        return False, "CDP endpoint is empty"
+        return False, "CDP 端点为空"
     try:
         health = check_cdp_health(endpoint)
-        return True, f"CDP ready: {health.browser}"
+        return True, f"CDP 已就绪：{health.browser}"
     except CdpHealthError as first_error:
         if not auto_start:
             return False, str(first_error)
     try:
         start_windows_job_chrome()
     except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
-        return False, f"CDP unavailable and auto-start failed: {exc}"
+        return False, f"CDP 不可用且自动启动失败：{exc}"
 
     deadline = time.monotonic() + max(1.0, wait_seconds)
-    last_error = "Chrome did not become ready"
+    last_error = "Chrome 未能就绪"
     while time.monotonic() < deadline:
         try:
             health = check_cdp_health(endpoint)
-            return True, f"CDP auto-started: {health.browser}"
+            return True, f"CDP 已自动启动：{health.browser}"
         except CdpHealthError as exc:
             last_error = str(exc)
             time.sleep(min(1.0, max(0.0, deadline - time.monotonic())))
     return (
         False,
-        "Chrome was started but the WSL CDP endpoint is still unavailable. "
-        "The Windows portproxy/firewall may need repair. " + last_error,
+        "Chrome 已启动，但 WSL CDP 端点仍不可用。"
+        "可能需要修复 Windows portproxy 或防火墙。" + last_error,
     )
 
 
@@ -309,7 +309,7 @@ def run_strategy_report(
     )
     lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     if len(lines) < 2:
-        raise RuntimeError("strategy report did not return its output paths")
+        raise RuntimeError("策略报告未返回输出路径")
     return Path(lines[0]), Path(lines[1]), lines[-1]
 
 
@@ -331,18 +331,18 @@ def run_weekly_report(
     )
     lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     if len(lines) < 2:
-        raise RuntimeError("weekly report did not return its output paths")
+        raise RuntimeError("每周报告未返回输出路径")
     return Path(lines[0]), Path(lines[1]), lines[-1]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Run the complete daily job collection pipeline once."
+        description="运行一次完整的每日岗位采集流程。"
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--env-file", type=Path, default=DEFAULT_ENV)
     parser.add_argument("--state-file", type=Path, default=DEFAULT_STATE)
-    parser.add_argument("--since", help="ISO baseline; defaults to last successful run")
+    parser.add_argument("--since", help="ISO 基准时间；默认使用上次成功运行的时间")
     parser.add_argument("--max-workers", type=int)
     parser.add_argument("--no-browser-start", action="store_true")
     args = parser.parse_args()
@@ -377,7 +377,7 @@ def main() -> int:
             if source.get("enabled", True) is not False and not source_uses_cdp(source)
         ]
         print(
-            f"Continuing with HTTP sources; skipped {len(skipped_cdp)} CDP sources",
+            f"继续扫描 HTTP 来源；已跳过 {len(skipped_cdp)} 个 CDP 来源",
             flush=True,
         )
 
@@ -399,7 +399,7 @@ def main() -> int:
             run_penn_channels(config)
             penn_channels_report = str(JOBBOT_OUTPUT / "penn_channels/latest.md")
         except Exception as exc:
-            print(f"Penn channel refresh needs attention ({type(exc).__name__})", flush=True)
+            print(f"宾大渠道刷新需要检查（{type(exc).__name__}）", flush=True)
     weekly_config = config.get("reporting", {}).get("weekly", {})
     weekly_md: Path | None = None
     weekly_json: Path | None = None
@@ -443,8 +443,8 @@ def main() -> int:
         f"Scan: seen={summary['seen']} new={summary['new']}; rescored={rescored}; "
         f"duration={duration_seconds}s"
     )
-    print(f"Strategy: {report_summary}")
-    print(f"Weekly: {weekly_summary}")
+    print(f"策略报告：{report_summary}")
+    print(f"每周报告：{weekly_summary}")
     print(md_report)
     if weekly_md:
         print(weekly_md)

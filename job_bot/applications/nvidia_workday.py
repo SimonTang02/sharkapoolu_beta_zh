@@ -1,7 +1,7 @@
-"""NVIDIA Workday browser-assisted form preparation.
+"""NVIDIA Workday 浏览器辅助表单准备。
 
-This adapter may fill visible, explicitly mapped fields and may save a Workday
-draft only when the caller opts in. It never clicks a final Submit button.
+此适配器可以填写可见且明确映射的字段；仅在调用方主动启用时保存 Workday
+草稿。它绝不点击最终 Submit 按钮。
 """
 
 from __future__ import annotations
@@ -109,7 +109,7 @@ def _playwright_api():
         from playwright.sync_api import sync_playwright
     except ImportError as exc:
         raise RuntimeError(
-            "Playwright is not installed. Run: python3 -m pip install --target .python_packages "
+            "未安装 Playwright。请运行：python3 -m pip install --target .python_packages "
             "-r job_bot/requirements-browser.txt && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers "
             "PYTHONPATH=.python_packages python3 -m playwright install chromium --no-shell"
         ) from exc
@@ -139,12 +139,11 @@ def local_browser_environment(
     project_root: Path,
     windows_fonts: Path = Path("/mnt/c/Windows/Fonts"),
 ) -> dict[str, str]:
-    """Expose Windows CJK fonts to Chromium when it runs inside WSL.
+    """在 WSL 中运行 Chromium 时，使其能够使用 Windows 中日韩字体。
 
-    The primary application browser is Windows Chrome and needs no help.  The
-    local-persistent fallback, however, is a Linux Chromium process; a stock WSL
-    install often has no CJK font at all and screenshots then contain tofu boxes
-    even though the DOM holds the correct Unicode text.
+    主要申请浏览器是 Windows Chrome，无需额外处理。不过，local-persistent 回退方式
+    运行的是 Linux Chromium 进程；标准 WSL 安装通常没有中日韩字体，因此即使 DOM 中
+    保存了正确的 Unicode 文本，截图里仍可能显示方框字。
     """
 
     environment = dict(os.environ)
@@ -230,17 +229,14 @@ def _select_dropdown(
     exact_final_value = re.compile(rf"^\s*{re.escape(final_value)}\s*$", re.I)
 
     def click_virtualized_option(pattern: re.Pattern[str]) -> bool:
-        """Find and immediately click an option in Workday's virtual list.
+        """在 Workday 虚拟列表中查找并立即点击选项。
 
-        Workday reuses the same DOM nodes while scrolling. Returning a Locator
-        after a match is unsafe because the node may represent a different item
-        by the time the caller clicks it (for example, Penn becoming Arizona or
-        Washington). Text verification and clicking therefore happen in the
-        same virtual-list iteration.
+        Workday 滚动列表时会重复使用相同的 DOM 节点。匹配后再返回 Locator 并不安全，
+        因为调用方点击时，该节点可能已经代表另一条目（例如从 Penn 变成 Arizona 或
+        Washington）。因此，文本核验和点击会在同一次虚拟列表迭代中完成。
         """
-        # Workday renders only a small window of large prompt lists.  NVIDIA's
-        # university list and international calling-code list can require
-        # dozens of virtualized windows before the exact item exists in DOM.
+        # Workday 只渲染大型提示列表的一小段。NVIDIA 的院校列表和国际电话区号列表
+        # 可能需要滚动数十个虚拟窗口，目标项才会出现在 DOM 中。
         for loop_index in range(60):
             options = page.locator('[data-automation-id="promptOption"]')
             visible_labels: list[str] = []
@@ -248,9 +244,8 @@ def _select_dropdown(
             for option_index in range(options.count()):
                 candidate = options.nth(option_index)
                 try:
-                    # A selected multiselect chip also exposes promptOption and
-                    # role=option. It is not part of the open popup and its
-                    # ancestor scrolls the whole page, so exclude it here.
+                    # 已选中的多选标签也会暴露 promptOption 和 role=option。
+                    # 它不属于当前打开的弹窗，且其祖先节点会滚动整个页面，因此在此排除。
                     if candidate.evaluate(
                         "el => !!el.closest('[data-automation-id=\"selectedItem\"]')"
                     ):
@@ -348,9 +343,8 @@ def _select_dropdown(
                     page.wait_for_timeout(300)
         except Exception:
             pass
-        # A previous hierarchical prompt may still be open. Clicking another
-        # search box in that state can close the prompt instead of opening the
-        # requested field, so normalize popup state first.
+        # 之前的层级提示可能仍处于打开状态。此时点击另一个搜索框可能会关闭提示，
+        # 而不是打开目标字段，因此先统一弹窗状态。
         for _ in range(3):
             page.keyboard.press("Escape")
             page.wait_for_timeout(100)
@@ -366,10 +360,8 @@ def _select_dropdown(
                 if code_match
                 else exact_segment
             )
-            # The searchable input also prompts Workday to materialize the
-            # otherwise clipped first option window. It does not reliably
-            # filter the list, so exact matching and virtual scrolling still
-            # decide what is clicked.
+            # 可搜索输入框还会让 Workday 加载原本被裁切的首段选项。
+            # 它不能可靠筛选列表，因此仍须通过精确匹配和虚拟滚动确定点击项。
             try:
                 locator.fill(segment, timeout=2_000)
                 page.wait_for_timeout(400)
@@ -568,15 +560,13 @@ def _fill_month_year(container: Any, month: Any, year: Any) -> dict[str, Any]:
         def replace_spinbutton(
             field: Any, text: str, *, explicit_delete: bool
         ) -> bool:
-            # Expanded Workday forms can report an otherwise editable date
-            # spinbutton outside the viewport. Focus avoids pointer geometry
-            # while still exercising the widget's normal keyboard handlers.
+            # 展开的 Workday 表单可能将可编辑的日期微调框报告为位于视口之外。
+            # 聚焦操作可避开指针坐标，同时仍使用控件正常的键盘处理逻辑。
             field.focus()
             field.press("Control+A")
-            # Month segments can retain the final digit (e.g. 12 -> 2), so
-            # delete their selected value once. Repeated deletion on the year
-            # segment moves focus back into the month and corrupts it with the
-            # first year digit, so year relies on selection replacement only.
+            # 月份片段可能保留最后一位数字（例如 12 变成 2），因此只删除一次选中值。
+            # 在年份片段重复删除会让焦点回到月份，并将年份首位误写进去，
+            # 所以年份仅依靠选中后替换。
             if explicit_delete:
                 field.press("Backspace")
             field.type(text, delay=35)
@@ -587,9 +577,8 @@ def _fill_month_year(container: Any, month: Any, year: Any) -> dict[str, Any]:
             )
             return rendered_value == text
 
-        # Workday may route the first typed year digit into the adjacent month
-        # segment. Fill year first, then make month the final authoritative
-        # write so the requested month cannot be overwritten by that behavior.
+        # Workday 可能把输入的年份首位写入相邻的月份片段。先填写年份，
+        # 再最后写入月份，确保目标月份不会被该行为覆盖。
         year_ok = replace_spinbutton(
             year_field, year_text, explicit_delete=False
         )
@@ -641,9 +630,8 @@ def fill_experience_fields(
         candidates = work_group.get_by_role(
             "button", name=label, exact=True
         )
-        # Tenant markup differs: NVIDIA exposes an accessible group, while MPS
-        # currently exposes the Work Experience action as the first global Add
-        # button.  Prefer the scoped control, then use document order.
+        # 不同租户的标记结构不同：NVIDIA 提供可访问性分组，而 MPS 当前将 Work Experience
+        # 操作显示为页面上的第一个 Add 按钮。优先使用作用域内的控件，再按文档顺序选择。
         fallbacks = [candidates]
         if label == "Add":
             fallbacks.append(page.get_by_role("button", name="Add", exact=True))
@@ -922,8 +910,8 @@ def fill_experience_fields(
             str(entry.get("proficiency", "")),
         )
         proficiency_results = {}
-        # Some tenants still require all five proficiency fields even when the
-        # language is marked native.  Fill the explicit scale in both cases.
+        # 有些租户即使将语言标记为母语，仍要求填写全部五项熟练度字段。
+        # 两种情况下都填写明确的等级。
         for name in ("Comprehension", "Overall", "Reading", "Speaking", "Writing"):
             buttons = page.locator(f'button[aria-label^="{name}"]:visible')
             button = buttons.nth(target_index)
@@ -953,8 +941,8 @@ def fill_experience_fields(
         results["skills"].append({"skill": skill, "filled": filled})
         consecutive_skill_failures = 0 if filled else consecutive_skill_failures + 1
         if consecutive_skill_failures >= 2:
-            # Skills are optional. Stop when the tenant rejects consecutive
-            # profile terms instead of spending minutes retrying one control.
+            # 技能为可选项。如果租户连续拒绝资料中的技能词，就停止尝试，
+            # 不要在同一控件上反复重试数分钟。
             break
 
     results["documents"] = upload_documents(
@@ -984,8 +972,8 @@ def fill_application_questions(
             except Exception:
                 continue
         if matching_field is None:
-            # Workday can split questions across several pages. A configured
-            # answer absent from the current page is not a blocker here.
+            # Workday 可能将问题分布在多个页面。当前页面没有某个已配置答案时，
+            # 不应在此处阻断流程。
             continue
         if is_work_permission_question(question) and not has_confirmed_work_permission_scope(
             profile, job_location
@@ -1030,8 +1018,7 @@ def fill_application_questions(
                 continue
         return False
 
-    # Apply a group only on the page that actually contains at least one of
-    # its options; this keeps page 1 and page 2 independently resumable.
+    # 仅在至少包含该组一个选项的页面应用此组设置；这样第 1 页和第 2 页可分别恢复。
     for group_name, option_names in checkbox_groups.items():
         option_names = [str(item) for item in option_names]
         page_has_group = any(
@@ -1102,10 +1089,9 @@ def fill_voluntary_disclosures(
         gender_policy == "if_present" and gender_present
     )
 
-    # A choice already stored in Workday may have been set manually after the
-    # local profile was created. Preserve that explicit browser/server value;
-    # only apply the configured fallback while the control still says
-    # "Select One".
+    # Workday 中已有的选项可能是在创建本地资料后由人工设置的。
+    # 保留浏览器/服务器中的这一明确值；仅当控件仍显示 "Select One" 时
+    # 才应用配置中的备用值。
     gender_choice_re = re.compile(
         r"^\s*(Male|Female|Decline to State)\s*$", re.I
     )
@@ -1158,9 +1144,8 @@ def fill_voluntary_disclosures(
     if terms_requested:
         checkbox = page.locator('input[name="acceptTermsAndAgreements"]')
         try:
-            # Workday renders the native input as visually hidden behind a
-            # styled checkbox. Playwright can still set the real input safely
-            # with force=True, and is_checked verifies the resulting state.
+            # Workday 将原生输入框视觉隐藏在样式化复选框后面。Playwright 仍可通过
+            # force=True 安全设置真实输入框，并用 is_checked 验证结果状态。
             if checkbox.count():
                 try:
                     checkbox.check(force=True)
@@ -1355,14 +1340,13 @@ def _click_named_control(page: Any, pattern: re.Pattern[str]) -> bool:
                 continue
             label = (locator.inner_text() or locator.get_attribute("aria-label") or "").strip()
             if FINAL_SUBMIT_RE.search(label):
-                raise RuntimeError("Final Submit control is blocked by policy")
+                raise RuntimeError("策略禁止操作最终 Submit 控件")
             try:
                 locator.click(timeout=15_000)
             except Exception:
-                # Browser extensions can resize the effective viewport while a
-                # Workday control remains DOM-visible. The label has already
-                # passed the final-submit guard, so a DOM click is a safe
-                # fallback for this exact located control.
+                # 浏览器扩展可能调整有效视口大小，而 Workday 控件仍在 DOM 中可见。
+                # 该标签已经通过最终提交保护检查，因此对这个已定位的控件执行 DOM 点击
+                # 是安全的备用方案。
                 locator.evaluate("element => element.click()")
             page.wait_for_timeout(1500)
             return True
@@ -1380,16 +1364,14 @@ def workday_sign_in_required(page: Any) -> bool:
     email_button = page.get_by_role(
         "button", name=re.compile(r"Sign in with email", re.I)
     )
-    # These are controls inside the Workday application surface, unlike the
-    # Simplify extension's "Log In to Autofill" side-panel link.
+    # 这些控件位于 Workday 申请页面内，与 Simplify 扩展侧栏中的
+    # "Log In to Autofill" 链接不同。
     if any_visible(heading) or any_visible(create_heading) or any_visible(email_button):
         return True
 
-    # A Workday application route can retain the stale document title
-    # "Create Account" even after an authenticated tenant transition.  The
-    # application stepper/upload controls are stronger evidence than the title
-    # and also keep extension UI (for example Simplify's own login prompt) out
-    # of the decision.
+    # 即使租户已完成认证切换，Workday 申请页面仍可能保留过期的文档标题
+    # "Create Account"。申请步骤指示器和上传控件比标题更能说明当前状态，
+    # 也能避免将扩展界面（例如 Simplify 自带的登录提示）纳入判断。
     application_controls = page.locator(
         '[data-automation-id="progressBarActiveStep"], '
         '[data-automation-id="progressBar"], input[type="file"]'
@@ -1412,7 +1394,7 @@ def workday_sign_in_required(page: Any) -> bool:
 
 
 def recover_workday_transient_error(page: Any) -> dict[str, Any]:
-    """Refresh one recoverable Workday SPA error without restarting the draft."""
+    """刷新一个可恢复的 Workday SPA 错误，不重启草稿。"""
     result = {"detected": False, "reloaded": False, "recovered": False, "error": ""}
     try:
         body = page.locator("body").inner_text(timeout=3_000)
@@ -1440,7 +1422,7 @@ def recover_workday_transient_error(page: Any) -> dict[str, Any]:
 
 
 def _open_workday_email_sign_in(page: Any) -> None:
-    """Expose the email/password form without interacting with credentials."""
+    """显示电子邮件/密码表单，但不操作凭据。"""
     email_entry = page.get_by_role(
         "button", name=re.compile(r"Sign in with email", re.I)
     ).first
@@ -1478,7 +1460,7 @@ def _click_workday_sign_in_submit(page: Any) -> str:
                     submit.evaluate("element => element.click()")
                     method = "dom_click"
         return method
-    raise RuntimeError("Visible Workday Sign In submit button was not found")
+    raise RuntimeError("未找到可见的 Workday Sign In 提交按钮")
 
 
 def _visible_workday_login_feedback(page: Any) -> bool:
@@ -1495,7 +1477,7 @@ def _visible_workday_login_feedback(page: Any) -> bool:
 
 
 def _submit_workday_login(page: Any, password_input: Any) -> dict[str, Any]:
-    """Click Sign In and prove that the page reacted, with one Enter fallback."""
+    """点击 Sign In 并确认页面有响应；必要时使用一次 Enter 作为备用操作。"""
     before_url = page.url
     before_title = page.title()
     methods = [_click_workday_sign_in_submit(page)]
@@ -1528,7 +1510,7 @@ def _submit_workday_login(page: Any, password_input: Any) -> dict[str, Any]:
 
 
 def recover_workday_authenticated_session(page: Any) -> dict[str, Any]:
-    """Reload a stale Sign In tab when the same tenant is already authenticated."""
+    """同一租户已有认证会话时，重新加载过期的 Sign In 标签页。"""
     result = {"attempted": False, "succeeded": False, "error": ""}
     if not workday_sign_in_required(page):
         return result
@@ -1558,10 +1540,10 @@ def recover_workday_authenticated_session(page: Any) -> dict[str, Any]:
 
 
 def attempt_workday_saved_password_login(page: Any) -> dict[str, Any]:
-    """Submit credentials already populated by Chrome Password Manager.
+    """提交已由 Chrome Password Manager 填入的凭据。
 
-    The adapter checks only whether each field has a value. It never reads,
-    returns, logs, exports, or persists the username/password content.
+    适配器只检查字段是否已有内容。它绝不读取、返回、记录、导出或持久化
+    用户名或密码的具体内容。
     """
     result = {
         "attempted": False,
@@ -1580,8 +1562,8 @@ def attempt_workday_saved_password_login(page: Any) -> dict[str, Any]:
         email_input.wait_for(state="visible", timeout=15_000)
         password_input.wait_for(state="visible", timeout=15_000)
         page.wait_for_timeout(1500)
-        # `:-webkit-autofill` lets us distinguish Chrome Password Manager from
-        # stale/manual/configured field contents without reading either value.
+        # `:-webkit-autofill` 可帮助区分 Chrome Password Manager 填入的内容与
+        # 过期、手动或配置的字段内容，无需读取其中任何值。
         autofill_probe = (
             "element => { try { return element.matches(':-webkit-autofill'); } "
             "catch (_) { return false; } }"
@@ -1655,15 +1637,15 @@ def run_preview(
     company_rules: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if profile.get("safety", {}).get("allow_submit") is not False:
-        raise RuntimeError("Profile safety.allow_submit must be false")
+        raise RuntimeError("资料中的 safety.allow_submit 必须为 false")
     if save_draft and not start_application:
-        raise RuntimeError("--save-draft requires --start-application")
+        raise RuntimeError("--save-draft 需要同时指定 --start-application")
     if advance_one_step and not start_application:
-        raise RuntimeError("--advance-one-step requires --start-application")
+        raise RuntimeError("--advance-one-step 需要同时指定 --start-application")
     if advance_to_review and not save_draft:
-        raise RuntimeError("--advance-to-review requires --save-draft")
+        raise RuntimeError("--advance-to-review 需要同时指定 --save-draft")
     if save_draft and not profile.get("safety", {}).get("allow_server_draft", False):
-        raise RuntimeError("Set safety.allow_server_draft=true before using --save-draft")
+        raise RuntimeError("使用 --save-draft 前，请先设置 safety.allow_server_draft=true")
 
     output_dir.mkdir(parents=True, exist_ok=True)
     browser_profile_dir.mkdir(parents=True, exist_ok=True)
@@ -1686,11 +1668,9 @@ def run_preview(
     checkpoint("run_started", application_id=application_id)
     sync_playwright = _playwright_api()
     cdp_url = cdp_url.strip()
-    # Each adapter invocation is already an isolated subprocess. Playwright's
-    # normal context-manager shutdown can wait indefinitely while detaching
-    # from a long-lived external Chrome CDP session. In CDP mode let process
-    # exit close only the transport socket; never send Browser.close to the
-    # user's dedicated Chrome.
+    # 每次适配器调用都已在独立子进程中运行。Playwright 正常的上下文管理器关闭流程
+    # 在断开长期运行的外部 Chrome CDP 会话时可能无限等待。CDP 模式下让进程退出时
+    # 仅关闭传输 socket；绝不向用户的专用 Chrome 发送 Browser.close。
     playwright_scope = (
         nullcontext(sync_playwright().start()) if cdp_url else sync_playwright()
     )
@@ -1704,7 +1684,7 @@ def run_preview(
                 timeout=30_000,
             )
             if not remote_browser.contexts:
-                raise RuntimeError("Connected Chrome exposed no usable browser context")
+                raise RuntimeError("已连接的 Chrome 未提供可用的浏览器上下文")
             context = remote_browser.contexts[0]
             browser_mode = "windows_cdp"
         else:
@@ -1839,8 +1819,8 @@ def run_preview(
             )
             if manual_intervention and interactive:
                 input(
-                    f"Manual browser action required ({manual_intervention}). Complete it in "
-                    "the dedicated Chrome tab, then press Enter here to continue. "
+                    f"需要手动操作浏览器（{manual_intervention}）。请在专用 Chrome 标签页中完成操作，"
+                    "然后按 Enter 继续。"
                 )
                 authentication_required = workday_sign_in_required(page)
                 manual_intervention = (
@@ -1938,8 +1918,7 @@ def run_preview(
                     "Voluntary Disclosures",
                     "Review",
                 }:
-                    # A resumed draft is already past My Information. Do not
-                    # advance its current section before filling that section.
+                    # 恢复的草稿已越过 My Information。填写当前部分前不要推进到下一部分。
                     server_draft_saved = True
             if advance_to_review and server_draft_saved:
                 try:
@@ -2063,10 +2042,9 @@ def run_preview(
                     "validation_blocked": validation_blocked,
                     "login": login_result,
                 },
-                # Page.captureScreenshot over a forwarded Windows CDP socket
-                # has no protocol-level timeout and can stall the whole batch.
-                # Playwright's screenshot path is bounded and still expands
-                # SPA-internal scroll containers for a reviewable long image.
+                # 通过转发的 Windows CDP socket 调用 Page.captureScreenshot 没有协议级超时，
+                # 可能卡住整个批次。Playwright 的截图流程有时限，仍会展开 SPA 内部滚动容器，
+                # 生成便于审阅的长图。
                 use_cdp=False,
                 full_page=bool((company_rules or {}).get("full_page_screenshot", True)),
                 full_page_timeout_ms=int(
@@ -2132,7 +2110,7 @@ def run_preview(
                 context.storage_state(path=str(browser_state_path))
                 _restrict_permissions(browser_state_path, 0o600)
             if interactive:
-                input("Review the browser. Press Enter here to finish (do not submit). ")
+                input("请检查浏览器中的内容，然后按 Enter 结束（不要提交）。")
                 if not cdp_url:
                     context.storage_state(path=str(browser_state_path))
                     _restrict_permissions(browser_state_path, 0o600)

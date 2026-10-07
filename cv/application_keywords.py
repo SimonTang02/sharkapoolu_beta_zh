@@ -1,4 +1,4 @@
-"""Shared, evidence-scoped keyword selection for CV and application preparation."""
+"""供简历与申请材料准备共用的、限定于证据范围内的关键词选择工具。"""
 from __future__ import annotations
 
 import argparse
@@ -23,7 +23,7 @@ def _present(term: str, text: str) -> bool:
 
 def select_keywords(role: str, job_description: str = "", *,
                     library_path: Path | None = None, preset: str | None = None) -> dict:
-    """Read current private data on every call; never promote JD terms into skills."""
+    """每次调用时读取当前私有数据；绝不将 JD 词语直接转成技能。"""
     path = Path(library_path) if library_path is not None else APPLICATION_KEYWORDS
     result = {"available": False, "library_path": str(path), "preset": None,
               "technical": [], "collaboration": [], "usage_rules": []}
@@ -32,28 +32,28 @@ def select_keywords(role: str, job_description: str = "", *,
     raw = path.read_bytes()
     data = json.loads(raw)
     if data.get("schema_version") != 1:
-        raise ValueError("Unsupported application keyword library schema")
+        raise ValueError("不支持的申请关键词库 schema")
     entries = data["technical_keywords"] + data["collaboration_personality_keywords"]
     ids = [x["id"] for x in entries]
     if len(set(ids)) != len(ids):
-        raise ValueError("Duplicate application keyword IDs")
+        raise ValueError("申请关键词 ID 重复")
     for entry in entries:
         if not all(entry.get(k) for k in ("english", "chinese", "evidence", "example_en", "source_ids", "claim_status")):
-            raise ValueError(f"Keyword lacks evidence or required fields: {entry['id']}")
+            raise ValueError(f"关键词缺少证据或必需字段：{entry['id']}")
         if any(s not in data["sources"] for s in entry["source_ids"]):
-            raise ValueError(f"Unknown evidence source: {entry['id']}")
+            raise ValueError(f"未知的证据来源：{entry['id']}")
     presets = {x["id"]: x for x in data["role_presets"]}
     technical_ids = {x['id'] for x in data['technical_keywords']}
     soft_ids = {x['id'] for x in data['collaboration_personality_keywords']}
     for item in presets.values():
         if not set(item['technical_ids']) <= technical_ids or not set(item['collaboration_ids']) <= soft_ids:
-            raise ValueError(f"Invalid keyword preset references: {item['id']}")
+            raise ValueError(f"关键词预设引用无效：{item['id']}")
     if preset is not None:
         if preset not in presets:
-            raise ValueError(f"Unknown keyword preset: {preset}")
+            raise ValueError(f"未知关键词预设：{preset}")
         chosen = presets[preset]
     else:
-        # Prefer the title; generic requirements in a long JD must not override it.
+        # 优先使用职位名称；长篇 JD 中的通用要求不得覆盖它。
         chosen = None
         for text in (role, job_description):
             hits = [(sum(_present(t, text) for t in x.get('role_match_terms', [])), x)
@@ -67,7 +67,7 @@ def select_keywords(role: str, job_description: str = "", *,
         candidates = [x for x in data[key] if x['claim_status'] in allowed]
         by_id = {x['id']: x for x in candidates}
         preferred = chosen[preset_key] if chosen else []
-        # A role preset defines relevance. Explicit JD matches rank its entries.
+        # 岗位预设定义相关性；JD 中的明确匹配项决定其条目顺序。
         order = {value: i for i, value in enumerate(preferred)}
         scored = []
         for entry in candidates:
@@ -89,7 +89,7 @@ def select_keywords(role: str, job_description: str = "", *,
 
 
 def apply_keyword_selection(profile: dict, selection: dict) -> dict:
-    """Keep manual skills/answers; populate an empty skill list from supported terms."""
+    """保留手动填写的技能/答案；技能列表为空时，根据有证据支持的术语填充。"""
     profile = copy.deepcopy(profile)
     previous = profile.get('application_keywords', {})
     labels = [x['english'] for x in selection['technical']]
@@ -103,20 +103,20 @@ def apply_keyword_selection(profile: dict, selection: dict) -> dict:
 
 
 def render_keyword_notes(selection: dict) -> str:
-    lines = ['## Application keywords', '']
+    lines = ['## 申请关键词', '']
     if not selection['available']:
-        return '\n'.join(lines + ['Keyword library unavailable; existing materials left unchanged.', ''])
-    lines += [f"Role preset: {selection['preset'] or 'literal matches only'}",
-              f"Library SHA-256: {selection['library_sha256']}", '',
-              'Technical labels are scoped to the evidence below. Collaboration examples are',
-              'behavior-based suggestions, not confirmed personality self-ratings.', '']
-    for label, key in [('Technical', 'technical'), ('Collaboration / work style', 'collaboration')]:
+        return '\n'.join(lines + ['关键词库不可用；现有材料保持不变。', ''])
+    lines += [f"岗位预设：{selection['preset'] or '仅匹配字面词项'}",
+              f"资料库 SHA-256：{selection['library_sha256']}", '',
+              '技术标签限定于以下证据范围。协作示例是基于行为的建议，',
+              '不是已经确认的性格自评。', '']
+    for label, key in [('技术', 'technical'), ('协作/工作方式', 'collaboration')]:
         lines += ['### ' + label, '']
         for entry in selection[key]:
             lines += [f"- **{entry['english']}** ({entry['chinese']}): {entry['example_en']}",
-                      f"  Evidence / scope: {entry['evidence']}"]
+                      f"  证据/范围：{entry['evidence']}"]
         lines += ['']
-    lines += ['### Usage rules', ''] + ['- ' + rule for rule in selection['usage_rules']] + ['']
+    lines += ['### 使用规则', ''] + ['- ' + rule for rule in selection['usage_rules']] + ['']
     return '\n'.join(lines)
 
 

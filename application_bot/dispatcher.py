@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan or execute configured no-submit application adapters."""
+"""规划或运行已配置的禁止提交申请适配器。"""
 
 from __future__ import annotations
 
@@ -143,12 +143,12 @@ def main() -> int:
     parser.add_argument(
         "--execute",
         action="store_true",
-        help="Run configured no-submit adapters sequentially; default only writes a plan.",
+        help="依次运行已配置的禁止提交适配器；默认只写入计划。",
     )
     args = parser.parse_args()
     config = load_config(args.config)
     if config.get("field_mappings", {}).get("safety", {}).get("allow_submit") is not False:
-        raise SystemExit("Config safety.allow_submit must be false")
+        raise SystemExit("配置项 safety.allow_submit 必须为 false")
     conn = connect_db(config)
     rows = application_rows(conn, args.application_id, args.campaign_id)
     limit_checks = {

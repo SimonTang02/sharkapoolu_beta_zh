@@ -1,8 +1,8 @@
--- Public empty database_template. No candidate or application data.
--- Derived from ensure_schema + ensure_campaign_schema in memory.
--- Every column has filling notes. SQL NULL means unknown; dates use UTC.
--- For reference/demo only. Normal use: jobbot init, then business commands.
--- Do not apply as a restore over production. Use shared connect() for real SQL.
+-- 公开空白 database_template，不含候选人或申请数据。
+-- 根据内存中的 ensure_schema + ensure_campaign_schema 整理而来。
+-- 每列均附有填写说明。SQL NULL 表示未知；日期使用 UTC。
+-- 仅供参考/演示。正常使用流程：jobbot init，然后运行相应业务命令。
+-- 不要将其用于覆盖生产库的恢复操作。实际 SQL 请使用 shared connect()。
 PRAGMA foreign_keys = ON;
 BEGIN;
 
@@ -286,4 +286,4 @@ CREATE INDEX IF NOT EXISTS idx_applications_job_id ON applications(job_id);
 CREATE INDEX IF NOT EXISTS idx_browser_tabs_target_id ON browser_tabs(target_id);
 
 COMMIT;
--- No INSERT statements: zero business records.
+-- 不包含 INSERT 语句：业务记录数为零。

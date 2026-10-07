@@ -1,66 +1,50 @@
-# Architecture
+# 架构
 
 ```mermaid
 flowchart LR
-    C[Shared config] --> S[Source adapters]
-    P[Private credentials] --> S
-    S --> N[Normalize and deduplicate]
-    N --> D[(Private SQLite database)]
-    C --> R[Scoring and strategy]
+    C[共享配置] --> S[来源适配器]
+    P[私有凭据] --> S
+    S --> N[规范化与去重]
+    N --> D[(私有 SQLite 数据库)]
+    C --> R[评分与策略]
     D --> R
-    E[Private evidence and keywords] --> R
-    R --> O[Daily and weekly reports]
-    D --> V[CV tailoring]
+    E[私有证据与关键词] --> R
+    R --> O[每日与每周报告]
+    D --> V[简历定制]
     E --> V
-    V --> A[Application preparation]
+    V --> A[申请准备]
     P --> A
-    A --> H[Human review and submit]
+    A --> H[人工审阅与提交]
 ```
 
-The repository has three executable packages:
+仓库包含三个可执行软件包：
 
-- `job_bot` collects, normalizes, stores, scores, and reports jobs.
-- `cv` turns verified evidence into tailoring guidance and document bundles.
-- `application_bot` audits sessions and prepares supported application forms.
+- `job_bot` 采集、规范化、存储、评分并生成职位报告。
+- `cv` 将已核实的证据转换为定制建议和文档套件。
+- `application_bot` 审计会话并准备受支持的申请表单。
 
-`private_paths.py` is the only canonical map for candidate-owned storage. Code
-imports its constants rather than constructing private paths independently.
-`JOBBOT_PRIVATE_DIR` changes the whole private root.
+`private_paths.py` 是候选人私有存储的唯一规范映射。代码应导入其中的常量，而不要自行拼接私有路径。`JOBBOT_PRIVATE_DIR` 可重定位整个私有根目录。
 
-## Configuration layers
+## 配置层
 
-The public entry point composes small versioned files with ordered `includes`.
-Later mappings override earlier mappings. Named lists can be changed through
-validated `patches`, so a local override need not copy the entire source list.
+公开入口按顺序组合多个版本化小文件。后出现的映射会覆盖先前映射。可通过经过校验的 `patches` 修改具名列表，因此本地覆盖无需复制整个来源列表。
 
-The private layer contains candidate facts, evidence, credentials, browser
-state, databases, reports, screenshots, and generated documents. JSON Schemas
-document the maintained files; `jobbot-private check` adds semantic and
-cross-file checks that JSON Schema alone cannot express.
+私有层包含候选人事实、证据、凭据、浏览器状态、数据库、报告、截图和生成文档。JSON Schema 描述受维护的文件；`jobbot-private check` 还会检查单靠 JSON Schema 无法表达的语义与跨文件约束。
 
-## Decision boundaries
+## 决策边界
 
-Collection may read public endpoints or an explicitly configured authenticated
-browser session. Scoring ranks evidence already in the database. CV generation
-may only draw claims from the evidence and keyword profiles. Application
-adapters may fill explicitly mapped facts and upload selected documents.
+采集可读取公开端点或明确配置的已认证浏览器会话。评分只对数据库中已有职位排序。简历生成只能使用证据和关键词档案中的声明。申请适配器可填写明确映射的事实并上传指定文档。
 
-CAPTCHA, MFA, login recovery, ambiguous questions, and legal or demographic
-answers are manual checkpoints. Final submission is outside the automation
-boundary.
+CAPTCHA、MFA、登录恢复、含义不清的问题，以及法律或人口统计类答案都必须由人工处理。最终提交不属于自动化范围。
 
-## Output model
+## 输出模型
 
-Durable candidate output stays below `private_data/`:
+候选人的持久化输出应保存在私有根目录下：
 
-- `database/` contains SQLite state.
-- `outputs/job_bot/` contains daily, weekly, and source-health reports.
-- `outputs/application_bot/` contains preparation reports and screenshots.
-- `cv/reports/`, `cv/variants/`, and `cv/build/` contain tailoring and rendered
-  documents.
-- `browser/state/` and `browser/profiles/` contain reusable authenticated state.
+- `database/` 保存 SQLite 状态。
+- `outputs/job_bot/` 保存每日、每周和来源健康报告。
+- `outputs/application_bot/` 保存准备报告和截图。
+- `cv/reports/`、`cv/variants/` 和 `cv/build/` 保存定制结果和渲染文档。
+- `browser/state/` 和 `browser/profiles/` 保存可复用的已认证状态。
 
-Public tests use synthetic fixtures only. A release audit examines the files
-Git would publish and rejects common secrets, personal markers, generated
-documents, machine-specific absolute paths, and unexpected large files.
-
+公开测试只使用合成夹具。发布审计会检查 Git 将要发布的文件，并拒绝常见密钥、个人信息标记、生成文档、机器专用绝对路径和异常大文件。

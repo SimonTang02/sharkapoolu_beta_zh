@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build an explicit or policy-selected, no-submit application campaign."""
+"""创建明确指定或按策略筛选的禁止提交申请批次。"""
 
 from __future__ import annotations
 
@@ -96,7 +96,7 @@ def direction_priority(reason: str) -> int:
 def select_candidates(
     conn: sqlite3.Connection, limit: int, min_score: int, config: dict | None = None
 ) -> list[Candidate]:
-    """Use the same policy as the review report for CN/HK campus batches."""
+    """中国/香港校园批次使用与审阅报告相同的策略。"""
     configure_strategy(config or load_config(DEFAULT_CONFIG))
     campus_jobs, _, _, _ = collect_strategy_jobs(conn)
     candidates = [
@@ -170,12 +170,12 @@ def load_campaign_candidates(
 def load_explicit_candidates(
     conn: sqlite3.Connection, job_ids: list[int]
 ) -> list[Candidate]:
-    """Load an ordered, reviewed job list and fail rather than silently skipping IDs."""
+    """载入按序排列的已审阅岗位清单；遇到问题时直接失败，不静默跳过 ID。"""
     candidates: list[Candidate] = []
     seen: set[int] = set()
     for job_id in job_ids:
         if job_id in seen:
-            raise ValueError(f"Duplicate explicit job id: {job_id}")
+            raise ValueError(f"明确指定的岗位 ID 重复：{job_id}")
         seen.add(job_id)
         row = conn.execute(
             """
@@ -186,11 +186,11 @@ def load_explicit_candidates(
             (job_id,),
         ).fetchone()
         if row is None:
-            raise ValueError(f"Explicit job id does not exist: {job_id}")
+            raise ValueError(f"明确指定的岗位 ID 不存在：{job_id}")
         if int(row["is_active"] or 0) != 1:
-            raise ValueError(f"Explicit job id is inactive: {job_id}")
+            raise ValueError(f"明确指定的岗位 ID 已失效：{job_id}")
         if not str(row["url"] or "").strip():
-            raise ValueError(f"Explicit job id has no application URL: {job_id}")
+            raise ValueError(f"明确指定的岗位 ID 没有申请网址：{job_id}")
         candidates.append(
             Candidate(
                 job_id=int(row["id"]),
@@ -303,13 +303,13 @@ def render_campaign(
     geographic_scope: str = "mainland_china,hong_kong",
 ) -> str:
     lines = [
-        f"# Application campaign {campaign_id}",
+        f"# 申请批次 {campaign_id}",
         "",
-        f"Scope: `{geographic_scope}`",
+        f"范围：`{geographic_scope}`",
         "",
-        "Safety: save draft or stop before final submit. Final submission is disabled.",
+        "安全提示：保存草稿，或在最终提交前停止。最终提交功能已禁用。",
         "",
-        "| Rank | Score | Kind | Foundation | Company | Role | Location | Platform | App |",
+        "| 排名 | 分数 | 类型 | 职位方向 | 公司 | 岗位 | 地点 | 平台 | 申请编号 |",
         "|---:|---:|---|---|---|---|---|---|---:|",
     ]
     for rank, item in enumerate(candidates, start=1):
@@ -350,7 +350,7 @@ def build_one_material(
         job_text,
         matches,
         (
-            "current.tex (graduation from private evidence profile)"
+            "current.tex（毕业时间来自私有证据档案）"
             if candidate.role_kind == "full_time"
             else "current.tex"
         ),
@@ -490,7 +490,7 @@ def prepare_materials(
     )
     conn.commit()
     if failures:
-        raise RuntimeError(f"Material generation failed for {len(failures)} jobs")
+        raise RuntimeError(f"为 {len(failures)} 个岗位生成材料失败")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -507,12 +507,12 @@ def main(argv: list[str] | None = None) -> None:
         action="append",
         type=int,
         default=[],
-        help="Use this exact active job ID in the given order; repeat for a reviewed queue",
+        help="按给定顺序使用此确切的有效岗位 ID；可重复指定以建立已审阅队列",
     )
     parser.add_argument(
         "--scope",
         default="mainland_china,hong_kong",
-        help="Campaign scope label stored in the database",
+        help="保存在数据库中的批次范围标签",
     )
     args = parser.parse_args(argv)
 
@@ -520,13 +520,13 @@ def main(argv: list[str] | None = None) -> None:
     conn = connect_db(config)
     ensure_campaign_schema(conn)
     if args.campaign_id and args.job_id:
-        raise SystemExit("--campaign-id and --job-id cannot be used together")
+        raise SystemExit("--campaign-id 和 --job-id 不能同时使用")
     geographic_scope = args.scope
     if args.campaign_id:
         campaign_id = args.campaign_id
         candidates = load_campaign_candidates(conn, campaign_id)
         if not candidates:
-            raise SystemExit(f"Campaign {campaign_id} does not exist or has no jobs")
+            raise SystemExit(f"批次 {campaign_id} 不存在或没有岗位")
         scope_row = conn.execute(
             "SELECT geographic_scope FROM application_campaigns WHERE id = ?",
             (campaign_id,),
@@ -542,7 +542,7 @@ def main(argv: list[str] | None = None) -> None:
             target_count = args.target
             if len(candidates) < args.target:
                 raise SystemExit(
-                    f"Only {len(candidates)} eligible China/Hong Kong roles meet the current policy"
+                    f"仅有 {len(candidates)} 个符合当前策略的中国/香港岗位具备资格"
                 )
         campaign_id = create_campaign(
             conn,
@@ -564,11 +564,11 @@ def main(argv: list[str] | None = None) -> None:
             render_campaign(campaign_id, candidates, app_ids, geographic_scope),
             encoding="utf-8",
         )
-        print(f"Selected {len(candidates)} roles for campaign {campaign_id}")
+        print(f"已为批次 {campaign_id} 选中 {len(candidates)} 个岗位")
         print(output)
     if args.prepare_materials:
         prepare_materials(conn, campaign_id, candidates, args.workers)
-        print(f"Prepared materials for campaign {campaign_id}")
+        print(f"已为批次 {campaign_id} 准备材料")
 
 
 if __name__ == "__main__":

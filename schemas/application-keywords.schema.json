@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_beta/main/schemas/application-keywords.schema.json",
-  "title": "Application keyword library",
-  "description": "Evidence-backed technical and collaboration labels with role presets.",
+  "$id": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_zh/main/schemas/application-keywords.schema.json",
+  "title": "申请关键词库",
+  "description": "有证据支持的技术与协作标签及岗位预设。",
   "type": "object",
   "required": ["schema_version", "sources", "usage_rules", "technical_keywords", "collaboration_personality_keywords", "role_presets"],
   "properties": {

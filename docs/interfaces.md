@@ -1,109 +1,69 @@
-# Extension interfaces
+# 扩展接口
 
-## Source adapters
+## 来源适配器
 
-Sources are declared in `job_bot/config/sources.json`. The `type` selects a
-collector implemented by `job_bot`. HTTP adapters receive the composed source
-object, apply bounded timeouts and filters, and return normalized postings.
-Browser-backed source types use the dedicated CDP session and must remain
-read-only unless a separate workflow explicitly documents a write.
+在 `job_bot/config/sources.json` 中声明来源。`type` 选择由 `job_bot` 实现的采集器。HTTP 适配器接收组合后的来源对象，使用有上限的超时和筛选规则，并返回规范化职位。浏览器来源类型使用专用 CDP 会话；除非单独工作流明确说明写操作，否则必须保持只读。
 
-A normalized posting must provide a stable URL and title. Company, location,
-description, publication date, source name, and role kind should be included
-when the upstream service exposes them. Adapters should tolerate absent optional
-fields, paginate with a bound, and report source failure rather than fabricating
-records.
+规范化职位必须提供稳定 URL 和标题。如果上游服务提供了公司、地点、描述、发布日期、来源名称和岗位类型，也应一并返回。适配器应容忍缺少可选字段，限制分页次数，并在来源失败时如实报告，不得伪造记录。
 
-Reserved source extension points:
+保留的来源扩展点：
 
-- a new `sources[].type` and matching collector dispatch;
-- per-source authentication environment-variable names;
-- public API, HTML/RSS, or authenticated CDP transport;
-- source categories for workflow selection;
-- include/exclude and role-kind filters applied after normalization.
+- 新增 `sources[].type` 及对应的采集器分发逻辑；
+- 按来源定义认证环境变量名称；
+- 公开 API、HTML/RSS 或已认证 CDP 传输；
+- 用于工作流选择的来源类别；
+- 规范化后的包含/排除筛选和岗位类型筛选。
 
-## Application adapters
+## 申请适配器
 
-`job_bot/config/portals.json` maps host suffixes or source platforms to adapter
-scripts. An adapter may probe login state, open one automation-owned tab, fill
-fields from the private profile, upload an explicitly selected document, and
-write an audit artifact. It must identify unsupported or ambiguous questions
-and stop for human review.
+`job_bot/config/portals.json` 将主机后缀或来源平台映射到适配器脚本。适配器可探测登录状态、打开一个由自动化管理的标签页、从私有档案填写字段、上传明确指定的文档并写入审计材料。遇到不受支持或有歧义的问题时，必须指出并停止，交由人工审阅。
 
-Every adapter must honor these contracts:
+所有适配器都必须遵循以下契约：
 
-- `application_browser.auto_submit` is `false`.
-- `application_profile.safety.allow_submit` is `false`.
-- CAPTCHA, MFA, declarations, and legal or immigration answers are not guessed.
-- Tabs and artifacts are registered through the shared management modules.
-- A final Submit control is never activated.
+- `application_browser.auto_submit` 为 `false`。
+- `application_profile.safety.allow_submit` 为 `false`。
+- 不猜测 CAPTCHA、MFA、声明以及法律或移民问题的答案。
+- 通过共享管理模块登记标签页和材料。
+- 绝不激活最终 Submit 控件。
 
-Reserved adapter hooks include session probes, draft support, environment-file
-options, per-portal timeouts, and generic routing by host suffix.
+保留的适配器扩展点包括会话探测、草稿支持、环境文件选项、各门户超时和按主机后缀通用路由。
 
-### Employer application limits
+### 雇主申请数量限制
 
-`application_limits` records the maximum number of applications for one exact
-employer name, recruiting category, and inclusive date window. `enforcement`
-is `hard` for a stated portal limit or `advisory` for a recommendation.
-`max_preferences_per_application` records a separate preference limit without
-counting each preference as another application. Store the policy URL and note
-whether the window is an official deadline or an internal tracking period.
+`application_limits` 记录针对一个完全匹配的雇主名称、招聘类别和含首尾日期区间的申请上限。若为门户明确规定的限制，`enforcement` 设为 `hard`；若为建议，则设为 `advisory`。`max_preferences_per_application` 另行记录偏好数量限制，不把每个偏好算作一份申请。保存政策 URL，并注明时间窗口是官方截止期还是内部跟踪周期。
 
-Tag matching postings in `jobs.recruitment_category` (for example,
-`2027_campus`). A company-wide rule uses category `all`. The dispatcher checks
-the rule against confirmed `submitted` applications before starting an
-adapter. A hard limit stops the adapter; an unclassified job at an employer
-with a category-specific hard rule requires category review. Advisory limits
-remain visible in the dispatch plan. Check one record directly with
-`python3 -m application_bot.application_limits <application-id>`. Limit rows and
-job tags are local database state; real application history stays private.
+在 `jobs.recruitment_category` 中标记职位类别（例如 `2027_campus`）。适用于整个公司的规则使用类别 `all`。dispatcher 在启动适配器前会将规则与已确认 `submitted` 的申请比对。硬性上限会停止适配器；若公司有按类别区分的硬性规则，但职位尚未分类，则必须先审查类别。建议性上限仍会显示在 dispatch 计划中。可用 `python3 -m application_bot.application_limits <application-id>` 直接检查一条记录。限制行和职位标签属于本地数据库状态；真实申请历史仍为私有数据。
 
-## Configuration overlays
+## 配置覆盖
 
-JSON configuration supports ordered `includes`. Paths are relative to the file
-that declares them. Later values override earlier mappings. `patches` target
-named list entries and support controlled append/remove changes. Validate every
-overlay with:
+JSON 配置支持按顺序使用 `includes`。路径相对于声明该项的文件解析。后续值覆盖先前映射。`patches` 按名称定位列表项，并支持受控追加或移除更改。用以下命令验证每个覆盖文件：
 
 ```bash
 jobbot-config --config path/to/local.json
 ```
 
-Private overlays belong under `private_data/config/`. They may change machine
-paths, enabled sources, browser mode, report routing, or scheduling limits.
-Secrets themselves belong in `passport.env`, not JSON.
+私有覆盖文件放在 `private_data/config/` 下。它们可更改机器路径、启用的来源、浏览器模式、报告路由或调度限制。密钥本身应放在 `passport.env`，不能放入 JSON。
 
-## Candidate profiles
+## 候选人档案
 
-The three maintained JSON contracts have schema files in `schemas/` and
-redacted examples in `examples/`. Consumers should accept additive optional
-fields, reject incompatible types, and use stable IDs when linking records.
-Any new fact with legal, eligibility, compensation, demographic, or declaration
-meaning needs explicit candidate confirmation and a clear provenance field.
+三个受维护的 JSON 契约都有对应的 `schemas/` Schema 文件和 `examples/` 脱敏示例。消费者应接受新增的可选字段、拒绝不兼容的类型，并在关联记录时使用稳定 ID。新增的法律、资格、薪酬、人口统计或声明类事实必须由候选人明确确认，并提供清晰的来源字段。
 
-## Command-line and output contracts
+## 命令行与输出契约
 
-Installed commands must return nonzero status for invalid configuration or a
-failed required operation. Diagnostic output may include file paths, key names,
-counts, and statuses; it must not print passwords, cookies, tokens, or candidate
-values. Generated durable output must resolve through `private_paths.py`.
+配置无效或必需操作失败时，已安装命令必须返回非零状态。诊断输出可包含文件路径、键名、计数和状态，但绝不能打印密码、cookie、token 或候选人具体值。生成的持久化输出必须通过 `private_paths.py` 定位。
 
-New CLI behavior should first expose a dry-run or plan form when it causes
-network writes, opens many browser tabs, or changes application state.
+如果新 CLI 行为会写入网络、打开大量浏览器标签或更改申请状态，应先提供 dry-run 或 plan 预览方式。
 
-## Reserved integrations
+## 预留集成
 
-The architecture leaves room for:
+架构为以下能力预留扩展空间：
 
-- additional university and employer job sources;
-- other ATS portal adapters;
-- encrypted private-data backup outside the public repository;
-- alternate browser transports behind the same adapter boundary;
-- notification sinks selected by config;
-- structured export/import of candidate profiles;
-- an evidence-backed language model service that proposes edits while the local
-  validator retains authority over allowed claims and safety gates.
+- 更多大学和雇主职位来源；
+- 其他 ATS 门户适配器；
+- 在公开仓库外进行私有数据的加密备份；
+- 在相同适配器边界后接入其他浏览器传输；
+- 由配置选择的通知接收端；
+- 候选人档案的结构化导入/导出；
+- 以证据为依据的语言模型服务，可提出编辑建议，而本地验证器仍负责允许的声明和安全门。
 
-An integration must remain optional: a fresh clone and the core test suite may
-not require its credentials, account, proprietary SDK, or network availability.
+集成必须保持可选：全新 clone 和核心测试套件不应要求其凭据、账户、专有 SDK 或网络可用性。

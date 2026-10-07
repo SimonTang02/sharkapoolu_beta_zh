@@ -1,8 +1,7 @@
-"""Canonical locations for private candidate data.
+"""候选人私有数据的规范存储位置。
 
-Program code may import these paths, but must never embed candidate values.
-Set JOBBOT_PRIVATE_DIR to relocate the whole private tree, for example to an
-encrypted disk or a Synology-mounted directory.
+程序代码可以导入这些路径，但绝不能嵌入候选人具体值。设置 JOBBOT_PRIVATE_DIR
+即可迁移整个私有目录树，例如移至加密磁盘或 Synology 挂载目录。
 """
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 
 
 def _default_private_root() -> Path:
-    """Keep source checkouts local and installed packages out of site-packages."""
+    """让源码检出目录保持本地路径，并避免已安装的软件包落入 site-packages。"""
     if (PROJECT_ROOT / "pyproject.toml").is_file():
         return PROJECT_ROOT / "private_data"
     data_home = Path(

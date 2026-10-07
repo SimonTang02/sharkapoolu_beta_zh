@@ -44,8 +44,8 @@ class PrivateConfigTests(unittest.TestCase):
         }
         issues = validate_application_profile(profile)
         messages = "\n".join(f"{item.path} {item.message}" for item in issues)
-        self.assertIn("application_profile.education must be list", messages)
-        self.assertIn("application_profile.safety.allow_submit must remain false", messages)
+        self.assertIn("application_profile.education 必须是列表", messages)
+        self.assertIn("application_profile.safety.allow_submit 必须保持为 false", messages)
 
     def test_keyword_library_rejects_unknown_preset_references(self) -> None:
         library = {
@@ -62,7 +62,7 @@ class PrivateConfigTests(unittest.TestCase):
             ],
         }
         issues = validate_keyword_library(library)
-        self.assertTrue(any("unknown keyword IDs" in item.message for item in issues))
+        self.assertTrue(any("引用了未知的关键词 ID" in item.message for item in issues))
 
     def test_keyword_library_reports_malformed_reference_lists(self) -> None:
         library = {
@@ -91,9 +91,9 @@ class PrivateConfigTests(unittest.TestCase):
         }
         issues = validate_keyword_library(library)
         messages = "\n".join(f"{item.path} {item.message}" for item in issues)
-        self.assertIn("source_ids must be a string list", messages)
-        self.assertIn("technical_ids must be a string list", messages)
-        self.assertIn("role_match_terms must be a string list", messages)
+        self.assertIn("source_ids 必须是字符串列表", messages)
+        self.assertIn("technical_ids 必须是字符串列表", messages)
+        self.assertIn("role_match_terms 必须是字符串列表", messages)
 
     def test_initializer_keeps_existing_files_without_force(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

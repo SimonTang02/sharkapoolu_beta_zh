@@ -1,4 +1,4 @@
-"""Import an original resume privately; create an editable draft and Agent task."""
+"""将原始简历导入私有目录，并创建可编辑草稿和智能体任务。"""
 from __future__ import annotations
 
 import argparse
@@ -42,23 +42,23 @@ def extract_pdf(source: Path) -> list[str]:
 
 
 def editable_draft(pages: list[str]) -> str:
-    # A literal editable transcription; the Agent performs semantic restructuring.
+    # 提供可编辑的逐字转录稿；由智能体负责语义重组。
     cjk = any('\u3400' <= char <= '\u9fff' for text in pages for char in text)
     font = r'\usepackage{fontspec}' + ('\n'+r'\usepackage{xeCJK}' if cjk else '')
     body = []
     for number, text in enumerate(pages, 1):
-        body.append(r'\section*{Original page '+str(number)+'}')
+        body.append(r'\section*{原始页面 '+str(number)+'}')
         for line in text.splitlines():
             if line.strip():
                 body.append(latex_escape(line.strip())+r'\par')
     if not any(text.strip() for text in pages):
-        body.append('No reliable extracted text. Agent visual transcription required.')
+        body.append('无法可靠提取文本。需要由智能体逐页查看并转录。')
     return '\n'.join([
-        '% REVIEW REQUIRED: editable transcription, not a submission-ready resume.',
-        '% Compile with XeLaTeX; compare every line with original.pdf before restructuring.',
+        '% 需要审阅：这是可编辑转录稿，并非可直接投递的简历。',
+        '% 使用 XeLaTeX 编译；重组内容前请逐行对照 original.pdf。',
         r'\documentclass[10pt]{article}', r'\usepackage[margin=0.7in]{geometry}',font,
         r'\setlength{\parindent}{0pt}',r'\begin{document}',
-        r'\textbf{RESUME IMPORT DRAFT -- REVIEW REQUIRED}',*body,r'\end{document}',''])
+        r'\textbf{简历导入草稿 -- 需要审阅}',*body,r'\end{document}',''])
 
 
 def import_resume(source: Path, output: Path | None = None) -> Path:
@@ -117,7 +117,7 @@ def main() -> int:
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input',type=Path,required=True)
     parser.add_argument('--output',type=Path)
-    parser.add_argument('--execute',action='store_true',help='Copy original and create private draft; default validates only')
+    parser.add_argument('--execute',action='store_true',help='复制原始文件并创建私有草稿；默认仅执行校验')
     args=parser.parse_args()
     try:
         if not args.execute:

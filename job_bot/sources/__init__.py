@@ -1,2 +1,1 @@
-"""Source adapters for job_bot."""
-
+"""job_bot 的岗位来源适配器。"""

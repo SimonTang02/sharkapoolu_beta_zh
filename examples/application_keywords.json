@@ -1,22 +1,22 @@
 {
-  "$schema": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_beta/main/schemas/application-keywords.schema.json",
+  "$schema": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_zh/main/schemas/application-keywords.schema.json",
   "schema_version": 1,
   "updated_at": "",
-  "purpose": "Evidence-scoped labels for resumes and application forms.",
+  "purpose": "供简历和申请表使用、限定于证据范围内的标签。",
   "sources": {
     "resume": {
       "path": "private_data/cv/source/current.tex",
-      "description": "Reviewed canonical resume source."
+      "description": "已审阅的规范简历源文件。"
     },
     "evidence": {
       "path": "private_data/cv/profile/evidence_profile.json",
-      "description": "Reviewed evidence inventory."
+      "description": "已审阅的证据清单。"
     }
   },
   "usage_rules": [
-    "Use only claims supported by a listed source.",
-    "Do not infer proficiency, years of experience, or personality ratings.",
-    "Review every selected label before submission."
+    "仅使用清单中来源支持的声明。",
+    "不得推断熟练程度、工作年限或性格评价。",
+    "提交前审阅每个选中的标签。"
   ],
   "technical_keywords": [],
   "collaboration_personality_keywords": [],

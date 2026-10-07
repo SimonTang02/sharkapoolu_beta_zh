@@ -1,4 +1,4 @@
-"""Verify public examples through the real schema, profile and CV interfaces."""
+"""通过实际 schema、资料和 CV 接口验证公开示例。"""
 
 import json
 import os

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit the files Git would publish and optionally inspect existing history."""
+"""审计 Git 将要发布的文件，并可选择检查现有历史记录。"""
 
 from __future__ import annotations
 
@@ -95,13 +95,13 @@ def path_problem(path: Path) -> str | None:
     path_text = path.as_posix()
     lower_name = path.name.casefold()
     if path.parts and path.parts[0] == "private_data" and path_text != "private_data/README.md":
-        return "private_data content"
+        return "private_data 私有数据内容"
     if lower_name in FORBIDDEN_NAMES:
-        return "private or credential filename"
+        return "私有文件或凭据文件名"
     if path.suffix.casefold() in FORBIDDEN_SUFFIXES:
-        return "generated document, database, or archive"
+        return "生成的文档、数据库或归档文件"
     if any(part.casefold() in {"browser_profiles", "browser_state"} for part in path.parts):
-        return "browser session directory"
+        return "浏览器会话目录"
     return None
 
 
@@ -167,7 +167,7 @@ def main() -> None:
     parser.add_argument(
         "--history",
         action="store_true",
-        help="also inspect existing commits using local private-profile markers",
+        help="同时使用本地私有档案标记检查现有提交",
     )
     args = parser.parse_args()
 
@@ -178,8 +178,8 @@ def main() -> None:
         for problem in sorted(set(problems)):
             print(problem)
         raise SystemExit(1)
-    scope = "working tree and history" if args.history else "publishable working tree"
-    print(f"Public-repository audit passed: {scope}")
+    scope = "工作区和历史记录" if args.history else "可发布的工作区"
+    print(f"公开仓库审计通过：{scope}")
 
 
 if __name__ == "__main__":

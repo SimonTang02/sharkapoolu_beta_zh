@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_beta/main/schemas/application-profile.schema.json",
+  "$schema": "https://raw.githubusercontent.com/SimonTang02/sharkapoolu_zh/main/schemas/application-profile.schema.json",
   "schema_version": 1,
   "fields": {
     "how_did_you_hear": "",
@@ -78,7 +78,7 @@
   "personal_facts_confirmation": {
     "date": "",
     "source": "",
-    "notes": "Use this optional object for dated, candidate-confirmed facts that do not yet have a stable first-class field."
+    "notes": "可在此可选对象中记录带日期、经候选人确认但尚无稳定专用字段的事实。"
   },
   "safety": {
     "allow_sensitive_answers": false,

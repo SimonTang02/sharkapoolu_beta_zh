@@ -30,7 +30,7 @@ class ScanBrowserTests(unittest.TestCase):
     def test_lost_owned_page_does_not_fall_back(self):
         context = Mock(pages=[])
         with patch.dict(os.environ, {"JOBBOT_SCAN_TARGET_ID": "lost"}):
-            with self.assertRaisesRegex(RuntimeError, "unavailable"):
+            with self.assertRaisesRegex(RuntimeError, "不可用"):
                 new_scan_page(context)
             context.new_page.assert_not_called()
 
@@ -39,6 +39,6 @@ class ScanBrowserTests(unittest.TestCase):
         with patch.dict(os.environ, {"JOBBOT_SCAN_TARGET_ID": "owned"}), patch(
             "job_bot.scan_browser.target_id", return_value="other"
         ):
-            with self.assertRaisesRegex(RuntimeError, "Refusing"):
+            with self.assertRaisesRegex(RuntimeError, "拒绝"):
                 close_scan_page(page)
             page.close.assert_not_called()

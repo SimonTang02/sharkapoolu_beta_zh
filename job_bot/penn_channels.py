@@ -1,7 +1,7 @@
-"""Read Penn career channels and retain one user-login tab per channel.
+"""读取宾大职业渠道，并为每个渠道保留一个用户登录标签页。
 
-Typed opportunity references live separately from verified enterprise jobs.
-No profile edits, registration, applications or messaging are performed.
+带类型的机会参考信息与已核实的企业职位分开保存。本模块不会编辑档案、注册、
+提交申请或发送消息。
 """
 from __future__ import annotations
 
@@ -95,7 +95,7 @@ def extract_references(channel: dict, state: dict, today: dt.date) -> list[dict]
             if not re.search(r"career|job|internship|employer|resume|interview|Handshake", title, re.I):
                 continue
         elif channel["id"] != "workday":
-            continue  # No speculative parsing of gated boards or alumni lists.
+            continue  # 不猜测解析受限平台或校友名单。
         if kind == "event":
             match = re.search(r"/events/(\d{4})/(\d{2})/(\d{2})/", url)
             if not match or dt.date(*map(int, match.groups())) < today:
@@ -120,7 +120,7 @@ def run(config: dict, *, open_pages: bool = False, only: list[str] | None = None
     report = {"checked_at": dt.datetime.now(dt.timezone.utc).isoformat(), "channels": [], "opportunities": []}
     channels = config.get("penn_channels", {}).get("channels", [])
     if only and set(only) - {c["id"] for c in channels}:
-        raise ValueError("Unknown Penn channel ID")
+        raise ValueError("未知的宾大渠道 ID")
     with _playwright_api()() as p:
         browser = p.chromium.connect_over_cdp(configured_cdp_connect_url(config), timeout=30000)
         try:
@@ -145,8 +145,8 @@ def run(config: dict, *, open_pages: bool = False, only: list[str] | None = None
                     continue
                 page = pages.get(manifest.get(key, {}).get("target_id"))
                 login_target = manifest.get(key, {}).get("target_id")
-                # Refresh implemented readers in a separate disposable tab.
-                # Retained login/user pages remain where the user left them.
+                # 在单独的临时标签页中刷新已实现的读取器。
+                # 保留的登录/用户页面维持用户离开时的状态。
                 if not open_pages and key in {"engineering", "engineering_hub", "curf"}:
                     page = None
                 created = page is None
@@ -166,8 +166,8 @@ def run(config: dict, *, open_pages: bool = False, only: list[str] | None = None
                                 link = page.get_by_role("link", name=channel["entry_link"], exact=True).first
                                 page.goto(link.get_attribute("href"), wait_until="domcontentloaded", timeout=20000)
                         except Exception:
-                            # SSO navigation can abort the original page load.
-                            # Inspect the actual destination before classifying.
+                            # SSO 导航可能中断原始页面加载。
+                            # 分类之前先检查实际到达的页面。
                             pass
                         page.wait_for_timeout(1500)
                     for attempt in range(3):
@@ -204,18 +204,22 @@ def run(config: dict, *, open_pages: bool = False, only: list[str] | None = None
         report["opportunities"] = [r for r in previous.get("opportunities", []) if r["channel"] not in only] + report["opportunities"]
         report["partially_refreshed_channels"] = only
     write_private(out / "latest.json", report)
-    lines = ["# Penn channels — campus work, research and career resources", "", report["checked_at"], "",
-             "These are channel states and visible references, not verified job offers or application submissions.", "",
-             "| Channel | Status | Items |", "|---|---|---|"]
+    lines = ["# 宾大渠道：校内工作、科研与职业资源", "", report["checked_at"], "",
+             "以下内容为渠道状态和页面可见信息，并非已核实的职位录用或申请提交记录。", "",
+             "| 渠道 | 状态 | 条目数 |", "|---|---|---|"]
     for row in report["channels"]:
         lines.append(f"| [{row['name']}]({row['entry_url']}) | {row['status']} | {row['items']} |")
+    kind_labels = {
+        "campus_job": "校内岗位", "research_lead": "科研机会", "event": "活动",
+        "resource": "资源", "external_job": "校外职位", "network": "人脉",
+    }
     for kind in ("campus_job", "research_lead", "event", "resource", "external_job", "network"):
-        lines.extend(["", "## " + kind, ""])
+        lines.extend(["", "## " + kind_labels[kind], ""])
         items = [x for x in report["opportunities"] if x["kind"] == kind]
         lines.extend(f"- [{x['title']}]({x['url']})" for x in items)
         if not items:
-            lines.append("No verified listings collected in this category; see channel state above.")
-    lines.extend(["", "Campus jobs need explicit work-study eligibility review. CURF is primarily for undergraduates; paid work and master's eligibility must be confirmed."])
+            lines.append("此类别没有采集到已核实的职位；请查看上方渠道状态。")
+    lines.extend(["", "校内岗位必须明确核实 Work-Study 资格。CURF 主要面向本科生；有薪工作资格和硕士生是否符合条件都需要确认。"])
     path = out / "latest.md"
     path.write_text("\n".join(lines) + "\n")
     path.chmod(0o600)
@@ -230,7 +234,7 @@ def main() -> None:
     args = parser.parse_args()
     report = run(load_config(args.config), open_pages=args.open_login_pages, only=args.channel)
     for row in report["channels"]:
-        print(f"{row['name']}: {row['status']} ({row['items']} references)")
+        print(f"{row['name']}：{row['status']}（{row['items']} 条参考信息）")
     print(JOBBOT_OUTPUT / "penn_channels/latest.md")
 
 

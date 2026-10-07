@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unified CLI with backward compatibility for the original application bot."""
+"""统一命令行接口，并兼容原版申请机器人。"""
 
 from __future__ import annotations
 

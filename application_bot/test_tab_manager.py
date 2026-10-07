@@ -26,8 +26,8 @@ class ReportTests(unittest.TestCase):
         report = render_report(
             [], adopted=[], applied=False, closed=[], max_tabs=15
         )
-        self.assertIn("Mode: audit only", report)
-        self.assertIn("Tabs closed: 0", report)
+        self.assertIn("模式：仅审计", report)
+        self.assertIn("已关闭标签页：0", report)
 
 
 if __name__ == "__main__":

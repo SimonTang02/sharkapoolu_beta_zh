@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-"""Open one representative login-check tab per campaign company.
+"""为批次中的每家公司打开一个代表性登录检查标签页。
 
-This is deliberately a separate phase from form filling.  It lets the user
-review login state for every company before any application-specific tabs are
-created.  Tabs owned by this module use ``jobbot-login-company-*`` labels and
-are safe for this module to deduplicate; application tabs are never closed.
+此步骤与表单填写分开执行，以便用户在创建任何申请专用标签页之前审阅每家公司的登录状态。本模块创建的标签使用 ``jobbot-login-company-*`` 名称，可由本模块安全去重；申请标签页绝不会关闭。
 """
 
 from __future__ import annotations
@@ -78,7 +75,7 @@ def _login_check_url(adapter_id: str | None, row) -> str:
 
 
 def build_login_targets(config, rows) -> list[LoginTarget]:
-    """Keep campaign rank order while choosing one page for each company."""
+    """为每家公司选择一个页面，同时保留批次岗位顺序。"""
     targets: list[LoginTarget] = []
     seen: set[str] = set()
     for row in rows:
@@ -130,7 +127,7 @@ def main() -> int:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--env-file", type=Path, default=CREDENTIALS_FILE)
     parser.add_argument(
-        "--plan-only", action="store_true", help="Write targets without opening Chrome tabs."
+        "--plan-only", action="store_true", help="仅写入目标，不打开 Chrome 标签页。"
     )
     args = parser.parse_args()
     if args.env_file.is_file():
@@ -145,7 +142,7 @@ def main() -> int:
     if not args.plan_only:
         mode, cdp_url = resolve_browser_connection(config)
         if mode != "windows_cdp":
-            raise SystemExit("login preflight requires application_browser.mode=windows_cdp")
+            raise SystemExit("登录预检需要 application_browser.mode=windows_cdp")
         sync_playwright = _playwright_api()
         with sync_playwright() as playwright:
             browser = playwright.chromium.connect_over_cdp(cdp_url, timeout=30_000)
@@ -171,8 +168,8 @@ def main() -> int:
                 error = ""
                 try:
                     page.goto(target.login_check_url, wait_until="domcontentloaded", timeout=45_000)
-                    # Workday sometimes leaves a stale Create Account title after a
-                    # tenant transition.  One explicit reload resolves that state.
+                    # Workday 有时会在租户切换后保留过时的 Create Account 标题。
+                    # 显式重新加载一次即可解决此状态。
                     if target.adapter == "workday" and "create account" in page.title().casefold():
                         page.reload(wait_until="domcontentloaded", timeout=45_000)
                 except Exception as exc:

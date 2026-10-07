@@ -1,49 +1,36 @@
-# Private candidate data
+# 候选人私有数据
 
-Everything below this directory is ignored by the main Git repository except
-this README. It is the canonical home for candidate identity, credentials,
-browser sessions, application evidence, generated resumes, cover letters, and
-application databases.
+除本 README 外，本目录下所有内容均由主 Git 仓库忽略。这里是候选人身份、凭据、浏览器会话、申请证据、生成简历/求职信及申请数据库的规范存放位置。
 
-Default layout:
+默认目录布局：
 
 - `credentials/passport.env`
 - `profiles/application_profile.json`
-- `browser/state/` and `browser/profiles/`
+- `browser/state/` 和 `browser/profiles/`
 - `database/`
-- `cv/source/` and `cv/build/`
-- `cv/profile/` (evidence and positioning), `cv/variants/`, and `cv/reports/`
+- `cv/source/` 和 `cv/build/`
+- `cv/profile/`（证据和个人定位）、`cv/variants/` 与 `cv/reports/`
 - `cv/archive/`
-- `outputs/job_bot/` and `outputs/application_bot/`
+- `outputs/job_bot/` 和 `outputs/application_bot/`
 
-Create the maintained files and validate them from the repository root:
+在仓库根目录创建受维护文件并验证：
 
 ```bash
 python3 -m job_bot.private_config init
 python3 -m job_bot.private_config check
 ```
 
-`init` copies redacted files from `examples/`, sets their mode to `600`, and
-keeps existing files. The matching contracts are under `schemas/`. Use
-`--force` only when you intentionally want to replace the maintained private
-files with blank examples.
+`init` 会从 `examples/` 复制脱敏文件、设置权限 `600`，并保留已有文件。对应契约位于 `schemas/`。只有确实要用空白示例替换受维护私有文件时才使用 `--force`。
 
-Data ownership is intentionally split:
+数据职责有意分开：
 
-- `profiles/application_profile.json` is canonical for facts entered in forms.
-- `cv/profile/evidence_profile.json` is canonical for claims and positioning.
-- `cv/profile/application_keywords.json` is canonical for evidence-backed skill
-  and collaboration vocabulary.
-- `credentials/passport.env` contains secrets and session pointers.
+- `profiles/application_profile.json` 是填入申请表单的事实权威来源。
+- `cv/profile/evidence_profile.json` 是简历声明和定位的权威来源。
+- `cv/profile/application_keywords.json` 是有证据支持的技能与协作用语的权威来源。
+- `credentials/passport.env` 保存密钥和会话指针。
 
-Some education and identity facts are duplicated for compatibility. Run the
-checker after changing them and review generated documents for consistency.
+为兼容用途，一些教育和身份事实会重复。更改后运行检查器，并检查生成文档的一致性。
 
-Set `JOBBOT_PRIVATE_DIR` before running a command to relocate the entire tree.
-The directory should be backed up separately and protected with filesystem or
-volume encryption. Moving files here does not remove personal information from
-older Git commits; rewriting repository history is a separate destructive task.
+运行命令前设置 `JOBBOT_PRIVATE_DIR` 可重定位整个目录树。应单独备份该目录，并通过文件系统或卷加密保护。将文件移入此处并不能从旧 Git 提交中移除个人信息；重写仓库历史是另一项会改变历史的操作。
 
-See [`docs/configuration.md`](../docs/configuration.md) for every field and
-[`docs/private-data-audit.md`](../docs/private-data-audit.md) for the structure
-assessment.
+所有字段说明见[`docs/configuration.md`](../docs/configuration.md)，结构评估见[`docs/private-data-audit.md`](../docs/private-data-audit.md)。

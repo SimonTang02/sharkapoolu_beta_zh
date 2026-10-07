@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [string]$WslHostIp,
     [Parameter(Mandatory = $true)]
@@ -34,4 +34,4 @@ New-NetFirewallRule `
     -RemoteAddress $WslIp `
     -Profile Any | Out-Null
 
-Write-Output "Rebuilt $WslHostIp`:$ListenPort -> 127.0.0.1`:$ChromePort for WSL $WslIp"
+Write-Output "已重建端口转发：$WslHostIp`:$ListenPort -> 127.0.0.1`:$ChromePort（WSL $WslIp）"

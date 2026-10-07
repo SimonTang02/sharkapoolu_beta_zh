@@ -27,18 +27,18 @@ private-check:
 
 current:
 	@mkdir -p $(OUTDIR)
-	@command -v latexmk >/dev/null 2>&1 || { echo "latexmk not found. Install a TeX distribution or compile on Overleaf."; exit 127; }
+	@command -v latexmk >/dev/null 2>&1 || { echo "未找到 latexmk。请安装 TeX 发行版，或在 Overleaf 上编译。"; exit 127; }
 	latexmk -cd -pdf -interaction=nonstopmode -halt-on-error -outdir=$(OUTDIR) $(SOURCE_DIR)/current.tex
 
 visa:
 	@mkdir -p $(OUTDIR)
-	@command -v latexmk >/dev/null 2>&1 || { echo "latexmk not found. Install a TeX distribution or compile on Overleaf."; exit 127; }
+	@command -v latexmk >/dev/null 2>&1 || { echo "未找到 latexmk。请安装 TeX 发行版，或在 Overleaf 上编译。"; exit 127; }
 	latexmk -cd -pdf -interaction=nonstopmode -halt-on-error -outdir=$(OUTDIR) $(SOURCE_DIR)/visa.tex
 
 check-tools:
-	@command -v latexmk >/dev/null 2>&1 && echo "latexmk: OK" || echo "latexmk: missing"
-	@command -v biber >/dev/null 2>&1 && echo "biber: OK" || echo "biber: missing"
-	@command -v pdflatex >/dev/null 2>&1 && echo "pdflatex: OK" || echo "pdflatex: missing"
+	@command -v latexmk >/dev/null 2>&1 && echo "latexmk：正常" || echo "latexmk：未安装"
+	@command -v biber >/dev/null 2>&1 && echo "biber：正常" || echo "biber：未安装"
+	@command -v pdflatex >/dev/null 2>&1 && echo "pdflatex：正常" || echo "pdflatex：未安装"
 
 clean:
 	latexmk -C -cd -outdir=$(OUTDIR) $(SOURCE_DIR)/current.tex $(SOURCE_DIR)/visa.tex 2>/dev/null || true
@@ -57,11 +57,11 @@ config-check:
 	python3 job_bot/config_inspect.py --config $(CONFIG)
 
 workflow:
-	@test -n "$(WORKFLOW)" || { echo "Set WORKFLOW, for example: make workflow WORKFLOW=http_refresh"; exit 2; }
+	@test -n "$(WORKFLOW)" || { echo "请设置 WORKFLOW，例如：make workflow WORKFLOW=http_refresh"; exit 2; }
 	python3 job_bot/run_modules.py --config $(CONFIG) --workflow $(WORKFLOW)
 
 workflow-plan:
-	@test -n "$(WORKFLOW)" || { echo "Set WORKFLOW, for example: make workflow-plan WORKFLOW=http_refresh"; exit 2; }
+	@test -n "$(WORKFLOW)" || { echo "请设置 WORKFLOW，例如：make workflow-plan WORKFLOW=http_refresh"; exit 2; }
 	python3 job_bot/run_modules.py --config $(CONFIG) --workflow $(WORKFLOW) --dry-run
 
 test:
@@ -76,5 +76,5 @@ history-audit:
 release-check: public-audit test config-check
 
 public-snapshot: release-check
-	@test -n "$(DEST)" || { echo "Set DEST, for example: make public-snapshot DEST=../26fall_intern_public"; exit 2; }
+	@test -n "$(DEST)" || { echo "请设置 DEST，例如：make public-snapshot DEST=../26fall_intern_public"; exit 2; }
 	python3 scripts/export_public_snapshot.py --init "$(DEST)"

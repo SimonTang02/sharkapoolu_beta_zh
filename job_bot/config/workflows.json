@@ -1,58 +1,58 @@
 {
   "workflows": {
     "penn_channels_refresh": {
-      "description": "Read Penn campus work, research, events and platform access states without mixing them into enterprise job rankings.",
+      "description": "读取宾大校园工作、研究、活动和平台访问状态，不将其混入企业职位排名。",
       "modules": ["penn_channels"],
       "continue_on_error": false
     },
     "penn_refresh": {
-      "description": "Read Penn Handshake through the existing Chrome login, then rescore and rebuild reports.",
+      "description": "使用现有 Chrome 登录状态读取宾大 Handshake，然后重新评分并生成报告。",
       "modules": ["scan", "rescore", "scoring_report", "strategy_full", "weekly"],
       "source_selector": {"include_types": ["handshake"]},
       "max_workers": 1,
       "continue_on_error": false
     },
     "daily": {
-      "description": "Full daily scan, delta strategy report, intervention report, and rebuilt weekly report.",
+      "description": "执行完整每日扫描，生成策略变化报告和干预报告，并重新生成每周报告。",
       "modules": ["daily"],
       "continue_on_error": false
     },
     "weekly_only": {
-      "description": "Rebuild the current weekly report from SQLite without network access.",
+      "description": "不访问网络，直接从 SQLite 重新生成当前每周报告。",
       "modules": ["weekly"],
       "continue_on_error": false
     },
     "digest_24h": {
-      "description": "Build or send the 24-hour digest from SQLite without fetching sources.",
+      "description": "不抓取来源，直接从 SQLite 创建或发送 24 小时摘要。",
       "modules": ["digest"],
       "continue_on_error": false
     },
     "report_only": {
-      "description": "Rebuild score, campaign, digest, and weekly reports without network access or rescoring.",
+      "description": "不访问网络或重新评分，重新生成评分、批次、摘要和每周报告。",
       "modules": ["scoring_report", "strategy_full", "digest", "weekly"],
       "continue_on_error": false
     },
     "http_refresh": {
-      "description": "Run only sources that do not require the Windows CDP browser, then rescore and report.",
+      "description": "仅运行不需要 Windows CDP 浏览器的来源，然后重新评分并生成报告。",
       "modules": ["scan", "rescore", "scoring_report", "strategy_full", "weekly"],
       "source_selector": {"browser": "http"},
       "max_workers": 4,
       "continue_on_error": false
     },
     "browser_refresh": {
-      "description": "Run only CDP/browser-backed sources, then rescore and report.",
+      "description": "仅运行依赖 CDP/浏览器的来源，然后重新评分并生成报告。",
       "modules": ["scan", "rescore", "scoring_report", "strategy_full", "weekly"],
       "source_selector": {"browser": "cdp"},
       "max_workers": 1,
       "continue_on_error": false
     },
     "score_experiment": {
-      "description": "Evaluate a config overlay in memory without changing stored production scores.",
+      "description": "在内存中评估配置覆盖项，不更改已存储的生产评分。",
       "modules": ["scoring_experiment"],
       "continue_on_error": false
     },
     "login_audit": {
-      "description": "Read-only browser login/session audit.",
+      "description": "只读浏览器登录/会话审计。",
       "modules": ["session_audit"],
       "continue_on_error": false
     }

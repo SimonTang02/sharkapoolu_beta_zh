@@ -1,2 +1,2 @@
-"""Human-reviewed application preparation entry point."""
+"""经过人工审阅的申请准备入口。"""
 

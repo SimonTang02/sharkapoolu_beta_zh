@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Complete the authorized MediaTek candidate profile without applying.
+"""完成已授权的 MediaTek 候选人档案信息，但不申请岗位。
 
-This adapter only works on the already-authenticated profile page.  It never
-opens a job application and contains no selector for the final submit control.
+此适配器仅在已完成身份验证的档案页面运行，不会打开岗位申请页面，也不包含最终提交控件的选择器。
 """
 
 from __future__ import annotations
@@ -50,16 +49,16 @@ def select_option(page, combobox, option_name: str) -> None:
             "七月", "八月", "九月", "十月", "十一月", "十二月",
         ]
         if option_name.isdigit() or option_name in months:
-            # The year list is virtualized in a 52px row scroll viewport.
-            # Scroll the owning viewport until the requested option mounts.
+            # 年份列表在 52px 行高的滚动视口中虚拟化显示。
+            # 滚动所属视口，直到所需选项加载出来。
             mounted = page.get_by_role("option")
             if not mounted.count():
-                raise RuntimeError("MediaTek year list opened without options")
+                raise RuntimeError("MediaTek 年份列表打开后未显示选项")
             mounted.first.evaluate(
                 """(el, offset) => {
                     let p = el.parentElement;
                     while (p && p.scrollHeight <= p.clientHeight) p = p.parentElement;
-                    if (!p) throw new Error('year scroll viewport not found');
+                    if (!p) throw new Error('未找到年份列表的滚动视口');
                     p.scrollTo(0, offset);
                 }""",
                 (
@@ -83,19 +82,19 @@ def select_option(page, combobox, option_name: str) -> None:
                 ]
                 page.keyboard.press("Escape")
                 raise RuntimeError(
-                    f"MediaTek virtualized year not mounted: {option_name}; "
+                    f"MediaTek 虚拟年份选项未加载：{option_name}；"
                     f"count={mounted.count()} first={mounted_text}"
                 )
             mounted.nth(option_index).click()
         else:
             mounted = page.get_by_role("option")
             if not mounted.count():
-                raise RuntimeError("MediaTek select opened without options")
+                raise RuntimeError("MediaTek 选择列表打开后未显示选项")
             mounted.first.evaluate(
                 """el => {
                     let p=el.parentElement;
                     while(p && p.scrollHeight <= p.clientHeight) p=p.parentElement;
-                    if (!p) throw new Error('select scroll viewport not found');
+                    if (!p) throw new Error('未找到选择列表的滚动视口');
                     p.scrollTo(0, Math.min(10000, p.scrollHeight - p.clientHeight));
                 }"""
             )
@@ -105,7 +104,7 @@ def select_option(page, combobox, option_name: str) -> None:
                 option = page.get_by_role("option").filter(has_text=option_name)
             if not option.count():
                 page.keyboard.press("Escape")
-                raise RuntimeError(f"MediaTek option not found after expansion: {option_name}")
+                raise RuntimeError(f"展开后未找到 MediaTek 选项：{option_name}")
             option.last.click()
     elif option.count():
         option.last.click()
@@ -113,7 +112,7 @@ def select_option(page, combobox, option_name: str) -> None:
     selected = " ".join(combobox.inner_text().split())
     if selected != option_name:
         raise RuntimeError(
-            f"MediaTek selection did not change to {option_name}; current={selected}"
+            f"MediaTek 选项未变更为 {option_name}；当前值={selected}"
         )
 
 
@@ -121,12 +120,12 @@ def current_education_editor(page):
     save = page.get_by_role("button", name="保存", exact=True)
     visible_saves = [save.nth(i) for i in range(save.count()) if save.nth(i).is_visible()]
     if not visible_saves:
-        raise RuntimeError("No visible MediaTek education Save control")
+        raise RuntimeError("未找到可见的 MediaTek 教育信息保存控件")
     editor = visible_saves[-1].locator(
         "xpath=ancestor::div[count(.//button[@role='combobox']) >= 8][1]"
     )
     if editor.count() != 1:
-        raise RuntimeError("Could not isolate the MediaTek education editor")
+        raise RuntimeError("无法定位 MediaTek 教育信息编辑器")
     return editor, visible_saves[-1]
 
 
@@ -135,7 +134,7 @@ def choose_binary(editor, label: str, choice: str) -> None:
     group = prompt.locator("xpath=following-sibling::*[1]")
     target = group.get_by_role("button", name=re.compile(rf"^{re.escape(choice)}"))
     if not target.count():
-        # The prompt and radios are often wrapped in the same parent.
+        # 提示文本和单选按钮通常位于同一父元素中。
         group = prompt.locator("xpath=parent::*")
         target = group.get_by_role("button", name=re.compile(rf"^{re.escape(choice)}"))
     if not target.count():
@@ -144,7 +143,7 @@ def choose_binary(editor, label: str, choice: str) -> None:
             "button", name=re.compile(rf"^{re.escape(choice)}")
         )
         if target.count() <= index:
-            raise RuntimeError(f"Could not find {label}: {choice}")
+            raise RuntimeError(f"无法找到 {label}：{choice}")
         target = target.nth(index)
     if "text-orange-200" in (target.last.get_attribute("class") or ""):
         return
@@ -153,12 +152,12 @@ def choose_binary(editor, label: str, choice: str) -> None:
 
 def fill_education(page, values: dict[str, str]) -> None:
     editor, save = current_education_editor(page)
-    print("MediaTek education: setting graduation flags", flush=True)
+    print("MediaTek 教育信息：设置毕业标记", flush=True)
     choose_binary(editor, "是否已毕业", values["graduated"])
     choose_binary(editor, "最高学历", values["highest"])
     boxes = editor.get_by_role("combobox")
     if boxes.count() < 8:
-        raise RuntimeError(f"Expected 8 MediaTek education comboboxes, found {boxes.count()}")
+        raise RuntimeError(f"预期有 8 个 MediaTek 教育信息组合框，实际找到 {boxes.count()} 个")
     for index, key in (
         (0, "degree"),
         (1, "school"),
@@ -172,9 +171,9 @@ def fill_education(page, values: dict[str, str]) -> None:
         expected = values[key]
         current = " ".join(boxes.nth(index).inner_text().split())
         if current != expected:
-            print(f"MediaTek education: setting {key}", flush=True)
+            print(f"MediaTek 教育信息：设置 {key}", flush=True)
             select_option(page, boxes.nth(index), expected)
-    print("MediaTek education: saving", flush=True)
+    print("MediaTek 教育信息：正在保存", flush=True)
     save.click()
     page.wait_for_timeout(1_000)
 
@@ -183,7 +182,7 @@ def add_education(page) -> None:
     buttons = page.get_by_role("button", name="添加更多", exact=True)
     visible_buttons = [buttons.nth(i) for i in range(buttons.count()) if buttons.nth(i).is_visible()]
     if len(visible_buttons) < 2:
-        raise RuntimeError("Could not locate the Education 'Add more' button")
+        raise RuntimeError("无法找到 Education ‘Add more’ 按钮")
     visible_buttons[1].click()
     page.wait_for_timeout(600)
 
@@ -193,7 +192,7 @@ def set_work_authorization(page) -> None:
         "button", name="我具有应征职缺当地的合法工作身分", exact=True
     )
     if not authorized.count():
-        raise RuntimeError("MediaTek work-authorization answer was not found")
+        raise RuntimeError("未找到 MediaTek 工作授权答案")
     authorized.last.click()
     page.wait_for_timeout(400)
 
@@ -211,14 +210,14 @@ def set_gender(page) -> None:
     if not gender.count():
         edit = page.get_by_role("button", name="编辑", exact=True)
         if not edit.count():
-            raise RuntimeError("MediaTek personal-information editor was not found")
+            raise RuntimeError("未找到 MediaTek 个人信息编辑器")
         edit.first.click()
         page.wait_for_timeout(500)
         gender = page.get_by_role("combobox", name="性别", exact=True)
         if not gender.count():
             gender = page.locator("button[role=combobox]").filter(has_text="性别")
     if not gender.count():
-        raise RuntimeError("MediaTek gender combobox was not found")
+        raise RuntimeError("未找到 MediaTek 性别组合框")
     select_option(page, gender.first, "男性")
     name_input = page.locator("input[placeholder='名字...']")
     editor = name_input.first.locator(
@@ -226,7 +225,7 @@ def set_gender(page) -> None:
     )
     save = editor.get_by_role("button", name="保存", exact=True)
     if not save.count():
-        raise RuntimeError("MediaTek personal-information Save control was not found")
+        raise RuntimeError("未找到 MediaTek 个人信息保存控件")
     save.first.click(timeout=10_000)
     page.wait_for_timeout(800)
 
@@ -242,7 +241,7 @@ def fill_work_experience(page, item: dict) -> None:
         adds = page.get_by_role("button", name="添加更多", exact=True)
         visible_adds = [adds.nth(i) for i in range(adds.count()) if adds.nth(i).is_visible()]
         if not visible_adds:
-            raise RuntimeError("MediaTek Work Experience 'Add more' was not found")
+            raise RuntimeError("未找到 MediaTek Work Experience ‘Add more’ 按钮")
         visible_adds[0].click()
         page.wait_for_timeout(500)
         title_inputs = page.locator("input[name^='workExperience.'][name$='.jobTitle']")
@@ -262,7 +261,7 @@ def fill_work_experience(page, item: dict) -> None:
 
     no = editor.get_by_role("button", name=re.compile(r"^否"))
     if not no.count():
-        raise RuntimeError("MediaTek current-employment answer was not found")
+        raise RuntimeError("未找到 MediaTek 当前就业状态答案")
     if "text-orange-200" not in (no.last.get_attribute("class") or ""):
         no.last.click()
 
@@ -281,13 +280,13 @@ def fill_work_experience(page, item: dict) -> None:
     for index, value in enumerate(expected):
         current = " ".join(boxes.nth(index).inner_text().split())
         if current != value:
-            print(f"MediaTek work experience: setting field {index}", flush=True)
+            print(f"MediaTek 工作经历：设置字段 {index}", flush=True)
             select_option(page, boxes.nth(index), value)
     duties.fill(str(item.get("description", ""))[:4000])
     save = editor.get_by_role("button", name="保存", exact=True)
     if not save.count():
-        raise RuntimeError("MediaTek Work Experience Save was not found")
-    print("MediaTek work experience: saving", flush=True)
+        raise RuntimeError("未找到 MediaTek Work Experience 保存控件")
+    print("MediaTek 工作经历：正在保存", flush=True)
     save.last.click(timeout=10_000)
     page.wait_for_timeout(1_000)
 
@@ -306,7 +305,7 @@ def main() -> None:
     parser.add_argument("--work-index", type=int, choices=(0, 1))
     args = parser.parse_args()
 
-    # Loading the profile here is an authorization guard; values are not logged.
+    # 在此加载档案是授权检查；不会记录任何字段值。
     profile = json.loads(Path(args.profile).read_text(encoding="utf-8"))
     auth = profile.get("explicit_authorization", {})
     safety = profile.get("safety", {})
@@ -316,7 +315,7 @@ def main() -> None:
         or not safety.get("allow_sensitive_answers")
         or disclosures.get("gender") != "Male"
     ):
-        raise SystemExit("Explicit user authorization is missing from the local profile")
+        raise SystemExit("本地档案中缺少用户明确授权")
     load_env_file(Path(args.env))
     config = load_config(Path(args.config))
     _, cdp_url = resolve_browser_connection(config)
@@ -331,18 +330,18 @@ def main() -> None:
             if PROFILE_URL_PART in page.url
         ]
         if not pages:
-            raise SystemExit("Open the authenticated MediaTek profile page first")
+            raise SystemExit("请先打开已登录的 MediaTek 档案页面")
         page = pages[-1]
         if args.step != "gender":
             page.keyboard.press("Escape")
         if args.step == "education":
             education_records = profile.get("education", [])
             if args.education_index is None or args.education_index >= len(education_records):
-                raise RuntimeError("A valid --education-index is required")
+                raise RuntimeError("需要有效的 --education-index")
             item = education_records[args.education_index]
             portal = item.get("portal_values", {}).get("mediatek", {})
             if not portal:
-                raise RuntimeError("Private profile lacks MediaTek education values")
+                raise RuntimeError("私有档案缺少 MediaTek 教育信息")
             saves = page.get_by_role("button", name="保存", exact=True)
             if not any(saves.nth(i).is_visible() for i in range(saves.count())):
                 add_education(page)
@@ -368,7 +367,7 @@ def main() -> None:
         else:
             work = profile.get("work_experience", [])
             if args.work_index is None or args.work_index >= len(work):
-                raise RuntimeError("A valid --work-index is required")
+                raise RuntimeError("需要有效的 --work-index")
             fill_work_experience(page, work[args.work_index])
         artifact = save_fill_test_artifact(
             page,

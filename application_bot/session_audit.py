@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Concurrent, read-only session audit driven by the portal registry."""
+"""基于门户注册表执行并发只读会话审计。"""
 
 from __future__ import annotations
 
@@ -120,7 +120,7 @@ def build_probes(config: dict[str, Any], conn) -> list[SessionProbe]:
                 scope = str(probe_config.get("scope", "{company}")).format(**values)
             except (KeyError, ValueError):
                 scope = company
-                reason = "source does not provide fields required by the probe template"
+                reason = "来源未提供探测模板所需字段"
         elif kind == "fixed_url":
             url = str(probe_config.get("url") or "") or None
             scope = str(probe_config.get("scope") or adapter.id)
@@ -129,17 +129,17 @@ def build_probes(config: dict[str, Any], conn) -> list[SessionProbe]:
             if app.get("external_id"):
                 url = str(probe_config.get("template", "")).format(**app)
             else:
-                reason = "no representative application with an external ID"
+                reason = "没有带外部 ID 的代表性申请"
         elif kind == "application_url":
             scope = company
             url = app.get("draft_url") or app.get("url") or None
             if not url:
-                reason = "no representative application exists for this portal"
+                reason = "此门户没有可用的代表性申请"
         else:
             scope = company
             reason = str(
                 probe_config.get("reason")
-                or "no safe read-only session endpoint is configured"
+                or "未配置安全的只读会话端点"
             )
         key = (adapter.id, scope.casefold())
         item = raw_probes.setdefault(
@@ -190,35 +190,35 @@ def classify_session(
     normalized = " ".join(f"{title} {body}".casefold().split())
     url_l = url.casefold()
     if http_status is not None and http_status >= 400:
-        return "access_error", f"probe returned HTTP {http_status}"
+        return "access_error", f"探测返回 HTTP {http_status}"
     if adapter == "handshake":
         from urllib.parse import urlsplit
         host = urlsplit(url).hostname or ""
         if host.endswith(".duosecurity.com"):
-            return "challenge_required", "PennKey Duo verification requires the user"
+            return "challenge_required", "PennKey Duo 验证需要用户手动完成"
         if "pennkey" in host or "continue with email" in normalized:
-            return "authentication_required", "PennKey/Handshake login is required"
+            return "authentication_required", "需要登录 PennKey/Handshake"
     if any(marker in normalized for marker in ("captcha", "hcaptcha", "verification code", "security code", "验证码", "驗證碼")):
-        return "challenge_required", "CAPTCHA or account-verification challenge is visible"
+        return "challenge_required", "页面显示 CAPTCHA 或账户验证挑战"
     login_url = any(marker in url_l for marker in ("/login", "/signin", "/sign-in"))
     login_text = any(
         marker in normalized[:6000]
         for marker in ("sign in", "log in", "returning candidate", "create account", "登录", "登錄")
     )
     if password_visible or login_url or login_text:
-        return "authentication_required", "a login boundary is visible"
+        return "authentication_required", "页面显示登录边界"
     if adapter == "handshake" and host in {"upenn.joinhandshake.com", "app.joinhandshake.com"}:
         if "/job-search" in url_l and "resume optimizer" in normalized and "saved" in normalized:
-            return "authenticated", "Handshake student job-search navigation is visible"
+            return "authenticated", "已显示 Handshake 学生职位搜索导航"
     authenticated_text = any(
         marker in normalized
         for marker in ("candidate home", "my applications", "job alerts", "saved jobs", "我的申请", "个人中心", "我的简历")
     )
     if "/userhome" in url_l or authenticated_text:
-        return "authenticated", "an authenticated candidate/profile page is visible"
+        return "authenticated", "已显示登录后的候选人/档案页面"
     if adapter in {"eightfold", "infineon_eightfold", "ti_oracle", "amd_icims", "generic_icims"} and visible_controls:
-        return "application_accessible", "an editable application page is accessible without a login boundary"
-    return "unknown", "page loaded without a reliable authenticated or signed-out signal"
+        return "application_accessible", "无需越过登录边界即可访问可编辑的申请页面"
+    return "unknown", "页面已加载，但没有可靠的登录或登出状态信号"
 
 
 async def audit_probes(
@@ -346,7 +346,7 @@ def main() -> int:
     config = load_config(args.config)
     mode, endpoint = resolve_browser_connection(config)
     if mode != "windows_cdp":
-        raise SystemExit("session-audit requires application_browser.mode=windows_cdp")
+        raise SystemExit("session-audit 需要 application_browser.mode=windows_cdp")
     audit_config = config.get("portals", {}).get("session_audit", {})
     conn = connect_db(config)
     probes = build_probes(config, conn)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and summarize an effective composed job-bot configuration."""
+"""验证并汇总合成后的有效 job-bot 配置。"""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def main() -> int:
     parser.add_argument(
         "--effective-json",
         type=Path,
-        help="Write the merged, patched, secret-free effective config",
+        help="写出合并并应用补丁后的有效配置，不包含机密",
     )
     args = parser.parse_args()
     config = load_config(args.config)
@@ -36,37 +36,37 @@ def main() -> int:
     enabled = [source for source in sources if source.get("enabled", True) is not False]
     categories = Counter(str(source.get("source_category") or "uncategorized") for source in enabled)
     types = Counter(str(source.get("type") or "unknown") for source in enabled)
-    print(f"Config: {args.config.resolve()}")
-    print(f"SHA-256: {effective_config_hash(config)}")
+    print(f"配置文件：{args.config.resolve()}")
+    print(f"SHA-256 哈希：{effective_config_hash(config)}")
     if config.get("experiment"):
-        print(f"Experiment: {config['experiment'].get('name', 'unnamed')}")
+        print(f"实验：{config['experiment'].get('name', 'unnamed')}")
     print(
-        f"Sources: total={len(sources)} enabled={len(enabled)} "
+        f"来源：总数={len(sources)} 已启用={len(enabled)} "
         f"http={sum(not uses_browser(source) for source in enabled)} "
         f"cdp={sum(uses_browser(source) for source in enabled)}"
     )
-    print("Source categories:")
+    print("来源类别：")
     for name, count in sorted(categories.items()):
         print(f"  {name}: {count}")
-    print("Source types:")
+    print("来源类型：")
     for name, count in sorted(types.items()):
         print(f"  {name}: {count}")
     scoring = config.get("scoring", {})
     print(
-        f"Scoring: algorithm={scoring.get('algorithm')} "
+        f"评分：algorithm={scoring.get('algorithm')} "
         f"purpose={scoring.get('purpose')}"
     )
     for group in scoring.get("foundation_groups", []):
         print(
-            f"  foundation={group.get('name')} base={group.get('base_score')} "
-            f"keywords={len(group.get('keywords', []))}"
+            f"  基础组={group.get('name')} 基础分={group.get('base_score')} "
+            f"关键词数={len(group.get('keywords', []))}"
         )
     strategy = config.get("strategy", {})
     print(
-        f"Strategy: name={strategy.get('name')} purpose={strategy.get('purpose')} "
+        f"策略：name={strategy.get('name')} purpose={strategy.get('purpose')} "
         f"minimum_score={strategy.get('minimum_score')}"
     )
-    print("Workflows:")
+    print("工作流：")
     for name, workflow in sorted(config.get("workflows", {}).items()):
         print(f"  {name}: {' -> '.join(workflow.get('modules', []))}")
     if args.effective_json:
@@ -75,7 +75,7 @@ def main() -> int:
             json.dumps(config, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
-        print(f"Effective config: {args.effective_json}")
+        print(f"有效配置：{args.effective_json}")
     return 0
 
 

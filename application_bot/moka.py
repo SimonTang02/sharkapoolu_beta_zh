@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fill known Moka application fields and stop before preview/submit."""
+"""填写已知的 Moka 申请字段，并在预览/提交前停止。"""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ def row_for(conn, application_id: int):
         (application_id,),
     ).fetchone()
     if not row or row["platform"] != "moka_cdp":
-        raise SystemExit("Application is not a Moka campaign role")
+        raise SystemExit("该申请不是 Moka 批次岗位")
     return row
 
 
@@ -80,7 +80,7 @@ def choose(page, field, value: str) -> None:
     visible = [option.nth(i) for i in range(option.count()) if option.nth(i).is_visible()]
     if not visible:
         page.keyboard.press("Escape")
-        raise RuntimeError(f"Moka option was not found: {value}")
+        raise RuntimeError(f"未找到 Moka 选项： {value}")
     visible[-1].click(force=True, timeout=5_000)
     page.wait_for_timeout(200)
 
@@ -108,7 +108,7 @@ def choose_if_needed(page, field, value: str) -> None:
 
 
 def choose_phone_calling_code(page, phone_field, code: str) -> bool:
-    """Select the calling code bound to this phone field, not a login-modal duplicate."""
+    """选择与此电话号码字段关联的区号，不要选择登录弹窗中的重复项。"""
     prefix_input = phone_field.locator("xpath=preceding::input[1]")
     try:
         prefix_input.click(force=True, timeout=5_000)
@@ -146,9 +146,9 @@ def fill_work_experience(page, records: list[dict]) -> int:
     if not records:
         return 0
     company_fields = page.locator("input[placeholder='公司名称']")
-    # Moka initializes one work record followed by one internship/research
-    # record. Both are truthful homes for the user's two undergraduate research
-    # roles, and using the existing slots avoids brittle portal-specific Add UI.
+    # Moka 会先初始化一条工作经历，再初始化一条实习/研究经历。
+    # 这两条记录都可真实地填写用户的两段本科研究经历，
+    # 使用已有记录项还可避开脆弱的门户专用“添加”界面。
     work_count = min(len(records), company_fields.count())
 
     year_fields = page.locator("input[placeholder='年']")
@@ -193,7 +193,7 @@ def fill_projects(page, projects: list[dict]) -> int:
             "xpath=ancestor::div[.//textarea[@placeholder='项目中职责']][1]"
         )
         if not record.count():
-            raise RuntimeError(f"Moka project record {index + 1} was not found")
+            raise RuntimeError(f"未找到 Moka 项目记录 {index + 1}")
         fill_if_empty(name_field, str(project.get("name") or ""))
         role = record.locator("input[placeholder='职责']")
         if role.count():
@@ -234,14 +234,14 @@ def main() -> None:
     company_rules = company_profile.get("rules", {})
     safety = profile.get("safety", {})
     if safety.get("allow_submit"):
-        raise SystemExit("Safety violation: allow_submit must remain false")
+        raise SystemExit("安全错误：allow_submit 必须保持为 false")
     fields = profile.get("fields", {})
     required = ("first_name", "last_name", "email", "phone")
     if any(not str(fields.get(key, "")).strip() for key in required):
-        raise SystemExit("The isolated application profile lacks contact fields")
+        raise SystemExit("隔离的申请档案缺少联系方式")
     resume = Path(row["tailored_resume_path"])
     if not resume.is_file():
-        raise SystemExit("Tailored resume is missing")
+        raise SystemExit("缺少定制简历")
 
     load_env_file(Path(args.env))
     _, cdp_url = resolve_browser_connection(config)
@@ -286,7 +286,7 @@ def main() -> None:
                 conn,
                 row,
                 "authentication_required",
-                "Moka application form did not open; manual login/session repair required.",
+                "Moka 申请表单未打开；需要手动登录或修复会话。",
                 page.url,
             )
             print(
@@ -295,13 +295,12 @@ def main() -> None:
             )
             return
 
-        # Moka is used here for mainland-China employers. Use the applicant's
-        # explicit Chinese legal name instead of synthesizing an English name.
+        # 此处使用 Moka 申请中国大陆雇主岗位。请使用申请人的
+        # 明确中文法定姓名，不要拼造英文姓名。
         full_name = str(fields.get("chinese_name") or "").strip()
         if not full_name or not re.search(r"[\u3400-\u9fff]", full_name):
             raise SystemExit(
-                "The isolated application profile lacks a valid Chinese name for this "
-                "mainland-China application"
+                "隔离的申请档案缺少此中国大陆申请所需的有效中文姓名"
             )
         page.locator("input[placeholder='姓名']").fill(full_name)
         raw_phone = str(fields["phone"]).strip()
@@ -322,7 +321,7 @@ def main() -> None:
                     )
                     update_status(
                         conn, row, "authentication_required",
-                        "Moka login expired while opening the phone calling-code control.",
+                        "打开电话区号控件时 Moka 登录已过期。",
                         page.url,
                     )
                     print(
@@ -330,9 +329,9 @@ def main() -> None:
                         f"screenshot={artifact['screenshot_path']}"
                     )
                     return
-                # Cambricon's current Moka form exposes only +86.  Do not put a
-                # Hong Kong number under the wrong calling code; continue all
-                # independent fields so the human has only this blocker left.
+                # 寒武纪当前的 Moka 表单仅提供 +86。不要将
+                # 香港号码填入错误的区号。继续填写其他
+                # 独立字段，以便只将此问题留给人工处理。
                 phone_blocked = True
                 phone_digits = ""
             else:
@@ -350,8 +349,8 @@ def main() -> None:
             file_inputs.first.set_input_files(str(resume), timeout=10_000)
             page.wait_for_timeout(5_000)
 
-        # The resume parser fills most of the education section. Complete only
-        # fields backed by the user's explicit answers and resume facts.
+        # 简历解析器会填写教育部分的大部分内容。仅补充
+        # 有用户明确答案或简历事实支持的字段。
         gender_fields = page.locator("input[placeholder='请选择']")
         if gender_fields.count() and not gender_fields.first.input_value().strip():
             choose(page, gender_fields.first, "男")
@@ -385,16 +384,15 @@ def main() -> None:
         )
         project_count = fill_projects(page, list(profile.get("projects") or []))
         note = (
-            "Known Chinese legal name, contact, authorized gender, June 2027 full-time graduation, education, "
-            f"skills, {work_count} work/research records, and {project_count} project records "
-            "were filled and the tailored resume was uploaded. Unknown birth-date, nationality, "
-            "address, identity and demographic fields remain blank. The browser is left "
-            "on the editable form; Preview and Submit was not clicked."
+            "已填写已知的中文法定姓名、联系方式、获授权的性别、2027 年 6 月全职毕业信息、教育经历、"
+            f"技能、{work_count} 条工作/研究经历和 {project_count} 条项目经历，"
+            "并已上传定制简历。未知的出生日期、国籍、地址、身份和人口统计信息保持空白。浏览器停留"
+            "在可编辑表单页面；未点击 Preview 或 Submit。"
         )
         if phone_blocked:
             note += (
-                " Company profile confirmed that this Cambricon form currently offers only +86; "
-                "the +852 phone field remains for human resolution while all independent fields were filled."
+                " 公司档案已确认此寒武纪表单目前仅提供 +86；"
+                "其他独立字段均已填写，+852 电话字段仍待人工处理。"
             )
         final_status = "manual_required" if phone_blocked else "browser_form_started"
         artifact = save_fill_test_artifact(

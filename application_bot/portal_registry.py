@@ -1,4 +1,4 @@
-"""Config-driven application portal matching and adapter command planning."""
+"""基于配置匹配申请门户并规划适配器命令。"""
 
 from __future__ import annotations
 
@@ -90,7 +90,7 @@ def resolve_adapter_by_url(config: dict[str, Any], url: str) -> PortalAdapter | 
 def resolve_company_profile(
     config: dict[str, Any], *, company: str, adapter_id: str
 ) -> dict[str, Any]:
-    """Resolve company-specific behavior layered over a shared ATS adapter."""
+    """解析叠加在通用 ATS 适配器上的公司专属行为。"""
     profiles = sorted(
         config.get("portals", {}).get("company_profiles", []),
         key=lambda item: -int(item.get("priority", 0)),

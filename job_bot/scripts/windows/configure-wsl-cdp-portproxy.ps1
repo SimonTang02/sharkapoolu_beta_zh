@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [string]$WslGatewayAddress,
     [Parameter(Mandatory = $true)]
@@ -13,7 +13,7 @@ $Principal = New-Object Security.Principal.WindowsPrincipal(
     [Security.Principal.WindowsIdentity]::GetCurrent()
 )
 if (-not $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    throw "Run this script from an Administrator PowerShell window."
+    throw "请在管理员 PowerShell 窗口中运行此脚本。"
 }
 
 $RuleName = "WSLJobChromeCDP"
@@ -31,7 +31,7 @@ netsh interface portproxy add v4tov4 `
 Remove-NetFirewallRule -Name $RuleName -ErrorAction SilentlyContinue
 New-NetFirewallRule `
     -Name $RuleName `
-    -DisplayName "WSL to Job Chrome CDP" `
+    -DisplayName "WSL 到求职 Chrome CDP" `
     -Direction Inbound `
     -Action Allow `
     -Protocol TCP `
@@ -41,5 +41,5 @@ New-NetFirewallRule `
     -Profile Any | Out-Null
 
 Write-Host "Portproxy: ${WslGatewayAddress}:$ListenPort -> 127.0.0.1:$ChromePort"
-Write-Host "Firewall remote address: $WslAddress"
+Write-Host "防火墙远端地址： $WslAddress"
 

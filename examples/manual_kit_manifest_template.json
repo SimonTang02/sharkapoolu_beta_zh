@@ -1,6 +1,6 @@
 {
-  "_comment": "Fictional input example. Keep real manifests and Application_Data.json under the private root. Replace PDF hashes only after inspecting the rendered PDFs. Each role folder needs Application_Data.json with the same rank.",
-  "title": "Example manual application kit",
+  "_comment": "虚构输入示例。真实清单和 Application_Data.json 应保存在私有目录中。检查渲染后的 PDF 后再填写其哈希值。每个岗位文件夹都需要带相同序号的 Application_Data.json。",
+  "title": "手动申请材料包示例",
   "jobs": [
     {
       "rank": 1,
@@ -11,7 +11,7 @@
       "role_kind": "full_time",
       "folder": "01_Example",
       "url": "https://example.test/jobs/example-001",
-      "known_gaps": "Work authorization and eligibility remain unconfirmed in this fictional example.",
+      "known_gaps": "此虚构示例中的工作授权和资格尚未确认。",
       "pdfs": [
         {
           "document": "Resume",

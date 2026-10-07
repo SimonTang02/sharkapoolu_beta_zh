@@ -1,65 +1,39 @@
-# CV workspace
+# CV 工作区
 
-This directory contains reusable, non-secret CV tooling:
+本目录包含可复用且不含密钥的 CV 工具：
 
-- `bot/`: deterministic CV tailoring and cover-letter generation.
-- `latex/`: shared LaTeX class and other reusable resources.
-- `docs/`: reusable workflow notes and external-tool evaluations.
+- `bot/`：确定性的简历定制与求职信生成。
+- `latex/`：共享 LaTeX 类和其他可复用资源。
+- `docs/`：可复用工作流说明及外部工具评估。
 
-Candidate-specific material is grouped under `../private_data/cv/`:
+候选人专属材料集中放在 `../private_data/cv/`：
 
-- `source/`: canonical editable LaTeX sources.
-- `build/`: locally rendered master PDFs.
-- `variants/`: one isolated resume/cover-letter bundle per job.
-- `profile/`: reviewed evidence and candidate-specific positioning notes.
-- `reports/`: generated fit and cover-letter review packets.
-- `archive/`: original downloads and historical source archives.
+- `source/`：规范的可编辑 LaTeX 源文件。
+- `build/`：本机渲染的主版 PDF。
+- `variants/`：每个职位一份独立的简历/求职信套件。
+- `profile/`：已审阅的证据和候选人专属定位说明。
+- `reports/`：生成的匹配度及求职信审阅包。
+- `archive/`：原始下载和历史源文件归档。
 
-For application skills and personal-strength wording, consult the private
-`profile/application_keywords.md` library and its JSON companion. Entries include
-bilingual labels, supporting experience, scoped example sentences, and role
-presets. `private_paths.APPLICATION_KEYWORDS` resolves the machine-readable file.
-Treat collaboration traits as behavior-based suggestions, not personality
-self-ratings. The CV generator reads the JSON during report/bundle generation and uses selected
-technical labels in the generated Technical Skills section. Examples and evidence
-are retained in the review report and bundle application_keywords.json.
+技能和个人优势措辞请参考私有的 `profile/application_keywords.md` 词库及其 JSON 配套文件。词条包含双语标签、支持经历、限定范围的示例句和岗位预设。`private_paths.APPLICATION_KEYWORDS` 解析机器可读文件。协作特质应视为基于行为的建议，而不是性格自评。CV 生成器会在生成报告/套件时读取 JSON，并在生成的 Technical Skills 栏使用所选技术标签。示例和证据保存在审阅报告和套件的 `application_keywords.json` 中。
 
-There are no CV compatibility files at the project root. New code must import
-paths from `private_paths.py`; local rendering and VS Code operate directly on
-the canonical private source directory.
+项目根目录没有 CV 兼容文件。新代码必须从 `private_paths.py` 导入路径；本地渲染和 VS Code 直接使用规范私有源目录。
 
-From the project root, render the master versions with:
+从项目根目录渲染主版：
 
 ```bash
 make current
 make visa
 ```
 
-Do not edit generated PDFs. Review a job-specific bundle and its `manifest.json`
-before using it in an application.
+不要编辑生成的 PDF。用于申请前，先审阅职位专用套件及其 `manifest.json`。
 
-## Application PDF length and language
+## 申请材料的页数与语言
 
-Aim for at most **two pages** for each application resume. Edit redundant content,
-section order and spacing before reducing type size; keep project headings with
-body text. Render and visually inspect **every page of the final PDF** before
-uploading, then verify readable text extraction, GPA/dates and attachment identity.
-A successful LaTeX build is not visual approval. Record the reviewed PDF hash in
-the variant manifest; any subsequent PDF change invalidates that review.
+每份申请简历目标为**不超过两页**。优先精简重复内容、调整章节顺序和间距，再考虑缩小字号；章节标题应与正文保持在一起。上传前逐页目视检查**最终 PDF 的所有页面**，并核对文本提取是否可读、GPA/日期以及附件身份。LaTeX 构建成功并不等于视觉审阅通过。在 variant manifest 中记录已审阅 PDF 的哈希；后续任何 PDF 变化都会使该审阅失效。
 
-The private `source/current.tex` can use `cv/latex/cvcompact.sty` for a compact
-English layout. A Chinese master may use XeLaTeX; `scripts/latexmk_cv.sh` honors
-the source engine directive. Keep machine-specific font paths in private source
-files or local font configuration. Archived PDFs are historical evidence rather
-than current uploads.
+私有 `source/current.tex` 可使用 `cv/latex/cvcompact.sty` 生成紧凑的英文布局。中文主简历可使用 XeLaTeX；`scripts/latexmk_cv.sh` 会遵循源文件中的引擎指示。机器专属字体路径放在私有源文件或本地字体配置中。归档 PDF 是历史证据，不是当前申请附件。
 
-Select resume language from the specific employer/role's explicit instructions.
-For domestic roles described in Chinese, prefer a natural Chinese narrative with
-standard English tool names and selective terminology glosses; this is an editorial
-default, not a claimed universal employer requirement. Keep English versions for
-English-language applications. Preserve exact degree names and paper titles where
-translation could mislead. Do not copy website requirements into candidate skills.
+简历语言应根据具体雇主/岗位的明确要求选择。对于中文描述的国内岗位，编辑默认建议采用自然的中文叙述，保留标准英文工具名并按需解释术语；这只是编辑默认，不代表所有雇主的统一要求。英文申请保留英文版本。翻译可能造成误解时，保留准确的学位名称和论文标题。不要把网站要求复制成候选人技能。
 
-Keep language preferences in the private candidate profile. Employer-specific
-instructions take precedence. Review actual rendered pages and preserve
-selectable, extractable Chinese text.
+语言偏好保存在私有候选人档案中。雇主针对具体岗位的说明优先。检查实际渲染页面，并确保中文文本仍可选择和提取。

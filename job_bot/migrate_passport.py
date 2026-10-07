@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Normalize an ignored passport.env without printing secret values."""
+"""规范化被忽略的 passport.env，且不打印机密值。"""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def parse_entries(path: Path) -> dict[str, str]:
             line = line[7:].lstrip()
         match = ENV_ENTRY_RE.fullmatch(line)
         if not match:
-            raise SystemExit(f"Invalid environment entry at {path}:{line_number}")
+            raise SystemExit(f"环境文件中存在无效条目： {path}:{line_number}")
         entries[match.group(1)] = match.group(2)
     return entries
 
@@ -106,7 +106,7 @@ def entry_group(name: str) -> tuple[int, str]:
 
 
 def render_template(template: Path, entries: dict[str, str]) -> tuple[str, int, int]:
-    """Render curated placeholders plus any additional configured values."""
+    """生成经过整理的占位项以及其他已配置的值。"""
     rendered: list[str] = []
     consumed: set[str] = set()
     configured = {
@@ -153,7 +153,7 @@ def write_atomic(path: Path, content: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Migrate passport.env to the current credential schema"
+        description="将 passport.env 迁移到当前凭据结构"
     )
     parser.add_argument("--env-file", type=Path, default=DEFAULT_ENV)
     parser.add_argument("--template", type=Path, default=DEFAULT_TEMPLATE)
@@ -170,7 +170,7 @@ def main() -> None:
         f"configured={configured_count}, placeholders={placeholder_count}"
     )
     for warning in warnings:
-        print(f"Warning: {warning}")
+        print(f"警告：{warning}")
 
 
 if __name__ == "__main__":

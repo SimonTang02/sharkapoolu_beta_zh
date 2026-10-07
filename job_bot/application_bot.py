@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Queue and prepare applications with mandatory human approval."""
+"""管理申请队列并准备申请材料；必须由人工批准。"""
 
 from __future__ import annotations
 
@@ -54,11 +54,11 @@ def resolve_browser_connection(
         mode = "windows_cdp"
     if mode == "local_persistent":
         if cdp_url_override:
-            raise SystemExit("--cdp-url cannot be combined with --browser-mode local_persistent")
+            raise SystemExit("--cdp-url 不能与 --browser-mode local_persistent 同时使用")
         return mode, ""
     if mode != "windows_cdp":
         raise SystemExit(
-            "application_browser.mode must be local_persistent or windows_cdp"
+            "application_browser.mode 必须为 local_persistent 或 windows_cdp"
         )
 
     cdp_config = browser_config.get("windows_cdp", {})
@@ -70,11 +70,11 @@ def resolve_browser_connection(
     )
     if not cdp_url:
         raise SystemExit(
-            f"windows_cdp is selected but no endpoint is configured; set {url_env} "
-            "or application_browser.windows_cdp.url"
+            f"已选择 windows_cdp，但未配置端点；请设置 {url_env} "
+            "或配置 application_browser.windows_cdp.url"
         )
     if not cdp_url.startswith(("http://", "https://", "ws://", "wss://")):
-        raise SystemExit("The Chrome CDP endpoint must be an HTTP(S) or WebSocket URL")
+        raise SystemExit("Chrome CDP 端点必须是 HTTP(S) 或 WebSocket URL")
     return mode, cdp_url
 
 
@@ -93,13 +93,13 @@ def cmd_queue(args: argparse.Namespace) -> None:
     else:
         job = conn.execute("SELECT * FROM jobs WHERE url = ?", (args.job_url,)).fetchone()
     if not job:
-        raise SystemExit("Job not found in the local database; scan it before queueing")
+        raise SystemExit("本地数据库中未找到该职位；请先扫描职位，再将其加入队列")
     existing = conn.execute(
         "SELECT id, status FROM applications WHERE job_id = ? ORDER BY id DESC LIMIT 1",
         (job["id"],),
     ).fetchone()
     if existing and existing["status"] not in {"failed", "cancelled"}:
-        print(f"Application already exists: id={existing['id']} status={existing['status']}")
+        print(f"申请已存在：id={existing['id']} status={existing['status']}")
         return
     now = utc_now()
     application_id = conn.execute(
@@ -112,7 +112,7 @@ def cmd_queue(args: argparse.Namespace) -> None:
     ).lastrowid
     add_event(conn, application_id, "queued", {"job_url": job["url"]})
     conn.commit()
-    print(f"Queued application id={application_id}: {job['title']} — {job['company']}")
+    print(f"已加入申请队列 id={application_id}：{job['title']} — {job['company']}")
 
 
 def cmd_list(args: argparse.Namespace) -> None:
@@ -127,7 +127,7 @@ def cmd_list(args: argparse.Namespace) -> None:
         """
     ).fetchall()
     if not rows:
-        print("No queued applications")
+        print("申请队列为空")
         return
     for row in rows:
         print(f"{row['id']:4d} | {row['status']:20s} | {row['title']} | {row['company']} | {row['url']}")
@@ -136,15 +136,15 @@ def cmd_list(args: argparse.Namespace) -> None:
 def load_profile(path: Path) -> dict:
     if not path.is_file():
         raise SystemExit(
-            f"Application profile not found: {path}. Run "
-            "'python3 -m job_bot.private_config init' and fill the private profile."
+            f"未找到申请资料：{path}.。请运行 "
+            "'python3 -m job_bot.private_config init' 并填写私有资料。"
         )
     try:
         profile = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise SystemExit(f"Invalid application profile JSON at line {exc.lineno}: {path}") from exc
+        raise SystemExit(f"申请资料 JSON 无效，错误位于第 {exc.lineno}: {path}") from exc
     if not isinstance(profile, dict):
-        raise SystemExit(f"Application profile root must be an object: {path}")
+        raise SystemExit(f"申请资料的根节点必须是对象： {path}")
     errors = [
         issue
         for issue in validate_application_profile(profile, str(path))
@@ -152,12 +152,12 @@ def load_profile(path: Path) -> dict:
     ]
     if errors:
         summary = "; ".join(f"{issue.path}: {issue.message}" for issue in errors)
-        raise SystemExit(f"Invalid application profile: {summary}")
+        raise SystemExit(f"申请资料无效： {summary}")
     return profile
 
 
 def hydrate_known_resume_contacts(profile: dict, resume_tex: str) -> dict:
-    """Fill only empty contact fields that are explicitly present in the resume."""
+    """仅填写简历中明确提供且当前为空的联系信息字段。"""
     fields = profile.setdefault("fields", {})
     name_match = re.search(r"\\name\{([^}]+)\}", resume_tex)
     if name_match:
@@ -193,7 +193,7 @@ def cmd_prepare_profile(args: argparse.Namespace) -> None:
         "JOIN jobs ON jobs.id = applications.job_id WHERE applications.id = ?", (args.application_id,)
     ).fetchone()
     if not row:
-        raise SystemExit(f"Application not found: {args.application_id}")
+        raise SystemExit(f"未找到申请记录： {args.application_id}")
     base_path = Path(args.base_profile)
     if not base_path.is_absolute():
         base_path = ROOT / base_path
@@ -205,7 +205,7 @@ def cmd_prepare_profile(args: argparse.Namespace) -> None:
     resume_path = Path(args.resume).resolve()
     cover_path = Path(args.cover_letter).resolve()
     if not resume_path.is_file() or not cover_path.is_file():
-        raise SystemExit("Both tailored resume and cover-letter files must exist")
+        raise SystemExit("定制简历和求职信文件都必须存在")
     profile.setdefault("documents", {})["resume_path"] = str(resume_path)
     profile["documents"]["cover_letter_path"] = str(cover_path)
     safety = profile.setdefault("safety", {})
@@ -235,7 +235,7 @@ def cmd_prepare_profile(args: argparse.Namespace) -> None:
         {"resume_path": str(resume_path), "cover_letter_path": str(cover_path)},
     )
     conn.commit()
-    print(f"Prepared isolated materials/profile for application {args.application_id}")
+    print(f"已为申请 {args.application_id} 准备独立的材料和资料。")
 
 
 def cmd_authorize_profile(args: argparse.Namespace) -> None:
@@ -256,7 +256,7 @@ def cmd_authorize_profile(args: argparse.Namespace) -> None:
         encoding="utf-8",
     )
     profile_path.chmod(0o600)
-    print("Stored explicit application answers; final submission remains disabled")
+    print("已保存明确提供的申请答案；最终提交仍处于禁用状态。")
 
 
 def cmd_workday_preview(args: argparse.Namespace) -> None:
@@ -268,12 +268,12 @@ def cmd_workday_preview(args: argparse.Namespace) -> None:
     )
     if config.get("application_browser", {}).get("auto_submit", False):
         raise SystemExit(
-            "application_browser.auto_submit must remain false; final submission is not implemented"
+            "application_browser.auto_submit 必须保持为 false；系统未实现最终提交"
         )
     if browser_mode == "windows_cdp":
         health = check_cdp_health(cdp_url)
         cdp_url = health.connect_url
-        print(f"Dedicated Chrome ready: {health.browser}")
+        print(f"专用 Chrome 已就绪：{health.browser}")
     conn = connect_db(config)
     row = conn.execute(
         """
@@ -284,10 +284,10 @@ def cmd_workday_preview(args: argparse.Namespace) -> None:
         (args.application_id,),
     ).fetchone()
     if not row:
-        raise SystemExit(f"Application not found: {args.application_id}")
+        raise SystemExit(f"未找到申请记录： {args.application_id}")
     hostname = (urllib.parse.urlsplit(row["url"] or "").hostname or "").lower()
     if not hostname.endswith("myworkdayjobs.com"):
-        raise SystemExit("workday-preview only supports Workday job URLs")
+        raise SystemExit("workday-preview 仅支持 Workday 职位 URL")
     company_slug = re.sub(r"[^A-Za-z0-9]+", "_", row["company"] or "workday").strip("_").upper()
     tenant_slug = re.sub(r"[^A-Za-z0-9]+", "_", hostname).strip("_").lower()
 
@@ -370,10 +370,10 @@ def cmd_workday_preview(args: argparse.Namespace) -> None:
         )
         add_event(conn, args.application_id, status, report)
         conn.commit()
-        print(f"Workday application {args.application_id} ({row['company']}): {status}")
-        print(f"Preview: {report['screenshot_path']}")
-        print(f"Field report: {output_dir / 'field_report.json'}")
-        print("Final submission was not performed.")
+        print(f"Workday 申请 {args.application_id}（{row['company']}）：{status}")
+        print(f"预览：{report['screenshot_path']}")
+        print(f"字段报告：{output_dir / 'field_report.json'}")
+        print("未执行最终提交。")
     except Exception as exc:
         conn.execute(
             "UPDATE applications SET status = 'failed', last_error = ?, updated_at = ? WHERE id = ?",
@@ -385,7 +385,7 @@ def cmd_workday_preview(args: argparse.Namespace) -> None:
 
 
 def cmd_nvidia_preview(args: argparse.Namespace) -> None:
-    """Backward-compatible NVIDIA-only entry point."""
+    """仅适用于 NVIDIA 的向后兼容入口。"""
     config = load_config(Path(args.config))
     conn = connect_db(config)
     row = conn.execute(
@@ -397,9 +397,9 @@ def cmd_nvidia_preview(args: argparse.Namespace) -> None:
         (args.application_id,),
     ).fetchone()
     if not row:
-        raise SystemExit(f"Application not found: {args.application_id}")
+        raise SystemExit(f"未找到申请记录： {args.application_id}")
     if "nvidia" not in (row["company"] or "").lower() and "nvidia" not in (row["url"] or "").lower():
-        raise SystemExit("nvidia-preview only supports NVIDIA Workday jobs; use workday-preview")
+        raise SystemExit("nvidia-preview 仅支持 NVIDIA Workday 职位；其他情况请使用 workday-preview")
     cmd_workday_preview(args)
 
 
@@ -412,11 +412,11 @@ def cmd_browser_health(args: argparse.Namespace) -> None:
     )
     if mode != "windows_cdp":
         raise SystemExit(
-            "Select application_browser.mode=windows_cdp or pass "
+            "请将 application_browser.mode 设为 windows_cdp，或传入 "
             "--browser-mode windows_cdp"
         )
     health = check_cdp_health(cdp_url)
-    print(f"Dedicated Chrome CDP is healthy: {health.browser}")
+    print(f"专用 Chrome CDP 运行正常：{health.browser}")
 
 
 def cmd_browser_smoke(args: argparse.Namespace) -> None:
@@ -427,7 +427,7 @@ def cmd_browser_smoke(args: argparse.Namespace) -> None:
         cdp_url_override=args.cdp_url,
     )
     if mode != "windows_cdp":
-        raise SystemExit("The browser smoke test requires windows_cdp mode")
+        raise SystemExit("浏览器冒烟检查要求使用 windows_cdp 模式")
     health = check_cdp_health(cdp_url)
     sync_playwright = _playwright_api()
     with sync_playwright() as playwright:
@@ -436,7 +436,7 @@ def cmd_browser_smoke(args: argparse.Namespace) -> None:
             timeout=30_000,
         )
         if not browser.contexts:
-            raise RuntimeError("Connected Chrome exposed no usable browser context")
+            raise RuntimeError("已连接的 Chrome 未提供可用的浏览器上下文")
         page = browser.contexts[0].new_page()
         try:
             response = page.goto(
@@ -445,23 +445,23 @@ def cmd_browser_smoke(args: argparse.Namespace) -> None:
                 timeout=30_000,
             )
             if response is not None and response.status >= 400:
-                raise RuntimeError(f"Smoke-test page returned HTTP {response.status}")
+                raise RuntimeError(f"冒烟检查页面返回 HTTP {response.status}")
             title = page.title()
         finally:
             page.close()
-        # Do not call browser.close(): this is an externally managed Windows Chrome.
+        # 不要调用 browser.close()：这是由外部管理的 Windows Chrome。
     after = check_cdp_health(cdp_url)
     print(
-        f"Dedicated Chrome smoke test passed: {after.browser}; "
-        f"opened and closed one automation tab ({title or args.url})"
+        f"专用 Chrome 冒烟检查通过：{after.browser}；"
+        f"已打开并关闭一个自动化标签页（{title or args.url}）"
     )
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Human-approved job application preparation")
+    parser = argparse.ArgumentParser(description="需经人工批准的申请准备工具")
     sub = parser.add_subparsers(required=True)
 
-    queue = sub.add_parser("queue", help="Queue a job from the local jobs database")
+    queue = sub.add_parser("queue", help="将本地职位数据库中的岗位加入申请队列")
     target = queue.add_mutually_exclusive_group(required=True)
     target.add_argument("--job-id", type=int)
     target.add_argument("--job-url")
@@ -471,13 +471,13 @@ def build_parser() -> argparse.ArgumentParser:
     queue.add_argument("--notes", default="")
     queue.set_defaults(func=cmd_queue)
 
-    list_parser = sub.add_parser("list", help="List the local application queue")
+    list_parser = sub.add_parser("list", help="列出本地申请队列")
     list_parser.add_argument("--config", default=str(DEFAULT_CONFIG))
     list_parser.set_defaults(func=cmd_list)
 
     prepare = sub.add_parser(
         "prepare-profile",
-        help="Bind reviewed resume/cover-letter PDFs to an isolated application profile",
+        help="将已审阅的简历和求职信 PDF 关联到独立申请资料",
     )
     prepare.add_argument("--application-id", type=int, required=True)
     prepare.add_argument("--resume", required=True)
@@ -488,7 +488,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     authorize = sub.add_parser(
         "authorize-profile",
-        help="Store explicit sensitive answers with a China/Hong Kong scope",
+        help="保存候选人明确提供且适用于中国/香港地区的敏感问题答案",
     )
     authorize.add_argument("--profile", default=str(DEFAULT_PROFILE))
     authorize.add_argument("--gender", choices=("male", "female", "decline"), required=True)
@@ -512,29 +512,29 @@ def build_parser() -> argparse.ArgumentParser:
         preview.add_argument("--interactive", action="store_true")
         preview.add_argument(
             "--cdp-url",
-            help="Temporarily override the dedicated Chrome CDP endpoint",
+            help="临时覆盖专用 Chrome CDP 端点",
         )
         preview.add_argument(
             "--browser-mode",
             choices=("local_persistent", "windows_cdp"),
-            help="Temporarily override application_browser.mode from the config",
+            help="临时覆盖配置中的 application_browser.mode",
         )
         preview.set_defaults(func=handler)
 
     add_workday_preview(
         "workday-preview",
-        "Open and prepare any supported Workday application",
+        "打开并准备受支持的 Workday 申请",
         cmd_workday_preview,
     )
     add_workday_preview(
         "nvidia-preview",
-        "Backward-compatible NVIDIA Workday application command",
+        "向后兼容的 NVIDIA Workday 申请命令",
         cmd_nvidia_preview,
     )
 
     health = sub.add_parser(
         "browser-health",
-        help="Check the configured dedicated Windows Chrome CDP endpoint",
+        help="检查已配置的专用 Windows Chrome CDP 端点",
     )
     health.add_argument("--config", default=str(DEFAULT_CONFIG))
     health.add_argument("--env-file", default=str(CREDENTIALS_FILE))
@@ -547,7 +547,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     smoke = sub.add_parser(
         "browser-smoke",
-        help="Open and close one automation-owned tab in dedicated Windows Chrome",
+        help="在专用 Windows Chrome 中打开并关闭一个由自动化拥有的标签页",
     )
     smoke.add_argument("--config", default=str(DEFAULT_CONFIG))
     smoke.add_argument("--env-file", default=str(CREDENTIALS_FILE))

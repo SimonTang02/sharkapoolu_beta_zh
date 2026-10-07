@@ -65,7 +65,7 @@ class HandshakeTests(unittest.TestCase):
         page.url = "https://upenn.joinhandshake.com/login"
         page.goto.return_value.status = 200
         page.locator.return_value.inner_text.return_value = "Continue with email"
-        with self.assertRaisesRegex(RuntimeError, "login required"):
+        with self.assertRaisesRegex(RuntimeError, "需要登录"):
             collect(page, {"url": "https://upenn.joinhandshake.com/stu/postings"})
         page.locator.return_value.evaluate_all.assert_not_called()
 
@@ -76,7 +76,7 @@ class HandshakeTests(unittest.TestCase):
         page.locator.return_value.inner_text.return_value = "Jobs — layout changed"
         page.locator.return_value.evaluate_all.return_value = []
         with patch("job_bot.sources.handshake.wait_for_search"):
-            with self.assertRaisesRegex(RuntimeError, "no recognizable job cards"):
+            with self.assertRaisesRegex(RuntimeError, "未返回可识别的职位卡片"):
                 collect(page, {"url": "https://upenn.joinhandshake.com/stu/postings"})
 
     def test_search_waits_for_query_and_stable_results_after_loading(self):

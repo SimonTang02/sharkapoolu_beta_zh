@@ -1,8 +1,7 @@
-"""Optional SQLite access over an authenticated SSH standard-input channel.
+"""通过已认证的 SSH 标准输入通道访问 SQLite（可选）。
 
-Without private connection configuration, connect() is ordinary sqlite3.
-The SSH backend runs the SQLite engine beside its database on the host. It
-never synchronizes or replaces a live database file and never retries writes.
+未配置私有连接时，connect() 使用普通 sqlite3。SSH 后端在主机上、数据库旁运行
+SQLite 引擎；它不会同步或替换正在使用的数据库文件，也不会重试写入。
 """
 
 from __future__ import annotations
@@ -73,13 +72,13 @@ def _message(value: Any) -> bytes:
     result = json.dumps(_encode(value), ensure_ascii=True, allow_nan=False,
                         separators=(",", ":")).encode("ascii") + b"\n"
     if len(result) > MAX_MESSAGE_BYTES:
-        raise sqlite3.OperationalError("Shared database message exceeds size limit")
+        raise sqlite3.OperationalError("共享数据库消息超过大小限制")
     return result
 
 
 def _database_name(value: str) -> str:
     if not re.fullmatch(r"[A-Za-z0-9_-][A-Za-z0-9_.-]*\.(sqlite3|sqlite|db)", value):
-        raise ValueError("Database must be a filename with a SQLite extension")
+        raise ValueError("数据库必须是带 SQLite 扩展名的文件名")
     return value
 
 
@@ -87,24 +86,24 @@ def _validate_config(config: dict) -> dict:
     if config.get("mode") == "local":
         return {"mode": "local"}
     if config.get("mode") != "ssh":
-        raise ValueError("Database connection mode must be local or ssh")
+        raise ValueError("数据库连接模式必须为 local 或 ssh")
     host = config.get("host", "")
     if not isinstance(host, str) or not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.@:-]*", host):
-        raise ValueError("Set a valid SSH host alias in the private connection config")
+        raise ValueError("请在私有连接配置中设置有效的 SSH 主机别名")
     for name in ("project_dir", "python"):
         if not isinstance(config.get(name), str) or not config[name].strip():
-            raise ValueError(f"Missing connection setting: {name}")
+            raise ValueError(f"缺少连接设置： {name}")
         if any(char in config[name] for char in "\n\r\0"):
-            raise ValueError(f"Invalid connection setting: {name}")
+            raise ValueError(f"连接设置无效： {name}")
     private_dir = config.get("private_dir")
     if private_dir is not None and (
         not isinstance(private_dir, str) or not private_dir.strip()
         or any(char in private_dir for char in "\n\r\0")
     ):
-        raise ValueError("Invalid connection setting: private_dir")
+        raise ValueError("连接设置无效： private_dir")
     timeout = config.get("request_timeout", 60)
     if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 1 <= timeout <= 300:
-        raise ValueError("request_timeout must be between 1 and 300 seconds")
+        raise ValueError("request_timeout 必须介于 1 到 300 秒之间")
     return {**config, "request_timeout": timeout}
 
 
@@ -132,11 +131,10 @@ def ssh_command(config: dict, database: str) -> list[str]:
 
 
 def connect(database: str | Path, *, timeout: float = 5.0):
-    """Route private database connections through SSH when explicitly configured.
+    """在明确配置后，通过 SSH 路由私有数据库连接。
 
-External fixture databases and :memory: retain normal SQLite behavior. An
-invalid configuration or failed SSH connection raises; it never falls back
-to a separate writable local database.
+    外部夹具数据库和 :memory: 仍使用普通 SQLite 行为。配置无效或 SSH 连接失败时会
+    抛出异常，绝不会回退到另一份可写的本地数据库。
     """
     raw = str(database)
     path = Path(raw).expanduser().resolve()
@@ -147,7 +145,7 @@ to a separate writable local database.
     try:
         config = _validate_config(json.loads(DATABASE_CONNECTION_CONFIG.read_text(encoding="utf-8")))
     except (OSError, ValueError, TypeError, AttributeError) as exc:
-        raise sqlite3.OperationalError("Invalid private database connection configuration") from None
+        raise sqlite3.OperationalError("私有数据库连接配置无效") from None
     if config["mode"] == "local":
         return sqlite3.connect(database, timeout=timeout)
     ensure_ssh_platform()
@@ -157,11 +155,11 @@ to a separate writable local database.
 
 def ensure_ssh_platform() -> None:
     if os.name == "nt":
-        raise sqlite3.OperationalError("SSH database RPC uses Unix pipes; use WSL on Windows. Writable local fallback is disabled.")
+        raise sqlite3.OperationalError("SSH 数据库 RPC 使用 Unix 管道；Windows 上请使用 WSL。本地可写回退已禁用。")
 
 
 class SSHConnection:
-    """The subset of sqlite3.Connection used by this repository."""
+    """本仓库使用的 sqlite3.Connection 子集。"""
 
     def __init__(self, command: list[str], *, request_timeout: float = 60, timeout: float = 5):
         self.row_factory = None
@@ -182,8 +180,8 @@ class SSHConnection:
         except (OSError, sqlite3.Error):
             self._abort()
             raise sqlite3.OperationalError(
-                "Cannot open shared database. Check SSH host key, key authentication, "
-                "remote project, Python, and database. Local fallback is disabled."
+                "无法打开共享数据库。请检查 SSH 主机密钥、密钥认证、远程项目目录、"
+                "Python 和数据库。本地回退已禁用。"
             ) from None
 
     def _abort(self) -> None:
@@ -204,9 +202,9 @@ class SSHConnection:
 
     def _request(self, request: dict) -> dict:
         if self._closed:
-            raise sqlite3.ProgrammingError("Shared database connection is closed")
+            raise sqlite3.ProgrammingError("共享数据库连接已关闭")
         if threading.get_ident() != self._thread_id:
-            raise sqlite3.ProgrammingError("Shared database connections must stay on their creating thread")
+            raise sqlite3.ProgrammingError("共享数据库连接必须始终由创建它的线程使用")
         packet = _message(request)
         deadline = time.monotonic() + self._request_timeout
         try:
@@ -238,12 +236,12 @@ class SSHConnection:
         except (OSError, EOFError, TimeoutError, ValueError):
             self._abort()
             raise sqlite3.OperationalError(
-                "Shared database channel failed. If a write or commit was in flight, "
-                "its outcome is unknown; check stored state before retrying."
+                "共享数据库通道失败。如果当时正在写入或提交，结果状态未知；"
+                "重试前请先检查已保存的数据。"
             ) from None
         if "error" in response:
             error_type = ERROR_TYPES.get(response["error"], sqlite3.DatabaseError)
-            raise error_type("Shared database rejected the operation (" + response["error"] + ")")
+            raise error_type("共享数据库拒绝了此操作（" + response["error"] + "）")
         return response
 
     def cursor(self):
@@ -267,7 +265,7 @@ class SSHConnection:
     def backup(self, target, *, pages: int = -1, progress=None,
                name: str = "main", sleep: float = 0.250) -> None:
         if name != "main" or self.in_transaction:
-            raise sqlite3.ProgrammingError("Backup requires the main database and no active transaction")
+            raise sqlite3.ProgrammingError("备份要求使用主数据库且当前没有活动事务")
         DATABASE_BACKUP_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
         response = self._request({"op": "backup_start"})
         temporary = None
@@ -281,7 +279,7 @@ class SSHConnection:
             source = sqlite3.connect(temporary)
             try:
                 if source.execute("PRAGMA quick_check").fetchone()[0] != "ok":
-                    raise sqlite3.DatabaseError("Shared database backup integrity check failed")
+                    raise sqlite3.DatabaseError("共享数据库备份完整性检查失败")
                 source.backup(target, pages=pages, progress=progress, sleep=sleep)
             finally:
                 source.close()
@@ -343,7 +341,7 @@ class SSHCursor:
 
     def _execute(self, op: str, sql: str, parameters=None):
         if self._closed:
-            raise sqlite3.ProgrammingError("Shared database cursor is closed")
+            raise sqlite3.ProgrammingError("共享数据库游标已关闭")
         self._release()
         request = {"op": op, "sql": sql}
         if parameters is not None:
@@ -355,8 +353,8 @@ class SSHCursor:
         self._id = response.get("cursor")
         self._rows = deque(response["rows"])
         if self.description and self.row_factory is sqlite3.Row:
-            # Native sqlite3.Row preserves names, duplicate columns, indexing,
-            # slicing, keys(), and dict(row) without reimplementing its rules.
+            # 原生 sqlite3.Row 会保留列名、重复列、索引、切片、keys() 和 dict(row)，
+            # 无需重新实现这些行为。
             columns = ["NULL AS \"" + item[0].replace('"', '""') + "\"" for item in self.description]
             self._template = self.connection._templates.execute("SELECT " + ",".join(columns))
         return self
@@ -372,7 +370,7 @@ class SSHCursor:
 
     def fetchone(self):
         if self._closed:
-            raise sqlite3.ProgrammingError("Shared database cursor is closed")
+            raise sqlite3.ProgrammingError("共享数据库游标已关闭")
         if not self._rows and self._id is not None:
             response = self.connection._request({"op": "fetch", "cursor": self._id})
             self._id = response.get("cursor")
@@ -419,10 +417,10 @@ class SSHCursor:
 
 
 def serve(database: str, *, idle_timeout: float = 900) -> None:
-    """One SSH session owns one SQLite connection and transaction scope."""
+    """一个 SSH 会话独占一个 SQLite 连接和事务范围。"""
     path = DATABASE_DIR / _database_name(database)
     if path.resolve().parent != DATABASE_DIR.resolve():
-        raise ValueError("Database must remain below the canonical private database directory")
+        raise ValueError("数据库必须位于规范的私有数据库目录内")
     conn = None
     cursors = {}
     cursor_sequence = 0
@@ -440,7 +438,7 @@ def serve(database: str, *, idle_timeout: float = 900) -> None:
 
     try:
         while True:
-            # A dropped or abandoned client must eventually release write locks.
+            # 客户端断开或被遗弃后，最终必须释放写锁。
             with selectors.DefaultSelector() as selector:
                 selector.register(sys.stdin.buffer, selectors.EVENT_READ)
                 if not selector.select(idle_timeout):
@@ -456,7 +454,7 @@ def serve(database: str, *, idle_timeout: float = 900) -> None:
                 op = request["op"]
                 response = {}
                 if op == "open" and conn is None:
-                    # mode=rw prevents accidental creation of a second database.
+                    # mode=rw 可防止意外创建第二个数据库。
                     conn = sqlite3.connect(path.resolve().as_uri() + "?mode=rw", uri=True,
                                            timeout=request.get("timeout", 5))
                 elif conn is None:
@@ -530,7 +528,7 @@ def serve(database: str, *, idle_timeout: float = 900) -> None:
                 else:
                     raise sqlite3.ProgrammingError
             except (sqlite3.Error, KeyError, ValueError, TypeError):
-                # Error text may embed SQL, bound values, or private paths.
+                # 错误文本可能包含 SQL、绑定值或私有路径。
                 error_name = sys.exc_info()[0].__name__
                 response = {"error": error_name if error_name in ERROR_TYPES else "ProgrammingError"}
             if conn is not None:
@@ -548,7 +546,7 @@ def serve(database: str, *, idle_timeout: float = 900) -> None:
         for cursor in cursors.values():
             cursor.close()
         if conn is not None:
-            conn.close()  # Uncommitted work is rolled back on disconnect.
+            conn.close()  # 断开连接时回滚尚未提交的操作。
 
 
 def _write_config(config: dict) -> None:
@@ -568,23 +566,23 @@ def _write_config(config: dict) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    server = commands.add_parser("serve", help="Private protocol endpoint launched by SSH")
+    server = commands.add_parser("serve", help="由 SSH 启动的私有协议端点")
     server.add_argument("--database", default=JOB_DATABASE.name)
     server.add_argument("--idle-timeout", type=float, default=900)
-    setup = commands.add_parser("configure", help="Preview or save this client's connection settings")
-    setup.add_argument("--host", required=True, help="Existing SSH alias of the database host")
-    setup.add_argument("--project-dir", required=True, help="Project directory on the database host")
+    setup = commands.add_parser("configure", help="预览或保存此客户端的连接设置")
+    setup.add_argument("--host", required=True, help="数据库主机上已配置的 SSH 别名")
+    setup.add_argument("--project-dir", required=True, help="数据库主机上的项目目录")
     setup.add_argument("--python", default=".venv/bin/python")
-    setup.add_argument("--private-dir", help="Host private root when JOBBOT_PRIVATE_DIR is used")
+    setup.add_argument("--private-dir", help="使用 JOBBOT_PRIVATE_DIR 时填写主机上的私有根目录")
     setup.add_argument("--request-timeout", type=float, default=60)
     setup.add_argument("--apply", action="store_true")
-    commands.add_parser("check", help="Check the configured connection without schema or data writes")
-    watch = commands.add_parser("watch", help="Report committed changes without printing database contents")
+    commands.add_parser("check", help="检查已配置的连接，不写入 schema 或数据")
+    watch = commands.add_parser("watch", help="报告已提交的更改，不打印数据库内容")
     watch.add_argument("--interval", type=float, default=1.0)
-    prepare = commands.add_parser("prepare-host", help="Back up the host database and enable WAL")
+    prepare = commands.add_parser("prepare-host", help="备份主机数据库并启用 WAL")
     prepare.add_argument("--database", default=JOB_DATABASE.name)
     prepare.add_argument("--apply", action="store_true")
-    local = commands.add_parser("local", help="Preview or explicitly restore local connection mode")
+    local = commands.add_parser("local", help="预览或显式恢复本地连接模式")
     local.add_argument("--apply", action="store_true")
     args = parser.parse_args()
     try:
@@ -596,33 +594,33 @@ def main() -> None:
             if args.private_dir:
                 config["private_dir"] = args.private_dir
             config = _validate_config(config)
-            print("Mode: SSH; private databases use the host's matching filenames.")
-            print("No database, credentials, profiles, or browser files will be copied.")
+            print("模式：SSH；私有数据库使用主机上的同名文件。")
+            print("不会复制数据库、凭据、个人资料或浏览器文件。")
             if args.apply:
                 _write_config(config)
-                print("Saved private connection configuration. Run check before using workflows.")
+                print("已保存私有连接配置。运行工作流前请先执行 check。")
             else:
-                print("Preview only. Add --apply to save this client's configuration.")
+                print("仅预览。添加 --apply 可保存此客户端的配置。")
         elif args.command in {"check", "watch"}:
             if not JOB_DATABASE.is_file():
                 config = json.loads(DATABASE_CONNECTION_CONFIG.read_text(encoding="utf-8")) if DATABASE_CONNECTION_CONFIG.exists() else {"mode": "local"}
                 if _validate_config(config)["mode"] == "local":
-                    raise ValueError("Initialize the local database before checking it")
+                    raise ValueError("检查前请先初始化本地数据库")
             if args.command == "watch" and not 0.2 <= args.interval <= 60:
-                raise ValueError("Watch interval must be between 0.2 and 60 seconds")
+                raise ValueError("监视间隔必须介于 0.2 到 60 秒之间")
             conn = connect(JOB_DATABASE)
             try:
                 conn.execute("SELECT 1").fetchone()
                 version = conn.execute("PRAGMA data_version").fetchone()[0]
-                print(f"Database connection OK; data_version={version}")
+                print(f"数据库连接正常；data_version={version}")
                 if args.command == "watch":
-                    print("Watching committed changes; press Ctrl+C to stop.", flush=True)
+                    print("正在监视已提交的更改；按 Ctrl+C 停止。", flush=True)
                     try:
                         while True:
                             time.sleep(args.interval)
                             current = conn.execute("PRAGMA data_version").fetchone()[0]
                             if current != version:
-                                print("Database updated at " + datetime.now(timezone.utc).isoformat(), flush=True)
+                                print("数据库更新时间：" + datetime.now(timezone.utc).isoformat(), flush=True)
                                 version = current
                     except KeyboardInterrupt:
                         pass
@@ -631,21 +629,21 @@ def main() -> None:
         elif args.command == "local":
             if args.apply:
                 _write_config({"mode": "local"})
-                print("Local connection mode saved. Existing local files have not been refreshed.")
+                print("已保存本地连接模式。现有本地文件未刷新。")
             else:
-                print("Preview: restore local connections. Add --apply only on the database host,")
-                print("or after separately restoring and checking a current database backup.")
+                print("预览：恢复本地连接。仅在数据库主机上添加 --apply，")
+                print("或在单独恢复并检查当前数据库备份后再添加。")
         elif args.command == "prepare-host":
             path = DATABASE_DIR / _database_name(args.database)
             if not path.is_file():
-                raise ValueError("Initialize the host database before preparing it")
+                raise ValueError("准备主机前请先初始化主机数据库")
             if DATABASE_CONNECTION_CONFIG.exists():
                 config = _validate_config(json.loads(DATABASE_CONNECTION_CONFIG.read_text(encoding="utf-8")))
                 if config["mode"] != "local":
-                    raise ValueError("prepare-host requires local connection mode")
-            print("Plan: create a private SQLite backup, check integrity, and enable WAL.")
+                    raise ValueError("prepare-host 要求使用 local 连接模式")
+            print("计划：创建私有 SQLite 备份、检查完整性并启用 WAL。")
             if not args.apply:
-                print("Preview only. Add --apply to prepare the database host.")
+                print("仅预览。添加 --apply 可准备数据库主机。")
                 return
             DATABASE_BACKUP_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
             stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S_%fZ")
@@ -658,23 +656,23 @@ def main() -> None:
                 deadline = time.monotonic() + 60
                 def progress(status, remaining, total):
                     if time.monotonic() > deadline:
-                        raise TimeoutError("Host backup timed out; retry when database activity is lower")
+                        raise TimeoutError("主机备份超时；请在数据库活动较少时重试")
                 source.backup(destination, pages=256, progress=progress, sleep=0.05)
                 if destination.execute("PRAGMA quick_check").fetchone()[0] != "ok":
-                    raise ValueError("Backup integrity check failed")
+                    raise ValueError("备份完整性检查失败")
                 mode = source.execute("PRAGMA journal_mode=WAL").fetchone()[0]
                 if mode != "wal":
-                    raise ValueError("WAL could not be enabled; stop active workflows and retry")
+                    raise ValueError("无法启用 WAL；请停止正在运行的工作流后重试")
             finally:
                 destination.close()
                 source.close()
-            print(f"Host ready; backup saved under database/backups/; journal_mode={mode}")
+            print(f"主机已就绪；备份保存在 database/backups/；journal_mode={mode}")
     except (OSError, ValueError, TypeError, AttributeError, TimeoutError, sqlite3.Error) as exc:
         if args.command == "serve":
             raise SystemExit(1) from None
-        # Deliberately omit exception text that could include private values.
-        print(f"Database operation failed ({type(exc).__name__}). Check local paths, "
-              "SSH setup, and connection settings.", file=sys.stderr)
+        # 有意省略可能包含私有值的异常文本。
+        print(f"数据库操作失败（{type(exc).__name__}）。请检查本地路径，"
+              "SSH 设置和连接配置。", file=sys.stderr)
         raise SystemExit(1) from None
 
 

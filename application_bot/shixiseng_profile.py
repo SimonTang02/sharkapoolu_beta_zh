@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fill the authenticated Shixiseng Chinese profile without delivering a CV."""
+"""填写已登录的实习僧中文档案，但不投递简历。"""
 
 from __future__ import annotations
 
@@ -40,11 +40,11 @@ def _open_basic_editor(page) -> None:
         return
     card = page.locator(".basePannel")
     if not card.count():
-        raise RuntimeError("Shixiseng base-information card was not found")
+        raise RuntimeError("未找到实习僧基本信息卡片")
     card.first.hover(timeout=5_000)
     edit = _visible(card.first.get_by_text("编辑", exact=True))
     if not edit:
-        raise RuntimeError("Shixiseng base-information edit control was not found")
+        raise RuntimeError("未找到实习僧基本信息编辑控件")
     edit[-1].click(force=True, timeout=5_000)
     page.wait_for_timeout(600)
 
@@ -53,11 +53,11 @@ def _fill_known_fields(page, profile: dict) -> tuple[list[str], list[str]]:
     fields = profile.get("fields", {})
     changed: list[str] = []
     missing: list[str] = []
-    # The editor is rendered as a sibling of `.basePannel` by the current Vue
-    # build, so scope by visible controls rather than by a brittle DOM parent.
+    # 当前 Vue
+    # 版本将编辑器渲染为 `.basePannel` 的同级元素，因此按可见控件定位，而不依赖脆弱的 DOM 父级关系。
     text_inputs = _visible(page.locator("input.el-input__inner"))
     if not text_inputs:
-        raise RuntimeError("Shixiseng base-information text fields were not found")
+        raise RuntimeError("未找到实习僧基本信息文本框")
 
     chinese_name = str(fields.get("chinese_name", "")).strip()
     if chinese_name and text_inputs[0].input_value().strip() != chinese_name:
@@ -97,7 +97,7 @@ def main() -> None:
     parser.add_argument("--env", default=str(CREDENTIALS_FILE))
     parser.add_argument(
         "--profile",
-        help="Optional profile override; defaults to the application-isolated profile.",
+        help="可选的档案覆盖项；默认使用隔离的申请档案。",
     )
     args = parser.parse_args()
 
@@ -112,11 +112,11 @@ def main() -> None:
         (args.application_id,),
     ).fetchone()
     if not row or row["platform"] != "shixiseng_cdp":
-        raise SystemExit("Application is not a Shixiseng campaign role")
+        raise SystemExit("该申请不是实习僧批次岗位")
     profile_path = Path(args.profile) if args.profile else Path(row["profile_path"])
     if not profile_path.is_file():
-        # Keep a private canonical profile as a compatibility fallback for
-        # manually created application rows.
+        # 保留私有规范档案，作为
+        # 手动创建申请记录时的兼容性后备项。
         profile_path = APPLICATION_PROFILE
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
 
@@ -133,16 +133,16 @@ def main() -> None:
             if page.evaluate("window.name") == label
         ]
         if not pages:
-            raise SystemExit(f"No open registered tab for {label}")
+            raise SystemExit(f"没有已打开且已登记的标签页：{label}")
         page = pages[-1]
         if "resume.shixiseng.com/resume/" not in page.url:
-            raise SystemExit("Registered Shixiseng tab is not on the profile editor")
+            raise SystemExit("已登记的实习僧标签页当前不在档案编辑器中")
 
         _open_basic_editor(page)
         changed, missing = _fill_known_fields(page, profile)
-        # Saving is intentionally withheld until every factual required field is
-        # present. This prevents a guessed birth month or current city from being
-        # written to the candidate profile.
+        # 在所有必填事实字段
+        # 均填写之前，特意不保存。这样可避免将猜测的出生月份或当前城市
+        # 写入候选人档案。
         status = "manual_required" if missing else "review_ready"
         artifact = save_fill_test_artifact(
             page,
@@ -177,7 +177,7 @@ def main() -> None:
         conn.commit()
         print(
             f"Shixiseng profile {args.application_id}: {status}; "
-            f"missing={','.join(missing) or 'none'}; "
+            f"缺少字段={','.join(missing) or '无'}；"
             f"screenshot={artifact['screenshot_path']}"
         )
 

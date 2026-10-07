@@ -1,4 +1,4 @@
-"""Own an isolated Chromium transport; disconnect from externally owned CDP."""
+"""独占隔离的 Chromium 传输；断开外部拥有的 CDP 会话。"""
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -38,7 +38,7 @@ def browser_transport(config: dict, needed: bool):
     except ImportError as exc:
         raise ValueError("请先安装浏览器组件：./scripts/bootstrap.sh --with-browser") from exc
     BROWSER_PROFILE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
-    # A fresh owned profile prevents accidental reuse of personal Chrome sessions.
+    # 使用新建的专用配置，避免意外复用个人 Chrome 会话。
     with tempfile.TemporaryDirectory(prefix="easy_builtin_", dir=BROWSER_PROFILE_DIR) as folder:
         with sync_playwright() as playwright:
             executable = playwright.chromium.executable_path
@@ -73,7 +73,7 @@ def browser_transport(config: dict, needed: bool):
 
 
 class ApplicationMonitor:
-    """Inspect only registered application pages; never close an external browser."""
+    """仅检查已登记的申请页面；绝不关闭外部浏览器。"""
     def __init__(self, config: dict):
         try:
             from playwright.sync_api import sync_playwright

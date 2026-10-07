@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run configured job-bot modules and record a reproducible run manifest."""
+"""运行已配置的 job-bot 模块并记录可复现的运行清单。"""
 
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ def module_command(
         command = [python, str(ROOT / "job_bot/bot.py"), "scan", *common]
         selected = select_sources(config, selector)
         if not selected:
-            raise ValueError("source selector matched no enabled sources")
+            raise ValueError("来源选择器未匹配到已启用的来源")
         for source in selected:
             command.extend(("--source", str(source["name"])))
         if max_workers is not None:
@@ -100,7 +100,7 @@ def module_command(
         return [python, str(ROOT / "job_bot/weekly_report.py"), *common]
     if module == "session_audit":
         return [python, str(ROOT / "application_bot/session_audit.py"), *common]
-    raise ValueError(f"unknown module: {module}")
+    raise ValueError(f"未知模块： {module}")
 
 
 def write_manifest(payload: dict[str, Any]) -> Path:
@@ -119,12 +119,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     choice = parser.add_mutually_exclusive_group(required=True)
-    choice.add_argument("--workflow", help="Named workflow from config.workflows")
+    choice.add_argument("--workflow", help="config.workflows 中定义的工作流名称")
     choice.add_argument(
-        "--module", action="append", choices=sorted(MODULES), help="Module to run; repeatable"
+        "--module", action="append", choices=sorted(MODULES), help="要运行的模块；可重复指定"
     )
-    parser.add_argument("--source", action="append", help="Exact source name")
-    parser.add_argument("--exclude-source", action="append", help="Exact source name to exclude")
+    parser.add_argument("--source", action="append", help="来源的准确名称")
+    parser.add_argument("--exclude-source", action="append", help="要排除的来源准确名称")
     parser.add_argument("--source-category", action="append")
     parser.add_argument("--source-type", action="append")
     parser.add_argument("--company", action="append")
@@ -132,11 +132,11 @@ def parse_args() -> argparse.Namespace:
         "--source-browser",
         choices=("any", "http", "cdp"),
         default=None,
-        help="Override the workflow's browser selector; 'any' explicitly selects both",
+        help="覆盖工作流的浏览器选择器；any 表示明确选择两者",
     )
     parser.add_argument("--max-workers", type=int)
     parser.add_argument("--continue-on-error", action="store_true")
-    parser.add_argument("--dry-run", action="store_true", help="Write the plan without executing modules")
+    parser.add_argument("--dry-run", action="store_true", help="写出计划但不执行模块")
     return parser.parse_args()
 
 
@@ -148,14 +148,14 @@ def main() -> int:
         workflows = config.get("workflows", {})
         if args.workflow not in workflows:
             choices = ", ".join(sorted(workflows))
-            raise SystemExit(f"Unknown workflow {args.workflow!r}; available: {choices}")
+            raise SystemExit(f"未知工作流 {args.workflow!r}; available: {choices}")
         workflow = workflows[args.workflow]
         modules = [str(item) for item in workflow.get("modules", [])]
     else:
         modules = list(args.module or [])
     unknown = set(modules) - MODULES
     if unknown or not modules:
-        raise SystemExit(f"Invalid or empty module list: {', '.join(sorted(unknown))}")
+        raise SystemExit(f"模块列表无效或为空： {', '.join(sorted(unknown))}")
 
     cli_selector = {
         "include_names": args.source or [],
@@ -170,7 +170,7 @@ def main() -> int:
         args.max_workers if args.max_workers is not None else workflow.get("max_workers")
     )
     if max_workers is not None and int(max_workers) < 1:
-        raise SystemExit("--max-workers/workflow max_workers must be at least 1")
+        raise SystemExit("--max-workers/workflow max_workers 必须至少为 1")
     continue_on_error = args.continue_on_error or bool(
         workflow.get("continue_on_error", False)
     )
@@ -200,7 +200,7 @@ def main() -> int:
             result_record["status"] = "planned"
             manifest["results"].append(result_record)
             continue
-        print(f"[{module}] starting", flush=True)
+        print(f"[{module}] 开始运行", flush=True)
         before = time.monotonic()
         result = subprocess.run(command, cwd=ROOT, check=False, text=True)
         result_record.update(

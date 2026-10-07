@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Beginner operation settings",
+  "title": "新手操作设置",
   "type": "object",
   "required": [
     "版本",

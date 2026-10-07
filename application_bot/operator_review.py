@@ -1,4 +1,4 @@
-"""Bind independently recorded review rounds to current private evidence bytes."""
+"""将独立记录的审阅轮次绑定到当前私有证据文件。"""
 from __future__ import annotations
 
 import hashlib

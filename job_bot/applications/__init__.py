@@ -1,1 +1,1 @@
-"""Human-approved application preparation adapters."""
+"""需经人工批准的申请准备适配器。"""

@@ -37,7 +37,7 @@ class DailyPipelineTests(unittest.TestCase):
             wait_seconds=1,
         )
         self.assertTrue(ok)
-        self.assertIn("No enabled", message)
+        self.assertIn("没有启用", message)
 
     def test_state_round_trip_is_atomic(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

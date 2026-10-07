@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate scoring configuration against active jobs without database writes."""
+"""使用在招职位评估评分配置，不写入数据库。"""
 
 from __future__ import annotations
 
@@ -107,39 +107,39 @@ def write_reports(
     new_counts = Counter(band(row["experimental_score"]) for row in results)
     digest = config_hash(config)
     lines = [
-        f"# Scoring experiment: {name}",
+        f"# 评分实验：{name}",
         "",
-        f"Generated: {now.isoformat(timespec='seconds')}",
-        f"Effective config SHA-256: `{digest}`",
+        f"生成时间：{now.isoformat(timespec='seconds')}",
+        f"生效配置 SHA-256：`{digest}`",
         "",
-        "This is a read-only simulation. No stored score, job lifecycle field, or application was changed.",
+        "本报告为只读模拟，未修改已存评分、职位生命周期字段或申请记录。",
         "",
-        "## Hypothesis",
+        "## 假设",
         "",
-        str(experiment.get("hypothesis") or "Not documented."),
+        str(experiment.get("hypothesis") or "未提供说明。"),
         "",
-        "## Distribution comparison",
+        "## 区间分布对比",
         "",
-        "| Band | Stored | Experimental | Delta |",
+        "| 区间 | 当前 | 实验 | 变化 |",
         "|---|---:|---:|---:|",
     ]
     for key in ("high", "relevant", "adjacent", "low"):
         lines.append(
             f"| {key} | {old_counts[key]} | {new_counts[key]} | {new_counts[key] - old_counts[key]:+d} |"
         )
-    lines.extend(("", f"Changed jobs: {len(changed)}/{len(results)}", "", "## Largest changes", ""))
+    lines.extend(("", f"评分发生变化的职位：{len(changed)}/{len(results)}", "", "## 变化最大的职位", ""))
     for row in changed[:limit]:
         lines.append(
             f"- `{row['delta']:+d}` {row['stored_score']}→{row['experimental_score']} — "
-            f"**{row['title']} — {row['company']}** (job {row['job_id']})"
+            f"**{row['title']} — {row['company']}**（职位 {row['job_id']}）"
         )
     if not changed:
-        lines.append("- No score changes.")
-    lines.extend(("", "## Experimental top jobs", ""))
+        lines.append("- 评分没有变化。")
+    lines.extend(("", "## 实验评分最高的职位", ""))
     for row in top[:limit]:
         lines.append(
             f"- {row['experimental_score']} ({band(row['experimental_score'])}) — "
-            f"**{row['title']} — {row['company']}** (job {row['job_id']})"
+            f"**{row['title']} — {row['company']}**（职位 {row['job_id']}）"
         )
     lines.append("")
 

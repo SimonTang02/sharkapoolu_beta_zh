@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-"""Read-only audit of application portals open in the dedicated Chrome.
+"""对专用 Chrome 中已打开的申请门户进行只读审计。
 
-This module deliberately does not click, fill, upload, accept policies, or
-submit.  Its output is a compact readiness report used to decide which portal
-adapter may safely proceed to a human-reviewed draft.
+本模块不会点击、填写、上传、接受政策或提交。它生成简明的准备情况报告，供判断哪些门户适配器可以安全地进入人工审阅草稿阶段。
 """
 
 from __future__ import annotations
@@ -62,7 +60,7 @@ def classify_portal(
     visible_inputs: int,
     visible_file_inputs: int,
 ) -> tuple[str, str, str]:
-    """Classify without treating a final action as a draft action."""
+    """进行分类时，不要将最终操作误判为草稿操作。"""
     normalized = " ".join(text.lower().split())
     title_l = title.lower()
     url_l = url.lower()
@@ -70,16 +68,16 @@ def classify_portal(
     if "hcaptcha" in normalized or "protected by hcaptcha" in normalized:
         return (
             "captcha_or_consent_required",
-            "The portal requires human consent and/or hCaptcha before the form.",
-            "Human review: accept the named policy if desired and complete hCaptcha.",
+            "门户要求先由人工确认同意事项和/或完成 hCaptcha。",
+            "人工审阅：如愿意，请接受所列政策并完成 hCaptcha。",
         )
     if platform == "mediatek" and (
         "提交申请" in text or "your application will be submitted" in normalized
     ):
         return (
             "final_submit_only",
-            "The next control is the final application submission, not Save Draft.",
-            "Do not continue automatically; require an explicit final-submit decision.",
+            "下一个控件会最终提交申请，而非保存草稿。",
+            "不要自动继续；须明确决定是否最终提交。",
         )
     if (
         "sign in" in title_l
@@ -93,8 +91,8 @@ def classify_portal(
     ):
         return (
             "authentication_required",
-            "The application session is not at an authenticated editable form.",
-            "Log in manually in the dedicated Chrome; stop for MFA/CAPTCHA.",
+            "当前申请会话未处于已登录且可编辑的表单页面。",
+            "请在专用 Chrome 中手动登录；遇到 MFA/CAPTCHA 时停止。",
         )
     if platform == "mediatek" and (
         "完善您的简历" in text
@@ -103,45 +101,45 @@ def classify_portal(
     ):
         return (
             "profile_incomplete",
-            "The account profile is incomplete and includes sensitive required fields.",
-            "Fill only explicitly authorized factual and sensitive profile fields.",
+            "账户档案不完整，且包含敏感必填字段。",
+            "仅填写已明确授权的事实字段和敏感档案字段。",
         )
     if any(word in title_l for word in ("principal", "senior", "staff", "director")):
         return (
             "role_mismatch",
-            "The open role is senior-level and outside the configured early-career queue.",
-            "Do not fill; select a scored internship or new-graduate role instead.",
+            "当前打开的岗位属于高级职位，不在已配置的早期职业队列中。",
+            "不要填写；请改选已评分的实习或应届毕业岗位。",
         )
     if platform == "simplify" and "/search" in url_l:
         return (
             "discovery_helper",
-            "Simplify is open as a search/autofill helper, not an employer application form.",
-            "Use the extension only after a supported employer form is open.",
+            "当前打开的是 Simplify 搜索/自动填写助手，而非雇主申请表。",
+            "仅在打开受支持的雇主申请表后使用该扩展。",
         )
     if platform in {"analog_devices", "huawei"} and any(
         marker in url_l for marker in ("/careers.html", "job-list")
     ):
         return (
             "listing_or_redirect",
-            "This is a careers search/landing page, not an application form.",
-            "Choose a high-fit early-career role before attempting autofill.",
+            "这是招聘搜索/落地页，不是申请表。",
+            "尝试自动填写前，请先选择匹配度高的早期职业岗位。",
         )
     if visible_inputs or visible_file_inputs:
         return (
             "form_detected",
-            "An editable form is visible and can be considered by a portal adapter.",
-            "Run a no-submit preview, fill known fields, and stop at Review.",
+            "页面中有可编辑表单，可交由门户适配器处理。",
+            "运行禁止提交的预览，填写已知字段，并在 Review 阶段停止。",
         )
     if any(word in normalized for word in ("apply", "申请", "應徵", "职位", "職位")):
         return (
             "listing_or_redirect",
-            "A job/listing page is available but no editable application form is visible.",
-            "Open the application entry once, then rerun the audit.",
+            "当前是岗位/列表页面，但没有可见的可编辑申请表。",
+            "打开一次申请入口，然后重新运行审计。",
         )
     return (
         "unsupported_or_landing",
-        "No authenticated editable application form was detected.",
-        "Keep this source for job discovery; do not attempt blind autofill.",
+        "未检测到已登录且可编辑的申请表。",
+        "保留此来源用于岗位发现；不要盲目尝试自动填写。",
     )
 
 
@@ -204,32 +202,32 @@ def audit_page(page, platform: str) -> PortalAudit:
 
 def render_markdown(records: list[PortalAudit], generated_at: str) -> str:
     lines = [
-        "# Application platform audit",
+        "# 申请平台审计",
         "",
-        f"Generated: {generated_at}",
+        f"生成时间：{generated_at}",
         "",
-        "Read-only audit. No form was filled and no application was submitted.",
+        "只读审计。未填写任何表单，也未提交任何申请。",
         "",
-        "| Platform | State | Inputs | Simplify | Safe next action |",
+        "| 平台 | 状态 | 输入框 | Simplify | 安全的下一步操作 |",
         "|---|---|---:|:---:|---|",
     ]
     for item in records:
         lines.append(
             f"| {item.platform} | {item.state} | "
-            f"{item.visible_inputs}/{item.visible_file_inputs} files | "
-            f"{'yes' if item.simplify_present else 'no'} | {item.safe_next_action} |"
+            f"{item.visible_inputs}/{item.visible_file_inputs} 个文件输入框 | "
+            f"{'是' if item.simplify_present else '否'} | {item.safe_next_action} |"
         )
     lines.append("")
-    lines.append("## Details")
+    lines.append("## 详情")
     lines.append("")
     for item in records:
         lines.extend(
             [
                 f"### {item.platform}",
                 "",
-                f"- Page: {item.title or '(untitled)'}",
-                f"- URL: {item.url}",
-                f"- Finding: {item.reason}",
+                f"- 页面：{item.title or '(无标题)'}",
+                f"- 网址：{item.url}",
+                f"- 发现：{item.reason}",
                 "",
             ]
         )
@@ -248,7 +246,7 @@ def main(argv: list[str] | None = None) -> None:
     config = load_config(Path(args.config))
     mode, endpoint = resolve_browser_connection(config)
     if mode != "windows_cdp":
-        raise SystemExit("platform-audit requires the dedicated Windows CDP browser")
+        raise SystemExit("platform-audit 需要专用 Windows CDP 浏览器")
     health = check_cdp_health(endpoint)
 
     from playwright.sync_api import sync_playwright

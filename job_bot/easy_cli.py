@@ -1,4 +1,4 @@
-"""Chinese beginner controls with explicit plans and opt-in execution."""
+"""面向中文初学者的控制界面：明确展示计划，执行需主动启用。"""
 from __future__ import annotations
 
 import argparse
@@ -55,7 +55,7 @@ def agent_packet(config: dict, task: str, ids: list[int]) -> Path:
     from application_bot.operator_review import review_path, review_template, job_fingerprint
     policy = config["operator_controls"]
     if task in ("assist", "materials") and not ids:
-        raise ValueError("Agent辅助或材料任务必须提供 --application-id")
+        raise ValueError("智能体辅助或材料任务必须提供 --application-id")
     rows = []
     if ids:
         conn = connect_db(config)
@@ -184,7 +184,7 @@ def main() -> int:
                 command.append("--execute")
             return subprocess.run(command, cwd=PROJECT_ROOT, check=False).returncode
     except (ValueError, OSError) as exc:
-        # Report control errors, never dump runtime config or candidate profile values.
+        # 报告控制项错误；绝不转储运行时配置或候选人资料值。
         print(f"无法运行：{exc}", file=sys.stderr)
         return 2
 

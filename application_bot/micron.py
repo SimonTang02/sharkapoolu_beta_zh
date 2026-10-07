@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
-"""Fill the Micron Eightfold application and stop before Submit application.
+"""填写 Micron Eightfold 申请，并在提交申请前停止。
 
-Micron uses Eightfold but its job application (careers.micron.com/careers/apply)
-differs from the generic Eightfold bootstrap flow: after the resume and contact
-screen it exposes a long series of job-specific Yes/No combobox questions plus a
-terms-and-conditions consent checkbox. This adapter fills only facts that are
-already confirmed in the private profile, inventories the remaining required
-questions for the human reviewer, and never clicks the final Submit button.
+Micron 使用 Eightfold，但其岗位申请页面 (careers.micron.com/careers/apply) 与通用 Eightfold 启动流程不同：简历和联系方式页面之后，会出现一系列岗位专属的 Yes/No 组合框问题，以及一项条款同意复选框。此适配器只填写私有档案中已确认的事实，为人工审阅者列出其余必答问题，且绝不点击最终提交按钮。
 
-The official success receipt is the Eightfold post-submit profile-review page
-("感谢您的申请" / "Thank you for your application"). Detecting it is read-only;
-it never performs a submit.
+官方成功回执是 Eightfold 提交后的档案审阅页面
+("感谢您的申请" / "Thank you for your application")。检测过程为只读；不会执行提交操作。
 """
 
 from __future__ import annotations
@@ -45,16 +39,16 @@ from private_paths import CREDENTIALS_FILE  # noqa: E402
 DEFAULT_CONFIG = ROOT / "job_bot/config.china_hk_ic_foreign.json"
 DEFAULT_ENV = CREDENTIALS_FILE
 
-# This adapter is a no-submit filler. It must never click these buttons; their
-# text is used only to detect form state and to assert a safety invariant.
+# 此适配器仅负责填写，不得提交。绝不能点击这些按钮；其中的文本
+# 仅用于识别表单状态和断言安全约束。
 SUBMIT_BUTTON_NAMES = ("提交申请", "Submit application", "Submit")
 
-# Confirmed-success markers on the Eightfold post-submit profile-review page.
+# Eightfold 提交后档案审阅页上的已确认成功标记。
 SUCCESS_MARKERS = ("感谢您的申请", "thank you for your application")
 
-# Job-specific questions observed on the Micron ASIC Digital Design form.
-# `answer` is None unless the answer is derivable from confirmed profile facts;
-# those stay unanswered and are reported for the human reviewer.
+# 在 Micron ASIC 数字设计表单中观察到的岗位专属问题。
+# 除非能从已确认的档案事实中得出答案，否则 `answer` 为 None；
+# 此类问题将保持未答状态，并报告给人工审阅者。
 MICRON_QUESTION_LABELS = (
     "Are you at least 18 years old?",
     "Are you in one of the above five groups?",
@@ -72,7 +66,7 @@ MICRON_QUESTION_LABELS = (
 
 
 def _local_phone(phone: str) -> str:
-    """Return the local number portion when the country code +852 is used."""
+    """使用 +852 国家/地区代码时，返回本地号码部分。"""
     compact = "".join(character for character in phone if character.isdigit())
     return compact[3:] if compact.startswith("852") else compact
 
@@ -89,11 +83,9 @@ def _is_adult(dob: str | None, today: date | None = None) -> str | None:
 
 
 def resolve_micron_answers(profile: dict, today: date | None = None) -> list[dict]:
-    """Map Micron questions to answers using only confirmed profile facts.
+    """仅根据已确认的档案事实为 Micron 问题匹配答案。
 
-    Returns one entry per known question. ``answer`` is None when the answer is
-    a candidate fact that is not derivable from the profile and must be
-    confirmed by the human reviewer rather than guessed.
+    每个已知问题返回一条记录。如果答案属于无法从档案推导的候选人事实，``answer`` 将为 None，必须由人工审阅者确认，不得猜测。
     """
     fields = profile.get("fields", {})
     results: list[dict] = []
@@ -106,7 +98,7 @@ def resolve_micron_answers(profile: dict, today: date | None = None) -> list[dic
 
 
 def classify_body(body: str) -> str:
-    """Classify the Micron page state from its rendered body text."""
+    """根据渲染后的正文文本判断 Micron 页面状态。"""
     text = " ".join(str(body).casefold().split())
     if any(marker in text for marker in SUCCESS_MARKERS):
         return "submitted"
@@ -147,7 +139,7 @@ def _confirmed_email(profile: dict) -> str:
 
 
 def _select_question(page, label_fragment: str, value: str) -> bool:
-    """Select a Micron job-specific combobox option, matched by question label."""
+    """根据问题标签选择 Micron 岗位专属组合框选项。"""
     wrappers = page.locator("[data-test-id^='_______QUESTION_SETUP_']")
     for index in range(wrappers.count()):
         wrapper = wrappers.nth(index)
@@ -196,10 +188,10 @@ def main() -> None:
         (args.application_id,),
     ).fetchone()
     if not row or row["platform"] != "eightfold":
-        raise SystemExit("Application is not an Eightfold campaign role")
+        raise SystemExit("该申请不是 Eightfold 批次岗位")
     profile = json.loads(Path(row["profile_path"]).read_text(encoding="utf-8"))
     if profile.get("safety", {}).get("allow_submit"):
-        raise SystemExit("Safety violation: allow_submit must remain false")
+        raise SystemExit("安全错误：allow_submit 必须保持为 false")
     fields = profile.get("fields", {})
 
     load_env_file(Path(args.env))
@@ -231,8 +223,8 @@ def main() -> None:
         page.wait_for_timeout(1_500)
         status = classify_body(_body_text(page))
 
-        # Read-only: if the official success receipt is already present, report
-        # it and do not touch the form.
+        # 只读操作：如果已存在官方成功回执，则报告该状态，
+        # 不再操作表单。
         if status != "submitted":
             files = page.locator("input[type=file]")
             if files.count() and Path(row["tailored_resume_path"]).is_file():
@@ -262,12 +254,11 @@ def main() -> None:
             unanswered = []
 
         note = (
-            "Micron Eightfold application prepared without submit. Resume, contact and "
-            "derivable questions were filled when confirmed facts existed; the remaining "
-            "job-specific questions and the terms checkbox were left for the human reviewer."
+            "Micron Eightfold 申请已准备就绪，未提交。仅在存在已确认事实时才填写简历、联系方式和可推导的问题；"
+            "其余岗位专属问题和条款复选框留给人工审阅者处理。"
         )
         if status == "submitted":
-            note = "Official Micron success receipt detected (thank-you/profile-review page)."
+            note = "已检测到 Micron 官方成功回执（致谢/档案审阅页面）。"
         artifact = save_fill_test_artifact(
             page,
             ROOT / "job_bot" / "out" / "applications" / str(row["id"]),
@@ -303,9 +294,9 @@ def main() -> None:
         })
         conn.commit()
         print(
-            f"Micron application {row['id']}: {status}; "
-            f"filled={len(filled_questions)} unanswered={len(unanswered)}; "
-            f"screenshot={artifact['screenshot_path']}"
+            f"Micron 申请 {row['id']}：{status}；"
+            f"已填写={len(filled_questions)} 未答={len(unanswered)}；"
+            f"截图={artifact['screenshot_path']}"
         )
 
 

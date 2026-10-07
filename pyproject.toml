@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sharkapoolu"
+name = "sharkapoolu-zh"
 version = "0.1.0"
-description = "An agent-driven toolkit for job discovery, tailored resumes, and application tracking."
+description = "用于职位发现、定制简历和申请跟踪的智能体工具集。"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
@@ -36,9 +36,9 @@ jobbot-db = "job_bot.shared_database:main"
 jobbot-settings = "job_bot.easy_cli:main"
 
 [project.urls]
-Repository = "https://github.com/SimonTang02/sharkapoolu_beta"
-Documentation = "https://github.com/SimonTang02/sharkapoolu_beta/tree/main/docs"
-Issues = "https://github.com/SimonTang02/sharkapoolu_beta/issues"
+Repository = "https://github.com/SimonTang02/sharkapoolu_zh"
+Documentation = "https://github.com/SimonTang02/sharkapoolu_zh/tree/main/docs"
+Issues = "https://github.com/SimonTang02/sharkapoolu_zh/issues"
 
 [tool.setuptools]
 py-modules = ["private_paths"]

@@ -1,17 +1,17 @@
 {
   "_comment": {
-    "purpose": "Public example only. Copy to the private config/database_connection.json; fill real machine settings there. This file contains no database rows or credentials.",
-    "mode": "local: this machine owns the SQLite file. ssh: this client runs SQL on the host. Start in local mode; use jobbot-db configure for a client.",
-    "host": "Existing SSH alias or user@host. Define its key and port in your local SSH config. No password or private key belongs in JSON.",
-    "project_dir": "Repository root on the database host. Use the host's actual path; ~/ is supported.",
-    "python": "Python executable on the host, relative to project_dir or an absolute path. The usual editable install uses .venv/bin/python.",
-    "private_dir": "Host's private root when JOBBOT_PRIVATE_DIR is customized. null uses the host project's default private_data. Use a host absolute path when filling this field.",
-    "request_timeout": "Per protocol request timeout in seconds, from 1 to 300. This is separate from SSH connection and SQLite lock timeouts.",
-    "storage": "Save the filled file only under the resolved private root, with mode 600. The host normally needs no connection file. Never change to local to work around a failed SSH connection."
+    "purpose": "仅供公开示例。请复制到私有 config/database_connection.json，并在其中填写真实机器设置。此文件不含数据库记录或凭据。",
+    "mode": "local：本机持有 SQLite 文件。ssh：此客户端在主机上执行 SQL。请从 local 模式开始；配置客户端时使用 jobbot-db configure。",
+    "host": "现有 SSH 别名或 user@host。请在本机 SSH 配置中设置密钥和端口。JSON 中不得放入密码或私钥。",
+    "project_dir": "数据库主机上的仓库根目录。请填写主机上的实际路径；支持 ~/。",
+    "python": "主机上的 Python 可执行文件路径，可相对于 project_dir，也可填写绝对路径。通常的可编辑安装使用 .venv/bin/python。",
+    "private_dir": "自定义 JOBBOT_PRIVATE_DIR 时填写主机上的私有根目录。null 表示使用主机项目默认的 private_data。填写此字段时请使用主机绝对路径。",
+    "request_timeout": "每个协议请求的超时时间，单位为秒，范围为 1 至 300。此设置独立于 SSH 连接和 SQLite 锁超时。",
+    "storage": "填写后的文件只能保存在解析出的私有根目录中，并设置 600 权限。主机通常不需要连接配置文件。SSH 连接失败时，切勿改成 local 模式绕过错误。"
   },
   "mode": "local",
   "host": "example-db",
-  "project_dir": "~/workspace/sharkapoolu_beta",
+  "project_dir": "~/workspace/sharkapoolu_zh",
   "python": ".venv/bin/python",
   "private_dir": null,
   "request_timeout": 60

@@ -1,4 +1,4 @@
-param(
+﻿param(
     [ValidateRange(1, 65535)]
     [int]$Port = 9222,
     [string]$UserDataDir = (Join-Path $env:LOCALAPPDATA "JobApplyChrome")
@@ -10,7 +10,7 @@ $Candidates = @(
 ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
 
 if (-not $Candidates) {
-    throw "Google Chrome was not found under Program Files or Program Files (x86)."
+    throw "在 Program Files 或 Program Files (x86) 下未找到 Google Chrome。"
 }
 
 $Chrome = @($Candidates)[0]
@@ -21,24 +21,24 @@ $Arguments = @(
     "--no-first-run"
 )
 
-Write-Host "Chrome executable: $Chrome"
-Write-Host "Dedicated profile: $UserDataDir"
-Write-Host "Windows-local CDP endpoint: http://127.0.0.1:$Port"
-Write-Host "This script does not stop or replace any existing Chrome process."
+Write-Host "Chrome 可执行文件： $Chrome"
+Write-Host "专用档案： $UserDataDir"
+Write-Host "Windows 本机 CDP 端点： http://127.0.0.1:$Port"
+Write-Host "此脚本不会停止或替换任何已运行的 Chrome 进程。"
 
 Start-Process -FilePath $Chrome -ArgumentList $Arguments
 
-# Verify startup before returning to WSL; Start-Process alone is not readiness.
+# 返回 WSL 前检查启动状态；Start-Process 命令本身不能证明已就绪。
 $Deadline = (Get-Date).AddSeconds(10)
 do {
     try {
         $Version = Invoke-RestMethod -Uri "http://127.0.0.1:$Port/json/version" -TimeoutSec 2
         if ($Version.Browser) {
-            Write-Host "Chrome ready: $($Version.Browser)"
+            Write-Host "Chrome 已就绪： $($Version.Browser)"
             return
         }
     } catch {
         Start-Sleep -Milliseconds 500
     }
 } while ((Get-Date) -lt $Deadline)
-throw "Chrome was launched but its local CDP endpoint did not become ready on port $Port."
+throw "Chrome 已启动，但本机 CDP 端点未能在端口 $Port 上就绪。"

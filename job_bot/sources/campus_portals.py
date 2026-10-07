@@ -1,8 +1,7 @@
-"""Adapters for university career portals.
+"""高校职业门户适配器。
 
-Campus systems often sit behind SSO and 2FA. These adapters avoid storing raw
-passwords in code; production use should rely on environment variables or a
-short-lived browser session/cookie export controlled by the user.
+校园系统通常需要 SSO 和 2FA。这些适配器不会在代码中存储明文密码；生产环境应使用
+环境变量，或由用户控制的短期浏览器会话/Cookie 导出。
 """
 
 from __future__ import annotations

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare an AMD iCIMS application up to consent/CAPTCHA, never submit."""
+"""准备 AMD iCIMS 申请直至同意/CAPTCHA 环节，绝不提交。"""
 
 from __future__ import annotations
 
@@ -46,10 +46,10 @@ def application_row(conn, application_id: int):
         (application_id,),
     ).fetchone()
     if not row or row["company"].lower() != "amd":
-        raise SystemExit("The application is not an AMD campaign application")
+        raise SystemExit("该申请不属于 AMD 批次")
     match = re.search(r"/jobs/(\d+)", row["url"])
     if not match:
-        raise SystemExit("Could not extract the AMD iCIMS job ID")
+        raise SystemExit("无法提取 AMD iCIMS 岗位 ID")
     return row, match.group(1)
 
 
@@ -86,9 +86,9 @@ def main() -> None:
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     consent = profile.get("explicit_authorization", {}).get("company_consents", {})
     if not consent.get("amd_applicant_privacy_statement"):
-        raise SystemExit("AMD privacy consent was not explicitly authorized")
+        raise SystemExit("尚未明确授权 AMD 隐私同意")
     if profile.get("safety", {}).get("allow_submit"):
-        raise SystemExit("Safety violation: allow_submit must remain false")
+        raise SystemExit("安全错误：allow_submit 必须保持为 false")
 
     load_env_file(Path(args.env))
     _, cdp_url = resolve_browser_connection(config)
@@ -121,12 +121,12 @@ def main() -> None:
         )
         page.wait_for_timeout(5_000)
         if args.open_only:
-            print("Opened AMD iCIMS application entry")
+            print("已打开 AMD iCIMS 申请入口")
             return
 
         email = str(profile.get("fields", {}).get("email", "")).strip()
         if not email:
-            raise SystemExit("The isolated application profile has no email")
+            raise SystemExit("隔离的申请档案中没有电子邮箱")
         touched = False
         captcha = any("hcaptcha" in frame.url.lower() for frame in page.frames)
         login_frames = []
@@ -137,7 +137,7 @@ def main() -> None:
                     if frame.locator("input[name='css_loginName']").count():
                         login_frames.append(frame)
                 except Exception:
-                    # iCIMS replaces its bootstrap iframe during navigation.
+                    # iCIMS 会在导航过程中替换启动 iframe。
                     continue
             if login_frames:
                 break
@@ -188,10 +188,10 @@ def main() -> None:
                 pass
 
         note = (
-            "AMD iCIMS entry opened; authorized email/privacy fields filled. "
-            "Human hCaptcha is required before the editable application can continue."
+            "已打开 AMD iCIMS 申请入口；已填写获授权的邮箱/隐私字段。"
+            "完成 hCaptcha 后，才能继续编辑申请表。"
             if captcha
-            else "AMD iCIMS entry opened and authorized fields filled; authentication/manual review is required."
+            else "已打开 AMD iCIMS 申请入口并填写获授权字段；需要身份验证/人工审阅。"
         )
         status = "captcha_required" if captcha else "authentication_required"
         artifact = save_fill_test_artifact(
@@ -214,8 +214,8 @@ def main() -> None:
         )
         update_status(conn, args.application_id, row["job_id"], status, note)
         print(
-            f"AMD application {args.application_id}: {status}; changed_fields={touched}; "
-            f"screenshot={artifact['screenshot_path']}"
+            f"AMD 申请 {args.application_id}：{status}；已更改字段数={touched}；"
+            f"截图={artifact['screenshot_path']}"
         )
 
 

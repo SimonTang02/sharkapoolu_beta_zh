@@ -82,10 +82,10 @@ class MicronContactTests(unittest.TestCase):
 
 class MicronSafetyTests(unittest.TestCase):
     def test_adapter_is_no_submit(self) -> None:
-        # The adapter documents its own guard and never enables submission.
+        # 适配器声明了自身的安全保护，且绝不会启用提交。
         self.assertTrue(SUBMIT_BUTTON_NAMES)
         self.assertIn("提交申请", SUBMIT_BUTTON_NAMES)
-        # Question labels are inventory, not a submit instruction.
+        # 问题标签仅作清单用途，不代表提交指令。
         self.assertTrue(MICRON_QUESTION_LABELS)
 
 

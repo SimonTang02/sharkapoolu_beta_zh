@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record applications that the candidate confirms were manually submitted."""
+"""记录候选人确认已手动提交的申请。"""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def main() -> None:
     parser.add_argument(
         "--source",
         default="user_confirmed_manual_submission",
-        help="Audit source for the status transition.",
+        help="状态变更的审计来源。",
     )
     args = parser.parse_args()
 
@@ -45,7 +45,7 @@ def main() -> None:
             (application_id,),
         ).fetchone()
         if not row:
-            raise SystemExit(f"Unknown application id: {application_id}")
+            raise SystemExit(f"未知的申请 ID： {application_id}")
 
         conn.execute(
             """

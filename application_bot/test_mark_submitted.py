@@ -1,4 +1,4 @@
-"""Manual confirmations work before a candidate has created a campaign."""
+"""候选人尚未创建批次时，也可以记录人工确认。"""
 
 import contextlib
 import io

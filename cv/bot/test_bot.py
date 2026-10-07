@@ -58,7 +58,7 @@ class EvidenceMatchingTests(unittest.TestCase):
         paragraphs = [evidence for evidence in selected_evidence if evidence in report]
         self.assertTrue(paragraphs)
         self.assertNotIn("tape-out", report.casefold())
-        self.assertIn("Mandatory human review", report)
+        self.assertIn("必须由人工审阅", report)
 
     def test_chinese_role_gets_ascii_cover_letter_label(self) -> None:
         matches = select_evidence(PROFILE, "digital IC RTL verification")

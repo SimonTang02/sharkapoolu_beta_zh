@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare an HKSTP Talent Pool application and stop on its review page."""
+"""准备 HKSTP Talent Pool 申请，并在审阅页面停止。"""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ def main() -> None:
 
     portal_url = args.portal_url or DEFAULT_PORTAL_URLS.get(args.application_id)
     if not portal_url:
-        raise SystemExit("HKSTP portal URL is required for this application")
+        raise SystemExit("此申请需要提供 HKSTP 门户网址")
 
     config = load_config(Path(args.config))
     conn = connect_db(config)
@@ -102,15 +102,15 @@ def main() -> None:
         (args.application_id,),
     ).fetchone()
     if not row:
-        raise SystemExit("Application does not exist")
+        raise SystemExit("申请记录不存在")
     profile = json.loads(Path(row["profile_path"]).read_text(encoding="utf-8"))
     if profile.get("safety", {}).get("allow_submit"):
-        raise SystemExit("Safety violation: allow_submit must remain false")
+        raise SystemExit("安全错误：allow_submit 必须保持为 false")
     resume_path = Path(row["tailored_resume_path"])
     if not resume_path.is_file():
-        raise SystemExit(f"Tailored resume is unavailable: {resume_path}")
+        raise SystemExit(f"定制简历不可用： {resume_path}")
     if resume_path.stat().st_size > 2 * 1024 * 1024:
-        raise SystemExit("HKSTP only accepts resumes up to 2 MB")
+        raise SystemExit("HKSTP 仅接受不超过 2 MB 的简历")
 
     load_env_file(Path(args.env))
     _, cdp_url = resolve_browser_connection(config)
@@ -140,7 +140,7 @@ def main() -> None:
             page.wait_for_timeout(2_000)
         if "onepass.hkstp.org" in page.url:
             status = "authentication_required"
-            note = "HKSTP redirected to OnePass; log in manually and rerun."
+            note = "HKSTP 已跳转到 OnePass；请手动登录后重新运行。"
         else:
             body = _body(page)
             if (
@@ -149,16 +149,16 @@ def main() -> None:
             ):
                 status = "review_ready"
                 note = (
-                    "HKSTP review page is open with the tailored resume and approved "
-                    "answers; final submission was not clicked."
+                    "HKSTP 审阅页面已打开，其中包含定制简历和已批准答案；"
+                    "未点击最终提交。"
                 )
             elif "/job/" in page.url and any(term in body for term in ("现在申请", "Apply Now")):
                 if not (_click_text(page, "现在申请") or _click_text(page, "Apply Now")):
-                    raise RuntimeError("HKSTP apply-entry control was not clickable")
+                    raise RuntimeError("无法点击 HKSTP 申请入口控件")
                 page.wait_for_timeout(2_500)
                 body = _body(page)
             if "action=preview" not in page.url:
-                # Resume manager is a candidate-profile write, not job submission.
+                # 简历管理器会写入候选人档案，但不会提交岗位申请。
                 selected_resume = page.locator("input.MuiSelect-nativeInput")
                 has_resume = bool(
                     selected_resume.count()
@@ -166,7 +166,7 @@ def main() -> None:
                 )
                 if not has_resume and "点击此处上传简历" in body:
                     if not _click_text(page, "点击此处上传简历"):
-                        raise RuntimeError("HKSTP resume manager did not open")
+                        raise RuntimeError("HKSTP 简历管理器未打开")
                     page.wait_for_timeout(1_000)
                     body = _body(page)
                 if "action=manageCv" in page.url or page.locator("input[type=file]").count():
@@ -178,7 +178,7 @@ def main() -> None:
                     if resume_name.count():
                         resume_name.fill(resume_path.stem[:100] or "application_resume")
                     if not _click_text(page, "好的"):
-                        raise RuntimeError("HKSTP resume save control was not available")
+                        raise RuntimeError("HKSTP 简历保存控件不可用")
                     page.wait_for_timeout(2_500)
                     body = _body(page)
 
@@ -218,17 +218,16 @@ def main() -> None:
 
                 if not _click_text(page, "预览"):
                     if not _click_text(page, "Preview"):
-                        raise RuntimeError("HKSTP preview control was not available")
+                        raise RuntimeError("HKSTP 预览控件不可用")
                 page.wait_for_timeout(2_500)
                 body = _body(page)
                 status = "review_ready"
                 note = (
-                    "HKSTP form fields and tailored resume are prepared; the review page "
-                    "is open and final submission was not clicked."
+                    "HKSTP 表单字段和定制简历已准备就绪；审阅页面已打开，未点击最终提交。"
                 )
                 if any(term in body for term in ("必填", "required field")) and "/apply/" in page.url:
                     status = "form_validation_required"
-                    note = "HKSTP preview found a remaining required-field validation issue."
+                    note = "HKSTP 预览发现仍有必填字段未通过校验。"
 
         artifact = save_fill_test_artifact(
             page,

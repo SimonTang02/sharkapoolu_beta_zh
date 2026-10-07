@@ -1,4 +1,4 @@
-"""Synthetic integration tests for SQLite operations across process boundaries."""
+"""针对跨进程 SQLite 操作的合成集成测试。"""
 
 from __future__ import annotations
 
@@ -159,7 +159,7 @@ class SharedDatabaseTests(unittest.TestCase):
         conn = self.remote()
         conn._process.kill()
         conn._process.wait()
-        with self.assertRaisesRegex(sqlite3.OperationalError, "outcome is unknown"):
+        with self.assertRaisesRegex(sqlite3.OperationalError, "结果状态未知"):
             conn.commit()
         self.assertTrue(conn._closed)
 

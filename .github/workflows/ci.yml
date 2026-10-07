@@ -15,28 +15,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Validate bootstrap script
+      - name: 校验初始化脚本
         run: |
           test -x scripts/bootstrap.sh
           bash -n scripts/bootstrap.sh
-      - name: Install package
+      - name: 安装软件包
         run: python3 -m pip install -e .
-      - name: Validate generated private configuration
+      - name: 校验生成的私有配置
         env:
           JOBBOT_PRIVATE_DIR: ${{ runner.temp }}/sharkapoolu-private
         run: |
           jobbot-private init
           jobbot-private check
-      - name: Build and smoke-test wheel
+      - name: 构建并冒烟检查 wheel
         run: |
           python3 -m pip wheel . --no-deps --wheel-dir "${RUNNER_TEMP}/wheels"
           python3 -m pip install --force-reinstall --no-deps "${RUNNER_TEMP}"/wheels/*.whl
           cd "${RUNNER_TEMP}"
           JOBBOT_PRIVATE_DIR="${RUNNER_TEMP}/wheel-private" jobbot-private init
           JOBBOT_PRIVATE_DIR="${RUNNER_TEMP}/wheel-private" jobbot-private check
-      - name: Audit publishable files
+      - name: 审计可发布文件
         run: python3 scripts/audit_public_repo.py
-      - name: Run unit tests
+      - name: 运行单元测试
         run: python3 -m unittest discover -s . -p 'test_*.py'
-      - name: Validate shared configuration
+      - name: 校验共享配置
         run: python3 job_bot/config_inspect.py --config job_bot/config.china_hk_ic_foreign.json

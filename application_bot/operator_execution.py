@@ -1,4 +1,4 @@
-"""Bound automatic preparation, observe manual checkpoints, preserve Chrome tabs."""
+"""限制自动准备范围、识别人工检查点并保留 Chrome 标签页。"""
 from __future__ import annotations
 
 import os
@@ -56,7 +56,7 @@ def execute_preparation(plan, config: dict, monitor, root):
                 plan.state = "adapter_prepared_not_submitted"
                 return
             plan.state = "adapter_failed"
-            # Adapter output can contain private facts; never copy it into errors.
+            # 适配器输出可能包含私有事实；绝不要将其写入错误信息。
             plan.error = "适配器未完成；查看该适配器的私有审查产物，勿盲目重试"
         finally:
             stop_adapter(process)

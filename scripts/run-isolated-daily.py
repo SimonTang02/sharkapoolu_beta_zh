@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run today's pipeline in an owned window of the existing authenticated Chrome."""
+"""在现有已认证 Chrome 的独立时间窗口中运行今日流程。"""
 from __future__ import annotations
 
 import datetime as dt
@@ -50,13 +50,13 @@ def main() -> int:
         manifest["scan_target"] = owned
         manifest["scan_window"] = session.send("Browser.getWindowForTarget", {"targetId": owned})["windowId"]
         page = new_scan_page(browser.contexts[0])
-        page.evaluate("document.title = 'Job Bot — isolated weekly scan'")
+        page.evaluate("document.title = 'Job Bot — 隔离周扫描'")
         manifest["same_browser_context"] = True
         (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
         session.detach()
-        browser.close()  # Disconnect this CDP client; Chrome and its pages remain running.
-    print("Isolated scan window created; no cookies exported.", flush=True)
-    print("Run directory:", run_dir, flush=True)
+        browser.close()  # 断开此 CDP 客户端；Chrome 及其页面继续运行。
+    print("已创建隔离扫描窗口；未导出 Cookie。", flush=True)
+    print("运行目录：", run_dir, flush=True)
     with (run_dir / "pipeline.log").open("w") as log:
         result = subprocess.run([sys.executable, "job_bot/daily_pipeline.py", "--no-browser-start"], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
         if result.returncode == 0:
@@ -64,8 +64,8 @@ def main() -> int:
     manifest["finished_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
     manifest["returncode"] = result.returncode
     (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print("Pipeline exit:", result.returncode, flush=True)
-    print("Log:", run_dir / "pipeline.log", flush=True)
+    print("流程退出码：", result.returncode, flush=True)
+    print("日志：", run_dir / "pipeline.log", flush=True)
     return result.returncode
 
 

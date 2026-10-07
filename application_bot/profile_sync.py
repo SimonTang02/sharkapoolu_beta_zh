@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Refresh isolated campaign profiles without changing application status."""
+"""刷新隔离的批次档案，但不改变申请状态。"""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def main() -> None:
         (args.campaign_id,),
     ).fetchall()
     if not rows:
-        raise SystemExit(f"Campaign {args.campaign_id} has no applications")
+        raise SystemExit(f"批次 {args.campaign_id} 没有申请记录")
 
     refreshed = []
     for row in rows:
@@ -77,7 +77,7 @@ def main() -> None:
         if "application_keywords" in existing:
             profile["application_keywords"] = copy.deepcopy(existing["application_keywords"])
         profile = apply_keyword_selection(profile, select_keywords(row["title"] or "", row["description"] or ""))
-        # Preserve any previously hydrated or manually supplied non-empty field.
+        # 保留先前已填充或手动提供的非空字段。
         for key, value in existing.get("fields", {}).items():
             if nonempty(value):
                 profile.setdefault("fields", {})[key] = value

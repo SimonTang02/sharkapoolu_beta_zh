@@ -13,17 +13,17 @@ for argument in "$@"; do
     --with-resume) with_resume=true ;;
     --skip-tests) run_tests=false ;;
     -h|--help)
-      echo "Usage: scripts/bootstrap.sh [--with-browser] [--with-resume] [--skip-tests]"
+      echo "用法：scripts/bootstrap.sh [--with-browser] [--with-resume] [--skip-tests]"
       exit 0
       ;;
-    *) echo "Unknown option: $argument" >&2; exit 2 ;;
+    *) echo "未知选项： $argument" >&2; exit 2 ;;
   esac
 done
 
 cd "$project_root"
 if [[ ! -x .venv/bin/python ]]; then
   if ! "$python_bin" -m venv .venv; then
-    echo "Could not create .venv. On Ubuntu/WSL install python3-venv first." >&2
+    echo "无法创建 .venv。请先在 Ubuntu/WSL 安装 python3-venv。" >&2
     exit 1
   fi
 fi
@@ -51,7 +51,7 @@ if $run_tests; then
   .venv/bin/python -m unittest discover -s . -p 'test_*.py'
 fi
 
-echo "Bootstrap complete. Activate with: source .venv/bin/activate"
+echo "初始化完成。请运行以下命令激活环境：source .venv/bin/activate"
 if $with_browser; then
-  echo "Linux may still require: sudo .venv/bin/python -m playwright install-deps chromium"
+  echo "Linux 系统可能还需要运行：sudo .venv/bin/python -m playwright install-deps chromium"
 fi

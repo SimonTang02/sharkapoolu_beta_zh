@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Manual application kit manifest",
+  "title": "手动申请材料包清单",
   "type": "object",
   "required": ["jobs"],
   "properties": {

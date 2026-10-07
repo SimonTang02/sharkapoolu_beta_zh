@@ -1,10 +1,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Medium Length Professional CV - RESUME CLASS FILE
+% 中等篇幅专业简历 - 简历文档类文件
 %
-% This template has been downloaded from:
+% 此模板下载自：
 % http://www.LaTeXTemplates.com
 %
-% This class file defines the structure and design of the template. 
+% 此文档类文件定义模板的结构和样式。
 %
 % Original header:
 % Copyright (C) 2010 by Trey Hunner
@@ -29,7 +29,7 @@
 \pagestyle{empty} % Suppress page numbers
 
 %----------------------------------------------------------------------------------------
-%	HEADINGS COMMANDS: Commands for printing name and address
+%	标题命令：用于输出姓名和地址的命令
 %----------------------------------------------------------------------------------------
 
 \def \name#1{\def\@name{#1}} % Defines the \name command to set name
@@ -37,12 +37,12 @@
 
 \def \addressSep {$\diamond$} % Set default address separator to a diamond
 
-% One, two or three address lines can be specified 
+% 可以指定一行、两行或三行地址。
 \let \@addressone \relax
 \let \@addresstwo \relax
 \let \@addressthree \relax
 
-% \address command can be used to set the first, second, and third address (last 2 optional)
+% \address 命令可设置第一、第二和第三行地址（后两项可选）
 \def \address #1{
   \@ifundefined{@addresstwo}{
     \def \@addresstwo {#1}
@@ -54,7 +54,7 @@
   }}
 }
 
-% \printaddress is used to style an address line (given as input)
+% \printaddress 用于设置输入地址行的样式
 \def \printaddress #1{
   \begingroup
     \def \\ {\addressSep\ }
@@ -64,7 +64,7 @@
   \addressskip
 }
 
-% \printname is used to print the name as a page header
+% \printname 用于将姓名作为页眉输出
 \def \printname {
   \begingroup
     \hfil{\MakeUppercase{\namesize\bf \@name}}\hfil
@@ -73,7 +73,7 @@
 }
 
 %----------------------------------------------------------------------------------------
-%	PRINT THE HEADING LINES
+%	输出标题行
 %----------------------------------------------------------------------------------------
 
 \let\ori@document=\document
@@ -89,10 +89,10 @@
 }
 
 %----------------------------------------------------------------------------------------
-%	SECTION FORMATTING
+%	分区格式
 %----------------------------------------------------------------------------------------
 
-% Defines the rSection environment for the large sections within the CV
+% 定义简历中较大分区所使用的 rSection 环境
 \newenvironment{rSection}[1]{ % 1 input argument - section name
   \sectionskip
   \MakeUppercase{\bf #1} % Section title
@@ -107,7 +107,7 @@
 }
 
 %----------------------------------------------------------------------------------------
-%	WORK EXPERIENCE FORMATTING
+%	工作经历格式
 %----------------------------------------------------------------------------------------
 
 \newenvironment{rSubsection}[4]{ % 4 input arguments - company name, year(s) employed, job title and location
@@ -123,7 +123,7 @@
   \vspace{0.5em} % Some space after the list of bullet points
 }
 
-% The below commands define the whitespace after certain things in the document - they can be \smallskip, \medskip or \bigskip
+% 以下命令定义文档中特定元素之后的空白，可使用 \smallskip、\medskip 或 \bigskip
 \def\namesize{\huge} % Size of the name at the top of the document
 \def\addressskip{\smallskip} % The space between the two address (or phone/email) lines
 \def\sectionlineskip{\medskip} % The space above the horizontal line for each section 

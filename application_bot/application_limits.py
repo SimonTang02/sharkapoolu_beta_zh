@@ -1,7 +1,7 @@
-"""Check employer application limits before preparing another submission.
+"""准备下一份申请前，检查雇主的申请数量限制。
 
-Limits are facts about a recruiting window, not candidate credentials. Tag each
-job's ``recruitment_category`` before applying a category-specific limit.
+限制是招聘周期的事实，不是候选人资历。应用类别限制前，请为每个岗位设置
+``recruitment_category``。
 """
 
 from __future__ import annotations
@@ -29,11 +29,10 @@ class LimitCheck:
 def check_application_limit(
     conn: sqlite3.Connection, application_id: int, *, today: date | None = None
 ) -> LimitCheck:
-    """Return hard blocks, advisory warnings, or a ready state.
+    """返回硬性阻止、建议警告或可继续状态。
 
-    A matching hard rule with an unclassified job is held for category review;
-    it must not silently bypass the limit. Existing submissions are counted only
-    inside the rule's date window and matching recruiting category.
+    若硬性规则匹配到未分类岗位，则暂停处理并等待类别审阅；不得静默绕过限制。
+    仅统计日期窗口内且符合招聘类别的既有提交记录。
     """
     today = today or date.today()
     row = conn.execute(
@@ -44,7 +43,7 @@ def check_application_limit(
         (application_id,),
     ).fetchone()
     if row is None:
-        raise ValueError(f"Unknown application id: {application_id}")
+        raise ValueError(f"未知的申请 ID： {application_id}")
     category = row["recruitment_category"]
     default = LimitCheck(application_id, "ready", category, 0, None, None, None, None)
     limits = conn.execute(

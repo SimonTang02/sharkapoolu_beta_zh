@@ -1,53 +1,33 @@
-# Manual application kit: new conversation handoff
+# 手动申请套件：新对话交接说明
 
-Read the repository's `AGENTS.md` and `AGENT_HANDOFF.md` first. This file
-describes one generated delivery bundle; it does not authorize portal actions.
+请先阅读仓库的 `AGENTS.md` 和 `AGENT_HANDOFF.md`。本文描述一个已生成的投递套件，不代表授权访问门户。
 
-## Resolve this campaign
+## 定位此 campaign
 
-- Bundle directory: `$output`
-- Entry page: `index.html` in that directory; keep its file address stable.
-- Targets: `$count` jobs, with the original ranks and order in `Manifest.json`.
-- Manifest SHA-256 at generation: `$manifest_sha256`.
-- Browser progress key prefix: `$progress_key`.
-- Role files: `<folder>/Application_Data.json`, reviewed PDFs and available
-  TXT/JSON references. Folder names and material hashes are in `Manifest.json`.
-- Supporting documents: `Supporting_Documents/` when listed in the manifest.
+- 套件目录：`$output`
+- 入口页：该目录中的 `index.html`；保持其文件地址稳定。
+- 目标岗位：`$count` 个，在 `Manifest.json` 中保留原始排名和顺序。
+- 生成时的 manifest SHA-256：`$manifest_sha256`
+- 浏览器进度键前缀：`$progress_key`
+- 岗位文件：`<folder>/Application_Data.json`、已审阅 PDF 和可用的 TXT/JSON 参考。文件夹名和材料哈希记录在 `Manifest.json` 中。
+- 支持文档：manifest 列出时位于 `Supporting_Documents/`。
 
-## Determine what is current
+## 确认当前进度
 
-1. Read this manifest and the repository's latest private handoff. Identify the
-   canonical private root and whether this machine uses a local or SSH database.
-2. Ask for the currently active original job number, exported browser progress,
-   or a success receipt. Actual manual progress is unknown until supplied.
-3. Browser-local progress and database submissions are separate. An empty
-   tracker, generated material status, or whole-database submitted count does
-   not establish this campaign's progress. Never read a personal Chrome profile
-   to recover it, reset its keys, or populate its progress from assumptions.
-4. For exports, match ranks to this exact manifest before interpreting statuses.
-   Record submitted only from official receipt evidence or explicit candidate
-   success confirmation. Preserve external submission time separately from
-   the time a confirmation is recorded.
-5. Resume from current canonical confirmed facts and actual portal fields.
-   Prepared answers are a dated aid, not authority to infer qualifications,
-   work permission, consent, or graduation facts. Retain unresolved answers.
+1. 阅读此 manifest 和仓库最新的私有交接说明。确认规范私有根目录，以及本机使用本地还是 SSH 数据库。
+2. 请用户提供当前正在处理的原始职位编号、浏览器进度导出或成功回执。用户提供前，实际手动进度未知。
+3. 浏览器本地进度与数据库提交记录相互独立。空白跟踪器、生成材料状态或全库 submitted 数量都无法证明本 campaign 的进度。绝不能读取个人 Chrome profile 来恢复进度，也不能重置其键或按假设填入进度。
+4. 解释导出结果前，先将排名与此 manifest 精确匹配。只有官方回执证据或候选人明确确认成功，才能记为 submitted。分别记录外部实际提交时间和确认登记时间。
+5. 根据当前规范、已确认事实和门户实际字段继续。准备好的答案只是有时间戳的辅助信息，不是推断资格、工作许可、同意或毕业事实的授权。保留未解决答案。
 
-## Continue safely
+## 安全续接
 
-Preserve targets, original ranks, reviewed materials and their hashes. Do not
-regenerate or overwrite this bundle, substitute jobs, or replay historical tab
-cleanup. Verify eligibility, current fields, and actual uploaded files for
-each application. Preserve transcript official/unofficial labels. The candidate
-handles login challenges, consent, declarations and final submission.
-Keep all final-submit guards false. This kit never updates the application DB.
+保留目标岗位、原始排名、已审阅材料及其哈希。不要重新生成或覆盖此套件、替换职位或重放历史标签清理。逐份申请核实资格、当前字段和实际上传文件。保留成绩单官方/非官方标签。登录挑战、同意、声明和最终提交由候选人处理。
 
-Use the existing `mark_submitted.py` workflow only after qualifying evidence.
-Check for an existing application before creating one. Store receipts, new
-answers, issues and continuation records only in canonical private output;
-do not place candidate facts in public code or handoff documentation.
+保持所有最终提交保护为 false。此套件不会更新申请数据库。
 
-## Suggested first message in a new conversation
+只有取得符合要求的证据后才使用现有 `mark_submitted.py` 工作流。创建申请前先检查是否已有记录。回执、新答案、问题和续接记录仅保存在规范私有输出中；不要将候选人事实写入公开代码或交接文档。
 
-Read this bundle's `AGENT_HANDOFF.md`, then `Manifest.json` and the repository
-operating contract. Preserve existing browser progress and materials. Continue
-with the job number or receipt I provide; do not submit an application for me.
+## 在新对话中的建议首条消息
+
+先阅读此套件的 `AGENT_HANDOFF.md`、`Manifest.json` 和仓库操作契约。保留已有浏览器进度和材料。根据我提供的职位编号或回执继续；不要替我提交申请。

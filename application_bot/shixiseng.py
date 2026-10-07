@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare a Shixiseng application tab without triggering one-click delivery."""
+"""准备实习僧申请标签页，不触发一键投递。"""
 
 from __future__ import annotations
 
@@ -75,13 +75,13 @@ def main() -> None:
         (args.application_id,),
     ).fetchone()
     if not row or row["platform"] != "shixiseng_cdp":
-        raise SystemExit("Application is not a Shixiseng campaign role")
+        raise SystemExit("该申请不是实习僧批次岗位")
     profile = json.loads(Path(row["profile_path"]).read_text(encoding="utf-8"))
     if profile.get("safety", {}).get("allow_submit"):
-        raise SystemExit("Safety violation: allow_submit must remain false")
+        raise SystemExit("安全错误：allow_submit 必须保持为 false")
     resume_path = Path(row["tailored_resume_path"])
     if not resume_path.is_file():
-        raise SystemExit(f"Tailored resume is unavailable: {resume_path}")
+        raise SystemExit(f"定制简历不可用： {resume_path}")
 
     load_env_file(Path(args.env))
     _, cdp_url = resolve_browser_connection(config)
@@ -114,28 +114,27 @@ def main() -> None:
             password_login.nth(index).is_visible()
             for index in range(password_login.count())
         )
-        # Shixiseng keeps its login modal mounted in the DOM after authentication.
-        # Hidden username/password inputs therefore cannot be used as a login signal.
+        # 实习僧完成身份验证后仍会将登录弹窗保留在 DOM 中。
+        # 因此，不能根据隐藏的用户名/密码输入框判断登录状态。
         signed_out = "登录/注册" in body or visible_login_input
         if signed_out:
             status = "authentication_required"
             note = (
-                "Shixiseng session is signed out after the Chrome restart. Log in "
-                "manually in the registered tab, then rerun this adapter."
+                "Chrome 重启后，实习僧会话处于登出状态。请在已登记的标签页中手动登录，"
+                "然后重新运行此适配器。"
             )
             stage = "login"
         elif "投个简历" in body:
-            # Shixiseng may implement this as immediate delivery. Do not click it
-            # until the exact role is approved for submission.
+            # 实习僧可能会将此操作实现为立即投递。除非已批准此确切岗位的提交操作，
+            # 否则不要点击。
             status = "delivery_confirmation_required"
             note = (
-                "Authenticated Shixiseng role is ready with a tailored Chinese "
-                "resume, but the possibly one-click '投个简历' control was not clicked."
+                "已登录的实习僧职位已备好定制中文简历，但未点击可能会立即投递的“投个简历”控件。"
             )
             stage = "application_entry"
         else:
             status = "portal_state_review_required"
-            note = "Shixiseng page state was not recognized; no delivery control was used."
+            note = "无法识别实习僧页面状态；未使用投递控件。"
             stage = "unrecognized"
 
         artifact = save_fill_test_artifact(

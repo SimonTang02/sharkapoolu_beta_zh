@@ -1,4 +1,4 @@
-"""Preview/import manually maintained UTF-8 CSV into the authoritative database."""
+"""预览并将人工维护的 UTF-8 CSV 导入权威数据库。"""
 from __future__ import annotations
 
 import argparse
@@ -124,7 +124,7 @@ def main() -> int:
     parser.add_argument('--jobs',type=Path)
     parser.add_argument('--applications',type=Path)
     parser.add_argument('--config',type=Path,default=PROJECT_ROOT/'job_bot/config.china_hk_ic_foreign.json')
-    parser.add_argument('--confirm-submissions',action='store_true',help='Only after actual receipts or explicit candidate confirmation')
+    parser.add_argument('--confirm-submissions',action='store_true',help='仅在取得实际回执或候选人明确确认后使用')
     parser.add_argument('--execute',action='store_true')
     args=parser.parse_args()
     try:
@@ -140,7 +140,7 @@ def main() -> int:
         payload={'executed':False,'jobs':jobs,'applications':applications,'input_sha256':{
             name:hashlib.sha256(file.read_bytes()).hexdigest() for name,file in (('jobs',args.jobs),('applications',args.applications)) if file},
             'job_scores':[score_job(JobPosting(source_name='manual_csv',company=row['company'],title=row['title'],url=row['url'],description=row['description']),config) for row in jobs],
-            'preview_scope':'CSV validation and proposed scores only; execution checks existing records transactionally'}
+            'preview_scope':'仅校验 CSV 并预览拟议评分；执行时会在事务中检查现有记录'}
         plan.write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n',encoding='utf-8');plan.chmod(0o600)
         if args.execute:
             payload['counts']=import_rows(config,jobs,applications,args.confirm_submissions);payload['executed']=True
