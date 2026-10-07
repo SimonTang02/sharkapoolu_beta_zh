@@ -1,23 +1,22 @@
 # Sharkapoolu 中文发布版
 
+> **第一次用？** 先看[逐步上手指南](docs/foolproof_guide_zh.md)：从Windows＋WSL2＋VS Code安装到简历导入，每一步都有命令和可复制给Agent的消息。
+
 这是 Sharkapoolu 的简体中文发布仓库。Sharkapoolu 是由 Agent 驱动的求职工具集，用于职位发现、定制简历和申请跟踪。主开发与功能开发在[英文上游仓库](https://github.com/SimonTang02/sharkapoolu_beta)进行；本仓库用于维护与上游兼容的中文翻译和发布内容。此版本适配的上游提交为 `bd90331c16d9f128f985928ae7752b49e8e758c9`。翻译对应关系见[本地化说明](docs/localization.md)，简体中文翻译许可说明见[中文许可说明](docs/license-zh-CN.md)。
 
 Sharkapoolu 是一个本地优先的求职工具集，可发现和排序职位、定制简历，并辅助准备申请材料。项目最初围绕硬件和数字设计岗位构建，但来源与评分层可配置。候选人资料保存在公开 Git 历史之外；最终申请提交始终由用户本人完成。
 
-新用户和 coding agent 请先阅读[完整操作与交接手册](AGENT_HANDOFF.md)及[配置责任与就绪指南](docs/getting-started.md)，再查看[带注释的公开模板](examples/README.md)，其中包括虚构的 Mike Malon / NYU 计算机科学简历示例和共享数据库设置。
+coding agent 请先阅读[完整操作与交接手册](AGENT_HANDOFF.md)及[配置责任与就绪指南](docs/getting-started.md)，再查看[带注释的公开模板](examples/README.md)，其中包括虚构的 Mike Malon / NYU 计算机科学简历示例和共享数据库设置。
 
 ## 主要功能
 
-- **简历导入与手工记录。** 将原始 PDF、文本或 LaTeX 简历导入私有审阅包，其中包含可编辑草稿，以及关于回答、证据关键词和评分的 Agent 说明。UTF-8 CSV 支持手工维护职位和已确认的申请历史，并可事务性导入。请从[候选人资料导入指南](docs/candidate-onboarding.md)及[Windows + WSL2 + VS Code 平台指南](docs/platforms.md)开始。
-- **单文件入门设置。** 带中文注释的设置文件可选择模块、地区、HTTP 或隔离浏览器采集、CDP 准备、审查轮次、时间预算和重试。`jobbot-settings` 会在显式执行前检查并预览更改。详见[入门用户指南](docs/beginner-settings.md)。
-- **两种申请工作流。** 手动投递提供离线 HTML 面板、逐职位可复制答案、已审阅 PDF 和支持材料链接、回执备注及浏览器本地进度导出。Agent 辅助准备提供队列、显式批次、ATS 路由，以及直到人工审阅点为止的受支持表单填写。两种流程都由候选人完成最终提交；排队、上传或到达 Review 都不代表已经提交。
-- **基于偏好的职位发现与审查。** 从 HTTP feed、招聘 API 和经授权的浏览器会话采集并规范化职位。可配置来源选择、岗位关键词、评分权重，以及已实现的地区、学位和招聘周期筛选。资格和工作许可仍须有证据并由候选人确认。新增地区、年份或岗位类别可能需要调整当前以硬件为重点的策略代码。
-- **跨机器共享申请历史。** SQLite 保存职位和申请事件。可选的、经过身份验证的 SSH 允许客户端操作主机上的私有数据库，无须开放数据库监听端口。机器须保持在线；浏览器会话、PDF 和进度导出不会自动同步。详见[共享规则](docs/shared-database.md)。
-- **以证据为依据的材料。** `cvbot` 从私有资料中选择有依据的经历和关键词，生成定制建议；配置 TeX 工具链后，还可渲染 LaTeX 简历与求职信 PDF 套件。生成的 PDF 仍需审阅；生成器不会创造新的资格条件。
-- **私有存储与个人定制。** 身份、证据、关键词、凭据、会话、回执和生成材料均保存在候选人自行管理的私有目录树中。公开模板使用空白或虚构资料；配置和隐私审计只报告结构，不打印具体值。
-- **专用浏览器会话与标签管理。** 支持使用独立 Chromium profile，或受限的 Windows Chrome CDP。会话审计、登录预检和经过审计的标签清理会保留正在填写的申请表及身份验证锚点。MFA、CAPTCHA 和政策选择仍由人工处理；持久化 profile 不保证登录持续有效。
-- **报告与可选通知。** 可生成每日、每周和策略审查报告。SMTP 投递需要私有配置和明确授权，默认采用 dry-run。定期运行需另行配置调度器。
-- **新对话交接。** 每个新生成的手动申请包都包含 campaign 交接说明、manifest 指纹和可复制的续接提示。新 Agent 可在没有旧聊天记录时找到文件和操作规则；实际进度仍以当前私有记录、用户导出和回执为准。
+- **找岗位。** 告诉Agent岗位方向、地区和毕业时间，它配置支持的来源与排序，再把岗位收进数据库。默认偏硬件方向，其他专业可能需要适配。
+- **准备简历材料。** 提供PDF或LaTeX简历，核实提取的事实；Agent整理可编辑LaTeX和逐岗材料。安装TeX后生成PDF，每份都要审阅再使用。
+- **帮你填表。** 手动HTML投递包提供答案和附件，支持的浏览器适配器可以准备字段。登录、验证码、审阅和最终提交由你完成。
+- **记录投递。** 使用本机数据库，也可手工填UTF-8 CSV。只有真实回执或你明确确认成功才登记已提交；跨机器SSH共享是可选项。
+- **按需开关、接着做。** 一份配置选择功能、地区、审查轮数和准备模式。私有任务与交接文件帮助新对话续接，浏览器进度导出和回执用于核实实际进度。
+
+先跑通一个岗位。[上手指南](docs/foolproof_guide_zh.md)说明安装脚本会做什么、哪些仍需要你或Agent完成。浏览器、报告和共享等进阶功能见[安装指南](docs/installation.md)、[功能开关](docs/beginner-settings.md)及[共享数据库](docs/shared-database.md)。
 
 ## 快速开始
 
@@ -28,7 +27,7 @@ Sharkapoolu 是一个本地优先的求职工具集，可发现和排序职位�
 ```bash
 git clone https://github.com/SimonTang02/sharkapoolu_beta_zh.git
 cd sharkapoolu_beta_zh
-./scripts/bootstrap.sh
+./scripts/bootstrap.sh --with-resume
 source .venv/bin/activate
 ```
 
@@ -42,7 +41,7 @@ jobbot-config --config job_bot/config.china_hk_ic_foreign.json
 如需浏览器辅助采集和表单准备：
 
 ```bash
-./scripts/bootstrap.sh --with-browser
+./scripts/bootstrap.sh --with-browser --with-resume
 sudo .venv/bin/python -m playwright install-deps chromium  # 仅 Linux，必要时运行
 ```
 
